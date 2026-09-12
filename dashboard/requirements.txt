@@ -4,4 +4,4 @@ plotly==7.0.0
 SQLAlchemy==2.0.51
 psycopg2-binary==2.9.12
 pymongo==4.17.0
-python-dotenv==1.2.2
+python-dotenv==1.2.3
