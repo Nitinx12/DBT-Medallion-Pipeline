@@ -1,13 +1,13 @@
 # dbt Transformations
 
 `walmart_dbt/` is the transformation layer of this project. dbt does not
-extract data from MongoDB: `scripts/extract.py` first lands raw collections in
+extract data from MongoDB: `scripts/python/extract.py` first lands raw collections in
 Postgres `bronze`; dbt then builds the cleaned `silver` and analytical `gold`
 schemas.
 
 ```mermaid
 flowchart LR
-    M[MongoDB] --> E[scripts/extract.py]
+    M[MongoDB] --> E[scripts/python/extract.py]
     E --> B[(bronze)]
 
     subgraph DBT[dbt]
@@ -82,7 +82,7 @@ uses dbt's built-in tests and `dbt_utils`; reusable custom test definitions
 also live in `tests/generic/`.
 
 These are different from the root-level SQL quality suite in `tests/`. dbt
-tests validate dbt model contracts; `scripts/sql_test.py` runs the standalone
+tests validate dbt model contracts; `scripts/python/sql_test.py` runs the standalone
 bronze, silver, and gold database checks.
 
 ## Commands

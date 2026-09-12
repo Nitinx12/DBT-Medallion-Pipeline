@@ -6,7 +6,7 @@ import pytest
 # In this repo pyspark IS installed, but mocking Spark internals keeps tests offline.
 pytest.importorskip("pyspark", reason="pyspark required for extract tests")
 
-import scripts.extract as ex
+import scripts.python.extract as ex
 
 # ── detect_incremental_column ─────────────────────────────────────────
 
@@ -82,14 +82,14 @@ def test_discover_collections_filters_system_prefix():
 
 
 def test_check_connector_compatibility_fails_on_spark4():
-    with patch("scripts.extract.pyspark.__version__", "4.0.0"):
+    with patch("scripts.python.extract.pyspark.__version__", "4.0.0"):
         with pytest.raises(SystemExit) as exc:
             ex.check_connector_compatibility()
         assert exc.value.code == 2
 
 
 def test_check_connector_compatibility_passes_on_spark3():
-    with patch("scripts.extract.pyspark.__version__", "3.5.5"):
+    with patch("scripts.python.extract.pyspark.__version__", "3.5.5"):
         # should not raise
         ex.check_connector_compatibility()
 
@@ -123,10 +123,10 @@ def test_table_exists_true_false():
 
 def test_get_row_count_zero_when_missing():
     engine = MagicMock()
-    with patch("scripts.extract.table_exists", return_value=False):
+    with patch("scripts.python.extract.table_exists", return_value=False):
         assert ex.get_row_count(engine, "missing") == 0
 
-    with patch("scripts.extract.table_exists", return_value=True):
+    with patch("scripts.python.extract.table_exists", return_value=True):
         conn = engine.connect.return_value.__enter__.return_value
         conn.execute.return_value.scalar.return_value = 42
         assert ex.get_row_count(engine, "orders") == 42
@@ -143,7 +143,7 @@ def test_has_unique_index_checks_pg_index():
 
 
 def test_validate_collection_pass_fail():
-    with patch("scripts.extract.get_row_count", return_value=100):
+    with patch("scripts.python.extract.get_row_count", return_value=100):
         status, detail = ex.validate_collection(MagicMock(), "orders", 100)
         assert status == "PASS"
         assert "100" in detail
@@ -187,7 +187,7 @@ def test_sanitize_for_postgres_flattens_complex():
     )
 
     # Patch pyspark functions used
-    with patch("scripts.extract.F") as mock_F:
+    with patch("scripts.python.extract.F") as mock_F:
         mock_F.col.return_value.cast.return_value = MagicMock()
         mock_F.to_json.return_value = MagicMock()
         flattened: list = []

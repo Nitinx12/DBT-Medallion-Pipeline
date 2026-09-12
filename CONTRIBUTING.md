@@ -20,7 +20,7 @@ uv run ruff format . && uv run ruff check .
 uv run pytest
 # if you touched models / SQL:
 uv run dbt test --select silver|gold
-uv run python scripts/sql_test.py tests/<layer>
+uv run python scripts/python/sql_test.py tests/<layer>
 ```
 
 ## PR rules

@@ -7,8 +7,8 @@
 
 Three small modules that every script in this project builds on: where
 connections come from, where configuration comes from, and where logs go.
-None of them touch business logic — they exist so `scripts/extract.py`,
-`scripts/sql_test.py`, and anything else added later don't each
+None of them touch business logic — they exist so `scripts/python/extract.py`,
+`scripts/python/sql_test.py`, and anything else added later don't each
 reimplement "read the env vars," "open a DB connection," and "set up
 logging" from scratch.
 
@@ -28,7 +28,7 @@ flowchart TD
     ENV[".env"] -- "load_dotenv()" --> ENGINE["engine.py<br/>reads os.getenv(...),<br/>validates, casts types"]
     ENGINE -- "from . import engine as config" --> CONN["connection.py<br/>get_mongo_db()<br/>get_postgres_engine()"]
     LOGGER["logger.py<br/>get_logger(name)"] -- "from .logger import get_logger" --> CONN
-    CONN -- "import connection" --> SCRIPTS["scripts/extract.py,<br/>scripts/sql_test.py,<br/>anything else"]
+    CONN -- "import connection" --> SCRIPTS["scripts/python/extract.py,<br/>scripts/python/sql_test.py,<br/>anything else"]
     LOGGER -- "get_logger(name)" --> SCRIPTS
 ```
 
@@ -93,7 +93,7 @@ value shown.
 
 This module ties directly into the Airflow/Docker environment chain
 covered in `airflow.md` — when a task runs `uv run python
-scripts/extract.py`, the DAG's `_PREAMBLE` has already exported
+scripts/python/extract.py`, the DAG's `_PREAMBLE` has already exported
 `POSTGRES_HOST=host.docker.internal` etc. into the shell *before* Python
 starts, so `engine.py`'s `os.getenv("POSTGRES_HOST")` picks up the
 corrected container value automatically, with no code here aware that
@@ -222,7 +222,7 @@ correctly).
 
 ```mermaid
 sequenceDiagram
-    participant Script as scripts/extract.py
+    participant Script as scripts/python/extract.py
     participant Conn as connection.py
     participant Eng as engine.py
     participant Log as logger.py

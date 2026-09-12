@@ -42,7 +42,7 @@ through the standalone Docker image.
 
 ```mermaid
 flowchart LR
-    MONGO[("MongoDB<br/>operational source")] -->|"scripts/extract.py<br/>PySpark + Mongo connector"| BRONZE
+    MONGO[("MongoDB<br/>operational source")] -->|"scripts/python/extract.py<br/>PySpark + Mongo connector"| BRONZE
 
     subgraph PG["PostgreSQL — walmart_db"]
         BRONZE[("bronze schema<br/>raw, 1:1 with Mongo collections")]
@@ -253,7 +253,7 @@ flowchart LR
         direction TB
         Q1["tests/bronze/*.sql (3)<br/>tests/silver/*.sql (9)<br/>tests/gold/*.sql (7)"]
         Q2["schema-driven PL/pgSQL loops —<br/>discover tables/columns from<br/>information_schema, one rule<br/>applied project-wide"]
-        Q3["run by: scripts/sql_test.py"]
+        Q3["run by: scripts/python/sql_test.py"]
         Q1 --> Q2 --> Q3
     end
 ```
@@ -261,7 +261,7 @@ flowchart LR
 | | dbt tests | Standalone SQL suite |
 |---|---|---|
 | Defined in | `schema.yml` per model | Individual `.sql` files, one rule each |
-| Invoked as | `dbt test --select silver` / `gold` | `uv run python scripts/sql_test.py tests/<layer>` |
+| Invoked as | `dbt test --select silver` / `gold` | `uv run python scripts/python/sql_test.py tests/<layer>` |
 | Convention | dbt's own pass/fail semantics | Auto-detected per file: either "SELECT returns violating rows" or "DO block raises an exception" |
 | Full detail | [`dbt.md`](dbt.md) | [`tests.md`](tests.md), [`scripts.md`](scripts.md) §2 |
 
@@ -369,7 +369,7 @@ flowchart TD
     ENVFILE[".env"] -- "load_dotenv()" --> ENGINE["engine.py<br/>reads + validates every env var<br/>ONCE, at import time —<br/>fails loud and early if misconfigured"]
     ENGINE -- "from . import engine" --> CONN["connection.py<br/>get_mongo_db() / get_postgres_engine()<br/>lazy, cached, round-trip-checked"]
     LOGGER["logger.py<br/>get_logger(name)<br/>console + rotating file,<br/>idempotent, no double handlers"] --> CONN
-    CONN --> SCRIPTS["scripts/extract.py<br/>scripts/sql_test.py"]
+    CONN --> SCRIPTS["scripts/python/extract.py<br/>scripts/python/sql_test.py"]
     LOGGER --> SCRIPTS
 ```
 

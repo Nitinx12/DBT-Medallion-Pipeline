@@ -24,7 +24,7 @@ def _make_engine_mock(fetch_rows=None, raise_on_execute=None):
 
 def test_run_tests_select_pass_and_fail(tmp_path):
     """SELECT returning rows = FAIL, empty = PASS."""
-    import scripts.sql_test as st
+    import scripts.python.sql_test as st
 
     test_dir = tmp_path / "tests"
     test_dir.mkdir()
@@ -49,7 +49,7 @@ def test_run_tests_select_pass_and_fail(tmp_path):
     conn.execute.side_effect = [pass_result, fail_result]
 
     log = MagicMock()
-    with patch("scripts.sql_test.get_postgres_engine", return_value=engine):
+    with patch("scripts.python.sql_test.get_postgres_engine", return_value=engine):
         passed = st.run_tests(test_dir, log)
 
     assert passed is False  # one failure
@@ -60,7 +60,7 @@ def test_run_tests_select_pass_and_fail(tmp_path):
 
 def test_run_tests_do_block_resource_closed_is_pass(tmp_path):
     """DO $$ blocks raise ResourceClosedError on fetchall -> treated as PASS."""
-    import scripts.sql_test as st
+    import scripts.python.sql_test as st
 
     test_dir = tmp_path / "tests"
     test_dir.mkdir()
@@ -74,7 +74,7 @@ def test_run_tests_do_block_resource_closed_is_pass(tmp_path):
     conn.execute.return_value = result
 
     log = MagicMock()
-    with patch("scripts.sql_test.get_postgres_engine", return_value=engine):
+    with patch("scripts.python.sql_test.get_postgres_engine", return_value=engine):
         passed = st.run_tests(test_dir, log)
 
     assert passed is True
@@ -85,7 +85,7 @@ def test_run_tests_exception_rolls_back_and_fails(tmp_path):
     """SQLAlchemyError suffix via RAISE EXCEPTION marks FAIL and rolls back."""
     from sqlalchemy.exc import SQLAlchemyError
 
-    import scripts.sql_test as st
+    import scripts.python.sql_test as st
 
     test_dir = tmp_path / "tests"
     test_dir.mkdir()
@@ -99,7 +99,7 @@ def test_run_tests_exception_rolls_back_and_fails(tmp_path):
     conn.execute.side_effect = SQLAlchemyError("violated")
 
     log = MagicMock()
-    with patch("scripts.sql_test.get_postgres_engine", return_value=engine):
+    with patch("scripts.python.sql_test.get_postgres_engine", return_value=engine):
         passed = st.run_tests(test_dir, log)
 
     assert passed is False
@@ -108,13 +108,13 @@ def test_run_tests_exception_rolls_back_and_fails(tmp_path):
 
 
 def test_run_tests_empty_dir_warns(tmp_path):
-    import scripts.sql_test as st
+    import scripts.python.sql_test as st
 
     empty = tmp_path / "empty"
     empty.mkdir()
     log = MagicMock()
     engine, _ = _make_engine_mock()
-    with patch("scripts.sql_test.get_postgres_engine", return_value=engine):
+    with patch("scripts.python.sql_test.get_postgres_engine", return_value=engine):
         passed = st.run_tests(empty, log)
     assert passed is True
     log.warning.assert_called_once()

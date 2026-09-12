@@ -31,8 +31,8 @@ uv add package_name
 uv add --dev pytest ruff
 
 # run any script through uv instead of the bare interpreter
-uv run python scripts/extract.py
-uv run python scripts/sql_test.py tests/bronze
+uv run python scripts/python/extract.py
+uv run python scripts/python/sql_test.py tests/bronze
 ```
 `uv.lock` is the source of truth — never hand-edit dependency versions
 in `pyproject.toml` without running `uv lock` afterward.
@@ -61,7 +61,7 @@ docker/         # Dockerfile, Dockerfile.airflow, docker-compose.yaml, entrypoin
 docs/           # deep-dive docs: airflow.md, dbt.md, docker.md, pipeline.md, scripts.md, tests.md, utils.md
 jars/           # Mongo Spark connector + Postgres JDBC, checked in for offline Spark startup
 pipeline/       # run_pipeline.ps1 — Windows entry point
-scripts/        # extract.py (Mongo -> bronze), sql_test.py (SQL test runner)
+scripts/        # python/ (extract.py, sql_test.py, ...) + bash/ (monitor_logs.sh) + shims
 sql/            # hand-written functions/triggers/reports
 tests/          # standalone SQL data-quality suite, one folder per layer
 utils/          # engine.py, connection.py, logger.py — shared infra
@@ -101,7 +101,7 @@ uv run dbt test --select silver
 uv run dbt test --select gold
 
 # standalone SQL data-quality suite (schema-driven PL/pgSQL checks)
-uv run python scripts/sql_test.py tests/silver
+uv run python scripts/python/sql_test.py tests/silver
 ```
 - every new dbt model needs schema.yml tests
 - every new extract/transform function needs at least one unit test
@@ -111,7 +111,7 @@ uv run python scripts/sql_test.py tests/silver
 Work on one file or one logical change at a time.
 ```bash
 # stage only the file you edited
-git add scripts/extract.py
+git add scripts/python/extract.py
 
 # commit with a clear, meaningful message
 git commit -m "extract: fall back to append-only when no unique index"
@@ -148,9 +148,9 @@ git commit -m "docker: pin JDK to 17" \
 | create env | `uv venv` |
 | install deps | `uv sync` |
 | add dependency | `uv add <pkg>` |
-| run extract | `uv run python scripts/extract.py` |
+| run extract | `uv run python scripts/python/extract.py` |
 | run dbt tests | `uv run dbt test --select silver` |
-| run SQL suite | `uv run python scripts/sql_test.py tests/<layer>` |
+| run SQL suite | `uv run python scripts/python/sql_test.py tests/<layer>` |
 | format code | `uv run ruff format .` |
 | lint code | `uv run ruff check .` |
 | stage one file | `git add <file>` |

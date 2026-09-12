@@ -4,7 +4,7 @@
 # `tests/` — Standalone SQL Data-Quality Suite
 
 Raw PL/pgSQL scripts, one per check, grouped by medallion layer. **Not**
-dbt tests — this is a separate system, run through `scripts/sql_test.py`
+dbt tests — this is a separate system, run through `scripts/python/sql_test.py`
 and invoked as its own pipeline stage in both `run_pipeline.ps1` and the
 Airflow DAG. See `dbt.md` §8 for the full distinction between this folder
 and `walmart_dbt/tests/generic/`.
@@ -120,7 +120,7 @@ Three things worth calling out:
 - **`RAISE EXCEPTION` is the pass/fail signal.** A clean run only ever
   emits `RAISE NOTICE` (informational, doesn't affect the SQL command's
   success). The moment `RAISE EXCEPTION` fires, the `DO` block itself
-  fails as a Postgres command — which is what `scripts/sql_test.py`
+  fails as a Postgres command — which is what `scripts/python/sql_test.py`
   detects as this check having failed (see §3).
 
 ---
@@ -158,7 +158,7 @@ as *expected* behavior, not confirmed line-by-line.
 
 > Numbering skips straight from `07` to `09` — an `08` was likely
 > renumbered or removed at some point. Doesn't affect anything
-> functionally (`scripts/sql_test.py` presumably just runs whatever `.sql`
+> functionally (`scripts/python/sql_test.py` presumably just runs whatever `.sql`
 > files exist in the folder), just a gap worth being aware of.
 
 ### `tests/gold/` — 7 checks
@@ -180,10 +180,10 @@ as *expected* behavior, not confirmed line-by-line.
 ```mermaid
 sequenceDiagram
     participant Caller as run_pipeline.ps1 / Airflow task
-    participant Runner as scripts/sql_test.py
+    participant Runner as scripts/python/sql_test.py
     participant PG as Postgres
 
-    Caller->>Runner: uv run python scripts/sql_test.py tests/silver
+    Caller->>Runner: uv run python scripts/python/sql_test.py tests/silver
     loop each *.sql file in the folder, in name order
         Runner->>PG: execute file contents
         alt DO block completes, only RAISE NOTICE fired
@@ -203,7 +203,7 @@ file is what turns `bronze_sql_tests` / `silver_sql_tests` /
 `gold_sql_tests` red in either runner, exactly as documented in
 `pipeline.md` §3 and `airflow.md` §2.
 
-`scripts/sql_test.py` itself wasn't shared, so its exact file-discovery
+`scripts/python/sql_test.py` itself wasn't shared, so its exact file-discovery
 and connection logic isn't documented here — but its observed contract
 (folder path in, per-file pass/fail out, non-zero process exit on any
 failure) is consistent across every place it's invoked in this project.
@@ -230,9 +230,9 @@ failure) is consistent across every place it's invoked in this project.
 
 ```bash
 # From project root
-uv run python scripts/sql_test.py tests/bronze
-uv run python scripts/sql_test.py tests/silver
-uv run python scripts/sql_test.py tests/gold
+uv run python scripts/python/sql_test.py tests/bronze
+uv run python scripts/python/sql_test.py tests/silver
+uv run python scripts/python/sql_test.py tests/gold
 ```
 
 ```sql

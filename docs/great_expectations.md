@@ -134,9 +134,9 @@ coverage:
 
 ```powershell
 # Standalone SQL checks
-uv run python scripts/sql_test.py tests/bronze
-uv run python scripts/sql_test.py tests/silver
-uv run python scripts/sql_test.py tests/gold
+uv run python scripts/python/sql_test.py tests/bronze
+uv run python scripts/python/sql_test.py tests/silver
+uv run python scripts/python/sql_test.py tests/gold
 
 # dbt schema tests
 uv run dbt test --project-dir walmart_dbt --select silver

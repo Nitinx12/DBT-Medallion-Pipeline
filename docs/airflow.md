@@ -88,7 +88,7 @@ flowchart TD
     classDef gold fill:#D4AF37,color:#1a1a1a,stroke:#8a6d1f
 
     A["preflight<br/>pyspark ↔ mongo-connector<br/>version check"]:::pre
-    B["extract<br/>scripts/extract.py"]:::bronze
+    B["extract<br/>scripts/python/extract.py"]:::bronze
     C["bronze_sql_tests<br/>tests/bronze/*.sql"]:::bronze
     D["dbt_silver_run<br/>dbt run --select silver"]:::silver
     E["dbt_silver_test<br/>dbt test --select silver"]:::silver
@@ -106,14 +106,14 @@ flowchart TD
 | # | task_id | Command | Layer |
 |---|---|---|---|
 | 0 | `preflight` | checks installed `pyspark` version and fails with a `uv sync` recovery instruction unless it is `3.5.x` | — |
-| 1 | `extract` | `uv run python scripts/extract.py` | Bronze |
-| 2 | `bronze_sql_tests` | `uv run python scripts/sql_test.py tests/bronze` | Bronze |
+| 1 | `extract` | `uv run python scripts/python/extract.py` | Bronze |
+| 2 | `bronze_sql_tests` | `uv run python scripts/python/sql_test.py tests/bronze` | Bronze |
 | 3 | `dbt_silver_run` | `cd walmart_dbt && uv run dbt run --select silver` | Silver |
 | 4 | `dbt_silver_test` | `cd walmart_dbt && uv run dbt test --select silver` | Silver |
-| 5 | `silver_sql_tests` | `uv run python scripts/sql_test.py tests/silver` | Silver |
+| 5 | `silver_sql_tests` | `uv run python scripts/python/sql_test.py tests/silver` | Silver |
 | 6 | `dbt_gold_run` | `cd walmart_dbt && uv run dbt run --select gold` | Gold |
 | 7 | `dbt_gold_test` | `cd walmart_dbt && uv run dbt test --select gold` | Gold |
-| 8 | `gold_sql_tests` | `uv run python scripts/sql_test.py tests/gold` | Gold |
+| 8 | `gold_sql_tests` | `uv run python scripts/python/sql_test.py tests/gold` | Gold |
 | 9 | `great_expectations_tests` | `uv run python -m pipeline.data_quality.run --layer all` | All layers |
 
 Every task is a `@task.bash` — the DAG builds each one's shell command as

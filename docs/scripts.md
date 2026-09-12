@@ -5,10 +5,29 @@
 
 # `scripts/` — Extraction & SQL Test Runner
 
-Two scripts. `extract.py` is the entire bronze layer — it's what
+```
+scripts/
+├── python/                  # python helpers — the pipeline's runtime code
+│   ├── extract.py           # bronze layer: Mongo → Postgres (incremental, watermark, upsert)
+│   ├── sql_test.py          # generic runner behind every *_sql_tests stage
+│   ├── ci_seed_bronze.py    # CI fixture loader (bypasses Mongo for integration gate)
+│   ├── health_check.py      # project health probe
+│   ├── security_check.py    # secret / vuln checks
+│   ├── inspect_gold_schema.py
+│   ├── seed_demo_db.py
+│   └── sync_gold_to_databricks.py
+├── bash/
+│   └── monitor_logs.sh      # log tail / rotation helper
+├── extract.py               # deprecated shim → scripts/python/extract.py (kept for one release)
+├── sql_test.py              # deprecated shim → scripts/python/sql_test.py
+└── ...                      # other *.py shims same pattern
+```
+
+Two core scripts live in `scripts/python/`: `extract.py` is the entire bronze layer — it's what
 populates Postgres from Mongo in the first place. `sql_test.py` is the
 generic runner behind every `*_sql_tests` pipeline stage documented in
-`tests.md`.
+`tests.md`. Invoke as `uv run python scripts/python/extract.py` (the
+old `scripts/extract.py` path still works via shim but is deprecated).
 
 > **Naming note:** `extract.py`'s own module docstring header reads
 > `scripts/mongo_exp.py`, and it names itself `"mongo_exp"` internally —
@@ -356,14 +375,14 @@ container, exactly as covered in `docker.md` §9 and `airflow.md` §5.
 
 ```bash
 # extract.py
-uv run python scripts/extract.py
-uv run python scripts/extract.py --tables orders,customers
-uv run python scripts/extract.py --full-refresh
-uv run python scripts/extract.py --dry-run
-uv run python scripts/extract.py --watermark-column updated_timestamp
+uv run python scripts/python/extract.py
+uv run python scripts/python/extract.py --tables orders,customers
+uv run python scripts/python/extract.py --full-refresh
+uv run python scripts/python/extract.py --dry-run
+uv run python scripts/python/extract.py --watermark-column updated_timestamp
 
 # sql_test.py
-uv run python scripts/sql_test.py tests/bronze
-uv run python scripts/sql_test.py tests/silver
-uv run python scripts/sql_test.py tests/gold
+uv run python scripts/python/sql_test.py tests/bronze
+uv run python scripts/python/sql_test.py tests/silver
+uv run python scripts/python/sql_test.py tests/gold
 ```

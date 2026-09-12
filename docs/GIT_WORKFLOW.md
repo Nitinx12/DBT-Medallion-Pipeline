@@ -75,7 +75,7 @@ git pull --rebase
 git checkout -b feature/extract-watermark-fallback
 
 # Work: one file / one logical change per commit
-git add scripts/extract.py
+git add scripts/python/extract.py
 git commit -m "feat(extract): fallback to append-only when no unique index"
 #   and body line if why is not obvious:
 # git commit -m "fix(docker): pin JDK to 17" -m "PySpark 3.5.x mongo connector is untested on JDK 21"

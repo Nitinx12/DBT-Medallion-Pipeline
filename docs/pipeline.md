@@ -26,7 +26,7 @@ flowchart TD
 Two things happen before any pipeline stage runs:
 
 1. **`$env:PYTHONPATH = $ProjectRoot`** — `scripts/*.py` are invoked as
-   `python scripts/extract.py`, not `python -m scripts.extract`, so
+   `python scripts/python/extract.py`, not `python -m scripts.python.extract`, so
    Python only puts `scripts/` itself on `sys.path` by default.
    Without this line, `from utils.connection import get_postgres_engine`
    (used throughout `scripts/`) would fail to import. This is the exact
@@ -90,7 +90,7 @@ flowchart TD
     classDef gold fill:#D4AF37,color:#1a1a1a,stroke:#8a6d1f
 
     S0["Stage 0: Preflight<br/>pyspark ↔ mongo-connector<br/>version check"]:::pre
-    S1["Stage 1: Extract<br/>scripts/extract.py"]:::bronze
+    S1["Stage 1: Extract<br/>scripts/python/extract.py"]:::bronze
     S2["Stage 2: Bronze SQL tests<br/>tests/bronze/*.sql"]:::bronze
     S3["Stage 3: dbt silver<br/>run + test --select silver"]:::silver
     S4["Stage 4: Silver SQL tests<br/>tests/silver/*.sql"]:::silver
@@ -104,12 +104,12 @@ flowchart TD
 | Stage | What runs | Working directory |
 |---|---|---|
 | 0. Preflight | `uv run python -c "import pyspark; print(pyspark.__version__)"`; fails with a `uv sync` recovery instruction unless PySpark is `3.5.x` | project root |
-| 1. Extract | `uv run python scripts/extract.py` | project root |
-| 2. Bronze SQL tests | `uv run python scripts/sql_test.py tests/bronze` | project root |
+| 1. Extract | `uv run python scripts/python/extract.py` | project root |
+| 2. Bronze SQL tests | `uv run python scripts/python/sql_test.py tests/bronze` | project root |
 | 3. Silver dbt | `uv run dbt run --select silver` then (if that succeeded) `uv run dbt test --select silver` | `walmart_dbt/` — script `Set-Location`s in, then back out |
-| 4. Silver SQL tests | `uv run python scripts/sql_test.py tests/silver` | project root |
+| 4. Silver SQL tests | `uv run python scripts/python/sql_test.py tests/silver` | project root |
 | 5. Gold dbt | `uv run dbt run --select gold` then `uv run dbt test --select gold` | `walmart_dbt/` |
-| 6. Gold SQL tests | `uv run python scripts/sql_test.py tests/gold` | project root |
+| 6. Gold SQL tests | `uv run python scripts/python/sql_test.py tests/gold` | project root |
 | 7. Great Expectations | `uv run python -m pipeline.data_quality.run --layer all` | project root |
 
 The two dbt stages are the only ones that change directory — `dbt`

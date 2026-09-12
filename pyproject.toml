@@ -43,3 +43,17 @@ dev = [
     "sqlfluff>=4.2.2",
     "sqlfluff-templater-dbt>=4.2.2",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests/unit"]
+addopts = "-v --cov=utils --cov=scripts --cov-report=term-missing"
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/*.py" = ["F401", "F403"]
+
+[tool.coverage.run]
+source = ["utils", "scripts"]
+omit = ["utils/__pycache__/*", "scripts/__pycache__/*"]
+
+# Scripts layout (organized 2026-09): python helpers in scripts/python/, bash helpers in scripts/bash/
+# Backward-compat shims remain at scripts/*.py and scripts/*.sh for one release cycle.
