@@ -49,7 +49,7 @@ jobs:
       # ── walmart-pipeline (standalone image) ──────────────────
       - name: Metadata — walmart-pipeline
         id: meta-pipeline
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/walmart-pipeline
           tags: |
@@ -70,7 +70,7 @@ jobs:
       # ── walmart-airflow (Airflow services image) ─────────────
       - name: Metadata — walmart-airflow
         id: meta-airflow
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/walmart-airflow
           tags: |
