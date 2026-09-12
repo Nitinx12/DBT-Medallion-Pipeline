@@ -38,6 +38,7 @@ dev = [
 [tool.ruff.lint.per-file-ignores]
 "dashboard/app.py" = ["E402"]
 "scripts/python/extract.py" = ["E402"]
+"scripts/python/inspect_gold_schema.py" = ["E402"]
 "scripts/python/seed_demo_db.py" = ["E402"]
 "scripts/python/sync_gold_to_databricks.py" = ["E402"]
 [tool.pytest.ini_options]

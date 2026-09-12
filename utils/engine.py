@@ -28,8 +28,9 @@ if POSTGRES_PORT is not None:
         raise OSError(f"POSTGRES_PORT must be an integer, got: {POSTGRES_PORT!r}")
 
 # Postgres schemas (medallion architecture). Optional: only needed by
-# scripts that actually build a bronze/silver/gold layout. mongo_exp.py
-# writes straight into the `public` schema and does not touch these.
+# scripts that actually build a bronze/silver/gold layout. extract.py
+# writes into the bronze schema (POSTGRES_SCHEMA_BRONZE) and dbt builds
+# the silver/gold ones on top of it.
 POSTGRES_SCHEMA_BRONZE = os.getenv("POSTGRES_SCHEMA_BRONZE")
 POSTGRES_SCHEMA_SILVER = os.getenv("POSTGRES_SCHEMA_SILVER")
 POSTGRES_SCHEMA_GOLD = os.getenv("POSTGRES_SCHEMA_GOLD")

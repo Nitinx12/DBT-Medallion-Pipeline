@@ -20,7 +20,7 @@ body:
     id: command
     attributes:
       label: Command that failed
-      placeholder: "e.g. uv run python scripts/sql_test.py tests/silver"
+      placeholder: "e.g. uv run python scripts/python/sql_test.py tests/silver"
     validations: { required: false }
 
   - type: textarea

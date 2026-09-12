@@ -1,13 +1,12 @@
 """Run non-destructive security checks for the Walmart ETL project.
 
-Lives in ``scripts/``; ``PROJECT_ROOT`` resolves one level up so Git scans,
-docker/, .github/workflows/, pyproject.toml, and uv.lock all still resolve
-against the repo root regardless of your current directory.
+Lives in ``scripts/python/``; ``PROJECT_ROOT`` resolves two levels up so Git
+scans, docker/, .github/workflows/, pyproject.toml, and uv.lock all still
+resolve against the repo root regardless of your current directory.
 
 The scanner reports file paths and line numbers only; it never displays a
-potential credential value. Run with ``uv run python scripts/security_check.py``
-from the repo root, or ``uv run python security_check.py`` from inside
-``scripts/``.
+potential credential value. Run with ``uv run python
+scripts/python/security_check.py`` from the repo root.
 """
 
 from __future__ import annotations
@@ -24,7 +23,8 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# scripts/python/security_check.py -> repo root is two levels up
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 MAX_FILE_SIZE_BYTES = 1_000_000
 SENSITIVE_FILENAMES = {".env", ".envrc", "credentials.json", "service-account.json"}
 SENSITIVE_SUFFIXES = {".key", ".pem", ".p12", ".pfx"}

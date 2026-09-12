@@ -13,10 +13,10 @@ Per table:
 5. Upsert with a batched MERGE INTO.
 
 Usage (from repo root):
-    uv run python scripts/sync_gold_to_databricks.py
-    uv run python scripts/sync_gold_to_databricks.py --only dim_brands dim_categories
-    uv run python scripts/sync_gold_to_databricks.py --full-refresh
-    uv run python scripts/sync_gold_to_databricks.py --dry-run
+    uv run python scripts/python/sync_gold_to_databricks.py
+    uv run python scripts/python/sync_gold_to_databricks.py --only dim_brands dim_categories
+    uv run python scripts/python/sync_gold_to_databricks.py --full-refresh
+    uv run python scripts/python/sync_gold_to_databricks.py --dry-run
 
 Requires: databricks-sql-connector, polars
 
@@ -39,7 +39,8 @@ from rich.console import Console
 from rich.table import Table
 from sqlalchemy import text
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# scripts/python/sync_gold_to_databricks.py -> repo root is two levels up
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from utils import engine as config

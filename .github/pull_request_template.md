@@ -19,7 +19,7 @@ Example: feat(extract): add watermark fallback when no unique index
 - [ ] `uv run ruff format . && uv run ruff check .`
 - [ ] `uv run pytest` (or `tests/unit` gate in CI)
 - [ ] `uv run dbt test --select <silver|gold>` (if models changed)
-- [ ] `uv run python scripts/sql_test.py tests/<layer>` (if SQL checks changed)
+- [ ] `uv run python scripts/python/sql_test.py tests/<layer>` (if SQL checks changed)
 
 ## Pipeline impact
 

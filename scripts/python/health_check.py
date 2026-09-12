@@ -1,11 +1,10 @@
 """Display a non-destructive health report for the Walmart ETL project.
 
-Lives in ``scripts/``; ``PROJECT_ROOT`` resolves one level up so every path
-below (docker/, logs/, .env, git) still points at the repo root regardless
+Lives in ``scripts/python/``; ``PROJECT_ROOT`` resolves two levels up so every
+path below (docker/, logs/, .env, git) still points at the repo root regardless
 of your current directory.
 
-Run with ``uv run python scripts/health_check.py`` from the repo root, or
-``uv run python health_check.py`` from inside ``scripts/``.  The script
+Run with ``uv run python scripts/python/health_check.py`` from the repo root.  The script
 reads connection settings from ``.env`` (or the current environment) but
 never prints secrets.
 """
@@ -31,7 +30,8 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# scripts/python/health_check.py -> repo root is two levels up
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 COMPOSE_FILE = PROJECT_ROOT / "docker" / "compose.yml"
 PIPELINE_LOG_DIR = PROJECT_ROOT / "logs"
 AIRFLOW_HEALTH_URL = "http://localhost:8080/api/v2/monitor/health"

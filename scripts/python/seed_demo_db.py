@@ -1,5 +1,5 @@
 """
-scripts/seed_demo_db.py
+scripts/python/seed_demo_db.py
 
 One-off utility: copy the gold schema from this project's local Postgres
 into a separate, public demo Postgres (e.g. a free Neon or Supabase
@@ -10,7 +10,7 @@ safe, public database for the hosted Streamlit dashboard demo, so the
 real local/dev database never needs to be reachable from the internet.
 
 Usage:
-    uv run python scripts/seed_demo_db.py "postgresql://user:pass@host/dbname"
+    uv run python scripts/python/seed_demo_db.py "postgresql://user:pass@host/dbname"
 
 The target database must already exist (e.g. a fresh Neon project);
 this script creates the schema and tables inside it.
@@ -20,11 +20,11 @@ import argparse
 import sys
 from pathlib import Path
 
-# scripts/seed_demo_db.py -> repo root is one level up. Put it on sys.path
-# so `from utils....` resolves when this is run directly
-# (`python scripts/seed_demo_db.py`), which only puts `scripts/` itself on
-# sys.path, not the repo root — same fix as dashboard/app.py.
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# scripts/python/seed_demo_db.py -> repo root is two levels up. Put it on
+# sys.path so `from utils....` resolves when this is run directly
+# (`python scripts/python/seed_demo_db.py`), which only puts `scripts/python/`
+# itself on sys.path, not the repo root — same fix as dashboard/app.py.
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 

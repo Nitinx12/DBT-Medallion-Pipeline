@@ -1,6 +1,6 @@
 """
-scripts/mongo_exp.py
-=====================
+scripts/python/extract.py
+=========================
 Production-grade MongoDB -> PostgreSQL extraction script, built on PySpark.
 
 WHAT IT DOES
@@ -50,11 +50,11 @@ WHAT IT DOES
 
 USAGE
 -----
-    uv run python scripts/mongo_exp.py
-    uv run python scripts/mongo_exp.py --tables orders,customers
-    uv run python scripts/mongo_exp.py --full-refresh
-    uv run python scripts/mongo_exp.py --dry-run
-    uv run python scripts/mongo_exp.py --watermark-column updated_timestamp
+    uv run python scripts/python/extract.py
+    uv run python scripts/python/extract.py --tables orders,customers
+    uv run python scripts/python/extract.py --full-refresh
+    uv run python scripts/python/extract.py --dry-run
+    uv run python scripts/python/extract.py --watermark-column updated_timestamp
 
 Requires (pyproject.toml): pyspark, pymongo, sqlalchemy, psycopg2-binary,
 python-dotenv, rich. Also requires network access (first run) to fetch the
@@ -106,7 +106,7 @@ warnings.showwarning = _rich_showwarning
 # ---------------------------------------------------------------------------
 # Make `utils` importable regardless of the CWD this script is launched from.
 # ---------------------------------------------------------------------------
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -121,7 +121,7 @@ from utils import engine as config
 from utils.connection import get_mongo_db
 from utils.logger import get_logger
 
-log = get_logger("mongo_exp")
+log = get_logger("extract")
 
 # System / internal collections we never want to mirror into Postgres.
 MONGO_SYSTEM_PREFIXES = ("system.",)

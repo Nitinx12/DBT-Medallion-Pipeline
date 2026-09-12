@@ -15,14 +15,17 @@
 walmart_dbt:
   outputs:
     dev:
-      dbname: walmart_db
+      dbname: "{{ env_var('POSTGRES_DATABASE', 'walmart_db') }}"
       host: "{{ env_var('POSTGRES_HOST', 'localhost') }}"
-      pass: admin
-      port: 5432
-      schema: bronze
+      # Same var names as utils/engine.py (POSTGRES_USERNAME/PASSWORD) so a
+      # single .env drives both the Python pipeline and dbt. Defaults match
+      # the local dev Postgres the README sets up.
+      pass: "{{ env_var('POSTGRES_PASSWORD', 'admin') }}"
+      port: "{{ env_var('POSTGRES_PORT', '5432') | int }}"
+      schema: "{{ env_var('POSTGRES_SCHEMA_BRONZE', 'bronze') }}"
       threads: 4
       type: postgres
-      user: postgres
+      user: "{{ env_var('POSTGRES_USERNAME', 'postgres') }}"
 
     ci:
       type: postgres

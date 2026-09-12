@@ -4,7 +4,7 @@ Target location in your repo: airflow/dags/walmart_pipeline_dag.py
 
 Mirrors pipeline/run_pipeline.ps1 stage-for-stage and in the same order:
     0. Preflight        (pyspark <-> mongo-spark-connector version check)
-    1. Extract          (scripts/extract.py)
+    1. Extract          (scripts/python/extract.py)
     2. Bronze SQL tests (tests/bronze/*.sql)
     3. dbt silver build + test (walmart_dbt, models/silver)
     4. Silver SQL tests (tests/silver/*.sql)
@@ -89,11 +89,11 @@ def walmart_medallion_pipeline():
 
     @task.bash(task_id="extract")
     def extract() -> str:
-        return _PREAMBLE + "uv run python scripts/extract.py"
+        return _PREAMBLE + "uv run python scripts/python/extract.py"
 
     @task.bash(task_id="bronze_sql_tests")
     def bronze_sql_tests() -> str:
-        return _PREAMBLE + "uv run python scripts/sql_test.py tests/bronze"
+        return _PREAMBLE + "uv run python scripts/python/sql_test.py tests/bronze"
 
     @task.bash(task_id="dbt_silver_run")
     def dbt_silver_run() -> str:
@@ -105,7 +105,7 @@ def walmart_medallion_pipeline():
 
     @task.bash(task_id="silver_sql_tests")
     def silver_sql_tests() -> str:
-        return _PREAMBLE + "uv run python scripts/sql_test.py tests/silver"
+        return _PREAMBLE + "uv run python scripts/python/sql_test.py tests/silver"
 
     @task.bash(task_id="dbt_gold_run")
     def dbt_gold_run() -> str:
@@ -117,7 +117,7 @@ def walmart_medallion_pipeline():
 
     @task.bash(task_id="gold_sql_tests")
     def gold_sql_tests() -> str:
-        return _PREAMBLE + "uv run python scripts/sql_test.py tests/gold"
+        return _PREAMBLE + "uv run python scripts/python/sql_test.py tests/gold"
 
     @task.bash(task_id="great_expectations_tests")
     def great_expectations_tests() -> str:

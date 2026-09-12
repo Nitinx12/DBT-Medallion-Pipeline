@@ -5,8 +5,8 @@ the pipeline's operational readiness and security baseline. Run them from the
 project root with `uv`.
 
 ```powershell
-uv run python health_check.py
-uv run python security_check.py
+uv run python scripts/python/health_check.py
+uv run python scripts/python/security_check.py
 ```
 
 Both scripts use Rich for a clear terminal report and return a non-zero exit
@@ -28,7 +28,7 @@ run. It checks:
 Use the faster dependency-only Spark check when needed:
 
 ```powershell
-uv run python health_check.py --quick
+uv run python scripts/python/health_check.py --quick
 ```
 
 This check helps catch stopped services, broken credentials, missing Spark
@@ -36,7 +36,8 @@ setup, and incomplete pipeline runs before an ETL job fails partway through.
 
 ## `security_check.py`
 
-`security_check.py` scans Git-visible project files without printing any
+`security_check.py` (in `scripts/python/`) scans Git-visible project files
+without printing any
 credential values. It checks for:
 
 - Common API tokens, private keys, embedded database passwords, and hard-coded

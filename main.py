@@ -1,12 +1,12 @@
 """Cross-platform, Docker-safe equivalent of ps1/run_pipeline.ps1.
 
 Pure orchestration only: every stage shells out to the same
-scripts/*.py, dbt, and uv commands the PowerShell script calls. It
+scripts/python/*.py, dbt, and uv commands the PowerShell script calls. It
 does not re-implement any extract/transform logic itself.
 
 Stage structure intentionally mirrors run_pipeline.ps1 exactly:
     0. Preflight        (pyspark <-> mongo-spark-connector version check)
-    1. Extract          (scripts/extract.py)
+    1. Extract          (scripts/python/extract.py)
     2. Bronze SQL tests (tests/bronze/*.sql)
     3. dbt silver build + test (walmart_dbt, models/silver)  -- one stage
     4. Silver SQL tests (tests/silver/*.sql)
@@ -178,13 +178,13 @@ def main() -> int:
     stages = [
         Stage(
             "Extract",
-            "EXTRACT (scripts/extract.py)",
-            [["uv", "run", "python", "scripts/extract.py"]],
+            "EXTRACT (scripts/python/extract.py)",
+            [["uv", "run", "python", "scripts/python/extract.py"]],
         ),
         Stage(
             "Bronze Tests",
             "BRONZE SQL TESTS (tests/bronze)",
-            [["uv", "run", "python", "scripts/sql_test.py", "tests/bronze"]],
+            [["uv", "run", "python", "scripts/python/sql_test.py", "tests/bronze"]],
         ),
         Stage(
             "Silver dbt",
@@ -198,7 +198,7 @@ def main() -> int:
         Stage(
             "Silver Tests",
             "SILVER SQL TESTS (tests/silver)",
-            [["uv", "run", "python", "scripts/sql_test.py", "tests/silver"]],
+            [["uv", "run", "python", "scripts/python/sql_test.py", "tests/silver"]],
         ),
         Stage(
             "Gold dbt",
@@ -212,7 +212,7 @@ def main() -> int:
         Stage(
             "Gold Tests",
             "GOLD SQL TESTS (tests/gold)",
-            [["uv", "run", "python", "scripts/sql_test.py", "tests/gold"]],
+            [["uv", "run", "python", "scripts/python/sql_test.py", "tests/gold"]],
         ),
         Stage(
             "Great Expectations",

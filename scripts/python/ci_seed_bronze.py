@@ -1,6 +1,6 @@
 """
-scripts/ci_seed_bronze.py
-==========================
+scripts/python/ci_seed_bronze.py
+================================
 CI-only fixture loader for the bronze layer. Writes sample rows straight
 into POSTGRES_SCHEMA_BRONZE, bypassing MongoDB/PySpark entirely, so the
 `integration` CI job can exercise the real medallion gate (bronze checks ->
@@ -35,7 +35,7 @@ Nothing here is hardcoded to a fixed collection list -- add a new fixture
 file to seed a new collection.
 
 Usage:
-    uv run python scripts/ci_seed_bronze.py
+    uv run python scripts/python/ci_seed_bronze.py
 """
 
 from __future__ import annotations
@@ -53,7 +53,8 @@ from utils.logger import get_logger
 
 log = get_logger("ci_seed_bronze")
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# scripts/python/ci_seed_bronze.py -> repo root is two levels up
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 FIXTURE_DIR = PROJECT_ROOT / "tests" / "fixtures" / "bronze"
 
 # Same default-fallback pattern as extract.py's POSTGRES_SCHEMA constant.

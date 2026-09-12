@@ -220,8 +220,7 @@ jobs:
         working-directory: walmart_dbt
         run: uv run dbt deps
 
-      # NOTE: fixture loader lives at scripts/python/ci_seed_bronze.py
-      # (scripts/ci_seed_bronze.py is a backward-compat shim).
+      # NOTE: fixture loader lives at scripts/python/ci_seed_bronze.py.
       - name: Seed bronze schema from fixtures
         run: uv run python scripts/python/ci_seed_bronze.py
 
