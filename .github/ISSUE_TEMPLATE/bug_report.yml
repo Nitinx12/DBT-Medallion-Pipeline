@@ -1,0 +1,45 @@
+name: Bug report
+description: Pipeline, dbt, or dashboard defect
+title: "[bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing. For secrets/credentials, use **Security** tab, not this form.
+
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Layer / area
+      options: [bronze, silver, gold, extract, dbt, airflow, docker, dashboard, ci/cd, docs]
+      default: 0
+    validations: { required: true }
+
+  - type: input
+    id: command
+    attributes:
+      label: Command that failed
+      placeholder: "e.g. uv run python scripts/sql_test.py tests/silver"
+    validations: { required: false }
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual
+      placeholder: "What should have happened? What happened instead? Paste log snippet."
+    validations: { required: true }
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Repro steps (minimal)
+      placeholder: "1. ... 2. ... Use small fixture data, never real Postgres/Mongo data."
+    validations: { required: true }
+
+  - type: input
+    id: commit
+    attributes:
+      label: Commit / branch
+      placeholder: "e.g. aa0a398 chore/git-workflow-production-ready"
+    validations: { required: false }

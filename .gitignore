@@ -147,7 +147,20 @@ logs/
 !logs/.gitkeep
 !output/.gitkeep
 !exports/.gitkeep
-__init__.pyreports/asset/pipeline.mp4
+# NOTE: bare __init__.py is ignored to keep namespace packages lean,
+# but explicit package __init__.py under scripts/python and utils are
+# required for `import scripts.python.*` and `import utils.*` to work
+# on editable installs — re-allow those specific paths.
+__init__.py
+!scripts/__init__.py
+!scripts/python/__init__.py
+!utils/__init__.py
+
+# ==========================
+# Generated Reports / Assets (do not version generated charts)
+# ==========================
+reports/asset/pipeline.mp4
+reports/charts/
 
 gx/uncommitted/
 gx/expectations/

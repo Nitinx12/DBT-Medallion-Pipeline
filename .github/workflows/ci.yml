@@ -2,9 +2,11 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, develop]
   push:
-    branches: [main]
+    branches: [main, develop]
+    tags: ["v*.*.*"]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -137,7 +139,11 @@ jobs:
           - file: docker/Dockerfile.airflow
             tag: walmart-airflow:ci
     steps:
+      # lfs: true — jars/*.jar are LFS objects; without this the built image
+      # would contain LFS pointer text instead of the real JDBC jars.
       - uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - uses: docker/setup-buildx-action@v3
 
@@ -214,14 +220,13 @@ jobs:
         working-directory: walmart_dbt
         run: uv run dbt deps
 
-      # NOTE: this assumes a `scripts/ci_seed_bronze.py` fixture loader that
-      # writes sample rows straight into the bronze schema, bypassing Mongo —
-      # see docs/ci_cd.md for why, and what it needs to do.
+      # NOTE: fixture loader lives at scripts/python/ci_seed_bronze.py
+      # (scripts/ci_seed_bronze.py is a backward-compat shim).
       - name: Seed bronze schema from fixtures
-        run: uv run python scripts/ci_seed_bronze.py
+        run: uv run python scripts/python/ci_seed_bronze.py
 
       - name: Bronze SQL checks
-        run: uv run python scripts/sql_test.py tests/bronze
+        run: uv run python scripts/python/sql_test.py tests/bronze
 
       - name: dbt run — silver
         working-directory: walmart_dbt
@@ -232,7 +237,7 @@ jobs:
         run: uv run dbt test --select silver --target ci
 
       - name: Silver SQL checks
-        run: uv run python scripts/sql_test.py tests/silver
+        run: uv run python scripts/python/sql_test.py tests/silver
 
       - name: dbt run — gold
         working-directory: walmart_dbt
@@ -243,7 +248,7 @@ jobs:
         run: uv run dbt test --select gold --target ci
 
       - name: Gold SQL checks
-        run: uv run python scripts/sql_test.py tests/gold
+        run: uv run python scripts/python/sql_test.py tests/gold
 
       - name: Great Expectations checks
         run: uv run python -m pipeline.data_quality.run --layer all

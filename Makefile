@@ -19,7 +19,7 @@ SHELL         := /bin/bash
 UV       := uv
 PYTHON   := $(UV) run python
 DBT_DIR  := walmart_dbt
-SRC_DIRS := scripts pipeline
+SRC_DIRS := scripts/python pipeline utils tests/unit
 UNIT_DIR := tests/unit
 VERSION  := $(shell $(UV) run python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])" 2>/dev/null || echo "0.0.0-dev")
 
@@ -95,13 +95,13 @@ extract: ## [1/7] Extract MongoDB collections into Bronze
 	@echo "------------------------------------------------------------"
 	@echo " STEP 1 / 7  -  EXTRACT (MongoDB to Bronze)"
 	@echo "------------------------------------------------------------"
-	$(PYTHON) scripts/extract.py
+	$(PYTHON) scripts/python/extract.py
 
 test-bronze: ## [2/7] Run Bronze-layer SQL tests
 	@echo "------------------------------------------------------------"
 	@echo " STEP 2 / 7  -  BRONZE SQL TESTS"
 	@echo "------------------------------------------------------------"
-	$(PYTHON) scripts/sql_test.py tests/bronze
+	$(PYTHON) scripts/python/sql_test.py tests/bronze
 
 dbt-silver: ## [3/7] Build + test Silver dbt models
 	@echo "------------------------------------------------------------"
@@ -113,7 +113,7 @@ test-silver: ## [4/7] Run Silver-layer SQL tests
 	@echo "------------------------------------------------------------"
 	@echo " STEP 4 / 7  -  SILVER SQL TESTS"
 	@echo "------------------------------------------------------------"
-	$(PYTHON) scripts/sql_test.py tests/silver
+	$(PYTHON) scripts/python/sql_test.py tests/silver
 
 dbt-gold: ## [5/7] Build + test Gold dbt models
 	@echo "------------------------------------------------------------"
@@ -125,7 +125,7 @@ test-gold: ## [6/7] Run Gold-layer SQL tests
 	@echo "------------------------------------------------------------"
 	@echo " STEP 6 / 7  -  GOLD SQL TESTS"
 	@echo "------------------------------------------------------------"
-	$(PYTHON) scripts/sql_test.py tests/gold
+	$(PYTHON) scripts/python/sql_test.py tests/gold
 
 gx-tests: ## [7/7] Run Great Expectations across Bronze/Silver/Gold
 	@echo "------------------------------------------------------------"

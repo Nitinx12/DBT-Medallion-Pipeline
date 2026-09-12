@@ -1,0 +1,52 @@
+name: Commit Lint
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  commitlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate commit messages follow Conventional Commits
+        run: |
+          # AGENTS.md rule: present tense, <=50 chars, prefix by area
+          # Allowed prefixes: feat, fix, docs, chore, refactor, test, ci, build, perf, style, revert
+          # Format: "<area>: <summary>"  optionally "<area>(scope): <summary>"
+          PATTERN='^(feat|fix|docs|chore|refactor|test|ci|build|perf|style|revert)(\(.+\))?: .+'
+
+          echo "Checking commits in PR: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
+          # For PR, check all commits in the PR
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+
+          # fallback if base/head not available (e.g. manual run)
+          if [ -z "$BASE" ] || [ -z "$HEAD" ]; then
+            echo "No PR context — skipping commit lint (push to main/develop is checked via CI tag rules)."
+            exit 0
+          fi
+
+          FAILED=0
+          while read -r sha msg; do
+            if ! echo "$msg" | grep -Eq "$PATTERN"; then
+              echo "::error::Commit $sha does not follow Conventional Commits: '$msg'"
+              echo "  Expected: '<type>(optional scope): <summary>' e.g. 'feat(extract): add watermark fallback'"
+              echo "  Allowed types: feat, fix, docs, chore, refactor, test, ci, build, perf, style, revert"
+              FAILED=1
+            else
+              echo "OK  $sha  $msg"
+            fi
+          done < <(git log --format="%H %s" "$BASE..$HEAD")
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo ""
+            echo "Fix: git rebase -i $BASE  and rewrite messages, then force-push."
+            exit 1
+          fi
