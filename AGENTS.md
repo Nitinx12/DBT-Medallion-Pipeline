@@ -1,7 +1,7 @@
 # AGENTS.md
 
 Guide for AI agents and humans working on this repo. For the full system
-design, read `ARCHITECTURE.md` first — this file only covers day-to-day
+design, read `architecture.md` first — this file only covers day-to-day
 conventions: setup, coding style, and git workflow.
 
 ## Project Overview
@@ -47,7 +47,7 @@ in `pyproject.toml` without running `uv lock` afterward.
 - on first attach, run `uv sync` to materialize `.venv` inside the
   container from `uv.lock`
 - postgres/mongo are reached via `host.docker.internal`, same
-  correction every other container needs (see `ARCHITECTURE.md` §7,
+  correction every other container needs (see `architecture.md` §7,
   the "localhost problem") — never edit `.env` itself for this
 - always run project commands as `uv run <cmd>` inside the container
   terminal; don't `pip install` directly, it won't update `uv.lock`

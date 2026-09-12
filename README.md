@@ -43,7 +43,7 @@ flowchart LR
     class GOLD gold
 ```
 
-Every arrow into silver and gold is a **quality gate**, not a formality the next layer only builds if the prior layer's tests pass. Full breakdown: [`ARCHITECTURE.md`](ARCHITECTURE.md) §4.
+Every arrow into silver and gold is a **quality gate**, not a formality the next layer only builds if the prior layer's tests pass. Full breakdown: [`architecture.md`](architecture.md) §4.
 
 ## Orchestration — one pipeline, run three ways
 
@@ -76,7 +76,7 @@ In Airflow this is `walmart_medallion_pipeline`, with `all_success` trigger rule
 | **Runners** | Windows/PowerShell, Airflow, and the standalone runner execute the same eight stages |
 | **Containerization** | Docker Compose stack (CeleryExecutor: scheduler, workers, triggerer, Redis) plus a self-contained pipeline image |
 | **Dashboard** | Streamlit + Plotly dashboard querying the gold schema directly — [live demo](https://your-app-name.streamlit.app), source in [`dashboard/`](dashboard/) |
-| **CI/CD** | Lint, DAG-integrity checks, and a live bronze→silver→gold run against Postgres on every PR; images published to GHCR on merge — [`docs/ci_cd.md`](docs/CI_CD.md) |
+| **CI/CD** | Lint, DAG-integrity checks, and a live bronze→silver→gold run against Postgres on every PR; images published to GHCR on merge — [`docs/ci-cd.md`](docs/ci-cd.md) |
 
 ## Tech stack
 
@@ -107,17 +107,17 @@ This README is the pitch. Everything below is the engineering detail:
 
 | Doc | Covers |
 |---|---|
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Full system design and execution-path status |
+| [`docs/architecture.md`](docs/architecture.md) | Full system design and execution-path status |
 | [`docs/airflow.md`](docs/airflow.md) | The DAG, task by task |
 | [`docs/dbt.md`](docs/dbt.md) | Models, grain, SCD types, tests |
 | [`docs/docker.md`](docs/docker.md) | Both images, why two, build details |
 | [`docs/pipeline.md`](docs/pipeline.md) | The PowerShell entry point |
 | [`docs/scripts.md`](docs/scripts.md) | `extract.py`'s incremental vs. full-reload logic |
 | [`docs/tests.md`](docs/tests.md) | What the raw SQL checks actually check |
-| [`docs/great_expectations.md`](docs/great_expectations.md) | Great Expectations suites, commands, artifacts, and troubleshooting |
+| [`docs/great-expectations.md`](docs/great-expectations.md) | Great Expectations suites, commands, artifacts, and troubleshooting |
 | [`docs/utils.md`](docs/utils.md) | Shared config/connection/logging |
-| [`docs/CI_CD.md`](docs/CI_CD.md)  | See how CI/CD works |
-| [`docs/project_health_and_security.md`](docs/project_health_and_security.md) | Local health and security checks |
+| [`docs/ci-cd.md`](docs/ci-cd.md)  | See how CI/CD works |
+| [`docs/health.md`](docs/health.md) | Local health and security checks |
 | [`dashboard/README.md`](dashboard/README.md) | Dashboard design: schema, caching, chart choices |
 
 Full pipeline script (`run_pipeline.ps1`): [view on Google Drive](https://drive.google.com/file/d/1vSPYN8GvC5cFMEHf7EVjwSq4HHAbCZRF/view?usp=sharing)

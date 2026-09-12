@@ -155,7 +155,7 @@ All fixes land on branch `chore/git-workflow-production-ready` — **no pipeline
 
 | # | Mistake | Evidence | Fix in this branch |
 |---|---|---|---|
-| 1 | **No branching — 158 commits straight to `main`** | `git branch -a` shows only `main`; `git log --graph` is linear | This branch is the first feature branch; `GIT_WORKFLOW.md` defines `main`/`develop`/`feature/*`/`release/*` |
+| 1 | **No branching — 158 commits straight to `main`** | `git branch -a` shows only `main`; `git log --graph` is linear | This branch is the first feature branch; `git-workflow.md` defines `main`/`develop`/`feature/*`/`release/*` |
 | 2 | **No branch protection / empty rulesets** | `gh api .../rulesets` = `[]`, no protection | `CODEOWNERS` + protection checklist in this doc (settings change, not file) |
 | 3 | **Inconsistent identity — two emails** | `Nitin <nitin321x@gmail.com>` and `Nitin <Nitin85x@gmail.com>` | Document single `user.email` in §3; run `git config user.email` once |
 | 4 | **`pull.rebase` mismatch** | `AGENTS.md` says `git pull --rebase` but `git config pull.rebase` = `false` | Add `git config pull.rebase true` to onboarding (§3); CI unchanged |
