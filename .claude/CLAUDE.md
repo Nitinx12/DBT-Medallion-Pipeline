@@ -8,6 +8,10 @@ Tools installed globally are NOT on PATH inside uv's project venv; don't assume
 `pytest` or `pre-commit` work bare.
 
 ## Commands
+**Always use `uv run` for every tool** — `dbt`, `pytest`, `pre-commit`, `ruff` are
+all installed into uv's project venv, not on system PATH. A bare `dbt` command
+may resolve to an unrelated global install (e.g. dbt Fusion, which doesn't
+support Postgres) instead of this project's dbt-core + dbt-postgres.
 - Install/sync deps: `uv sync`
 - Run tests: `uv run pytest`
 - Run all lint/format hooks: `uv run pre-commit run --all-files`
@@ -48,3 +52,4 @@ Tools installed globally are NOT on PATH inside uv's project venv; don't assume
   `-Index 24..33`.
 - `dos2unix` isn't available by default; check line endings with
   `file <path>` via `bash -c` instead, or normalize via `.gitattributes`.
+
