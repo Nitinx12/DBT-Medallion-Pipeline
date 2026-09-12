@@ -1,0 +1,9 @@
+# CODEOWNERS — production gate: every PR to main requires review from owners
+# See https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+* @Nitinx12
+
+# Optional: tighten ownership per area (uncomment when team grows)
+# /airflow/          @Nitinx12
+# /walmart_dbt/      @Nitinx12
+# /.github/workflows/ @Nitinx12

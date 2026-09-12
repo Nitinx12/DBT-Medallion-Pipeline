@@ -147,7 +147,12 @@ logs/
 !logs/.gitkeep
 !output/.gitkeep
 !exports/.gitkeep
-__init__.pyreports/asset/pipeline.mp4
+__init__.py
+
+# ==========================
+# Generated Reports / Assets (do not version generated charts)
+# ==========================
+reports/asset/pipeline.mp4
 
 gx/uncommitted/
 gx/expectations/
