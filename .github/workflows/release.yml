@@ -54,6 +54,8 @@ jobs:
         with:
           ref: ${{ needs.validate-tag.outputs.version }}
           fetch-depth: 0
+          # lfs: true — jars/*.jar are LFS objects baked into the images
+          lfs: true
 
       - name: Lowercase repo owner (GHCR requires it)
         run: echo "OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_ENV"

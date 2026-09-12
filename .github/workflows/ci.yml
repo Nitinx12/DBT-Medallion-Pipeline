@@ -139,7 +139,11 @@ jobs:
           - file: docker/Dockerfile.airflow
             tag: walmart-airflow:ci
     steps:
+      # lfs: true — jars/*.jar are LFS objects; without this the built image
+      # would contain LFS pointer text instead of the real JDBC jars.
       - uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - uses: docker/setup-buildx-action@v3
 

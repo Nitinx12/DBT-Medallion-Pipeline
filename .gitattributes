@@ -31,6 +31,11 @@
 *.pptx binary
 
 # ==========================
+# Git LFS — Spark connector jars (multi-MB binaries, out-of-band storage)
+# ==========================
+jars/*.jar filter=lfs diff=lfs merge=lfs -text
+
+# ==========================
 # Linguist — keep repo language stats honest
 # ==========================
 jars/** linguist-vendored

@@ -160,6 +160,7 @@ __init__.py
 # Generated Reports / Assets (do not version generated charts)
 # ==========================
 reports/asset/pipeline.mp4
+reports/charts/
 
 gx/uncommitted/
 gx/expectations/
