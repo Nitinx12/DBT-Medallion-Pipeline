@@ -2,7 +2,7 @@
 # .githooks/commit-msg — local Conventional Commits guard (mirrors commitlint.yml + pre-commit)
 # Enable with: git config core.hooksPath .githooks
 set -euo pipefail
-msg=$(head -n1 "$1")
+msg=$(head -n1 "$1" | tr -d '\r')
 pattern='^(feat|fix|docs|chore|refactor|test|ci|build|perf|style|revert)(\(.+\))?: .+'
 if ! echo "$msg" | grep -Eq "$pattern"; then
   echo "✖ commit message does not match Conventional Commits" >&2
