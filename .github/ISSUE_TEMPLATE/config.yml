@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "Question / Discussion"
+    url: https://github.com/Nitinx12/Walmart_DBT/discussions
+    about: "Ask about pipeline, dbt models, or local setup"
+  - name: "Security report"
+    url: https://github.com/Nitinx12/Walmart_DBT/security/policy
+    about: "Do not file public issues for secrets or vulns — see SECURITY.md"

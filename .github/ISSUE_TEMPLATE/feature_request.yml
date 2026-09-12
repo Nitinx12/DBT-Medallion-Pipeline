@@ -1,0 +1,26 @@
+name: Feature request
+description: Propose a pipeline, model, or tooling improvement
+title: "[feat]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / context
+      placeholder: "What user or pipeline problem does this solve? Link related issue/docs."
+    validations: { required: true }
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      placeholder: "One responsibility, snake_case names. If you add a stage or redefine success, note that BOTH pipeline/run_pipeline.ps1 AND airflow/dags/walmart_pipeline_dag.py must change (AGENTS.md Pipeline Stage Rule)."
+    validations: { required: true }
+
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Risk / layer
+      options: [low — docs/tests, medium — silver/gold model, high — extract/bronze/gate change]
+      default: 0
+    validations: { required: false }
