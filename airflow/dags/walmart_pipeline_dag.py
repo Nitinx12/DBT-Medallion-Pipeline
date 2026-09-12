@@ -76,7 +76,6 @@ _PREAMBLE = (
     default_args={"retries": 0},
 )
 def walmart_medallion_pipeline():
-
     @task.bash(task_id="preflight")
     def preflight() -> str:
         return _PREAMBLE + (

@@ -25,4 +25,3 @@ docker compose -f docker/compose.yml up
 - **Profiles**: host uses `~/.dbt/profiles.yml`; Airflow uses `docker/dbt/profiles.yml` via `DBT_PROFILES_DIR`.
 
 See `architecture.md` §6, `docker/Dockerfile` / `docker/Dockerfile.airflow`.
-

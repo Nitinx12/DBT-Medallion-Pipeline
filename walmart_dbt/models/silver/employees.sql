@@ -54,12 +54,12 @@ cleaned AS (
         TRIM(CONCAT(first_name, ' ', last_name))::VARCHAR AS employee_name,
         TRIM(email::VARCHAR)::VARCHAR AS email,
         TRIM(job_title::VARCHAR)::VARCHAR AS job_title,
+        TRIM(salary::VARCHAR)::NUMERIC AS salary,
         CASE
             WHEN is_active IS NULL THEN NULL
             WHEN UPPER(TRIM(is_active)) = 'Y' THEN TRUE
             ELSE FALSE
         END AS is_active,
-        TRIM(salary::VARCHAR)::NUMERIC AS salary,
         CURRENT_TIMESTAMP AS silver_loaded_at
     FROM deduplicated
     WHERE rnk = 1

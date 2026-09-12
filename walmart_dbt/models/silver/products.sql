@@ -51,12 +51,12 @@ cleaned AS (
         d.updated_timestamp::TIMESTAMP AS updated_timestamp,
         TRIM(d.product_id::VARCHAR)::INT AS product_id,
         TRIM(d.product_name::VARCHAR)::VARCHAR AS product_name,
+        TRIM(d.price::VARCHAR)::NUMERIC AS price,
         CASE
             WHEN d.is_active IS NULL THEN NULL
             WHEN UPPER(TRIM(d.is_active)) = 'Y' THEN TRUE
             ELSE FALSE
         END AS is_active,
-        TRIM(d.price::VARCHAR)::NUMERIC AS price,
         CURRENT_TIMESTAMP AS silver_loaded_at
     FROM deduplicated AS d
     LEFT JOIN {{ ref('brands') }} AS b

@@ -52,14 +52,14 @@ cleaned AS (
         TRIM(order_item_id::VARCHAR)::INT AS order_item_id,
         TRIM(order_id::VARCHAR)::INT AS order_id,
         TRIM(product_id::VARCHAR)::INT AS product_id,
+        TRIM(quantity::VARCHAR)::INT AS quantity,
+        TRIM(unit_price::VARCHAR)::NUMERIC AS unit_price,
+        TRIM(line_amount::VARCHAR)::NUMERIC AS line_amount,
         CASE
             WHEN is_active IS NULL THEN NULL
             WHEN UPPER(TRIM(is_active)) = 'Y' THEN TRUE
             ELSE FALSE
         END AS is_active,
-        TRIM(quantity::VARCHAR)::INT AS quantity,
-        TRIM(unit_price::VARCHAR)::NUMERIC AS unit_price,
-        TRIM(line_amount::VARCHAR)::NUMERIC AS line_amount,
         CURRENT_TIMESTAMP AS silver_loaded_at
     FROM deduplicated
     WHERE rnk = 1

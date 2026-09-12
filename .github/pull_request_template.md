@@ -36,4 +36,3 @@ Example: feat(extract): add watermark fallback when no unique index
 - [ ] Docs updated (`docs/` or `README.md`) if behavior changed
 
 ## Screenshots / logs (if UI or pipeline output changed)
-

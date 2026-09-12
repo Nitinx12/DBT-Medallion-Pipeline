@@ -26,6 +26,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pandas>=3.0.5",
+    "pre-commit>=4.6.2",
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
     "ruff>=0.16.1",
@@ -33,6 +34,12 @@ dev = [
     "sqlfluff-templater-dbt>=4.2.2",
 ]
 
+
+[tool.ruff.lint.per-file-ignores]
+"dashboard/app.py" = ["E402"]
+"scripts/python/extract.py" = ["E402"]
+"scripts/python/seed_demo_db.py" = ["E402"]
+"scripts/python/sync_gold_to_databricks.py" = ["E402"]
 [tool.pytest.ini_options]
 testpaths = ["tests/unit"]
 addopts = "-v --cov=utils --cov=scripts --cov-report=term-missing"

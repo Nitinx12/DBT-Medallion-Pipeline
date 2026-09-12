@@ -58,12 +58,12 @@ cleaned AS (
         TRIM(d.store_id::VARCHAR)::INT AS store_id,
         TRIM(d.customer_id::VARCHAR)::INT AS customer_id,
         TRIM(d.order_status::VARCHAR)::VARCHAR AS order_status,
+        TRIM(d.total_amount::VARCHAR)::NUMERIC AS total_amount,
         CASE
             WHEN d.is_active IS NULL THEN NULL
             WHEN UPPER(TRIM(d.is_active)) = 'Y' THEN TRUE
             ELSE FALSE
         END AS is_active,
-        TRIM(d.total_amount::VARCHAR)::NUMERIC AS total_amount,
         CURRENT_TIMESTAMP AS silver_loaded_at
     FROM deduplicated AS d
     LEFT JOIN {{ ref('payment_methods') }} AS pm

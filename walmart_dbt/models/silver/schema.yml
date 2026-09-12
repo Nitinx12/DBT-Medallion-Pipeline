@@ -178,7 +178,7 @@ models:
         tests:
           - unique
           - not_null
-      
+
       - name: silver_loaded_at
         tests:
           # - unique
@@ -198,7 +198,7 @@ models:
         tests:
           - unique
           - not_null
-      
+
       - name: silver_loaded_at
         tests:
           # - unique
@@ -286,7 +286,7 @@ models:
         tests:
           - unique
           - not_null
-      
+
       - name: silver_loaded_at
         tests:
           # - unique
@@ -365,7 +365,7 @@ models:
       - name: updated_timestamp
         tests:
           - not_null
-      
+
       - name: silver_loaded_at
         tests:
           # - unique

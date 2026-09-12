@@ -315,7 +315,7 @@ fluent_datasources:
             partitioner:
         table_name: fact_order_items
         schema_name: gold
-    connection_string: 
+    connection_string:
       postgresql+psycopg2://postgres:admin@localhost:5432/walmart_db
 analytics_enabled:
 data_context_id: f8c71746-3977-4066-9511-26b217d8fbb5

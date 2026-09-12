@@ -39,6 +39,6 @@ repos:
     hooks:
       - id: conventional-commits
         name: conventional-commits
-        entry: bash -c 'msg=$(head -1 "$1"); if ! echo "$msg" | grep -Eq "^(feat|fix|docs|chore|refactor|test|ci|build|perf|style|revert)(\(.+\))?: .+"; then echo "commit message must match: <type>(scope): <summary>"; echo "  got: $msg"; echo "  types: feat, fix, docs, chore, refactor, test, ci, build, perf, style, revert"; exit 1; fi' --
+        entry: bash .githooks/commit-msg
         stages: [commit-msg]
         language: system

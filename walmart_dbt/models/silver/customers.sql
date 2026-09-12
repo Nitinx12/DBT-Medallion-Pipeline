@@ -73,6 +73,10 @@ cleaned AS (
         updated_timestamp::TIMESTAMP AS updated_timestamp,
         TRIM(customer_id::VARCHAR)::INT AS customer_id,
         TRIM(CONCAT(first_name, ' ', last_name))::VARCHAR AS customer_name,
+        TRIM(email::VARCHAR)::VARCHAR AS email,
+        TRIM(city::VARCHAR)::VARCHAR AS city,
+        TRIM(province::VARCHAR)::VARCHAR AS province,
+        TRIM(country::VARCHAR)::VARCHAR AS country,
         CASE
             -- a valid NANP number always has exactly 10 significant digits;
             -- whatever junk precedes them (+1-, 001-, nothing) is discarded
@@ -86,15 +90,11 @@ cleaned AS (
                     || SUBSTRING(RIGHT(phone_digits, 10), 7, 4)
         END AS phone,
         NULLIF(phone_ext_digits, '') AS phone_extension,
-        TRIM(email::VARCHAR)::VARCHAR AS email,
         CASE
             WHEN is_active IS NULL THEN NULL
             WHEN UPPER(TRIM(is_active)) = 'Y' THEN TRUE
             ELSE FALSE
         END AS is_active,
-        TRIM(city::VARCHAR)::VARCHAR AS city,
-        TRIM(province::VARCHAR)::VARCHAR AS province,
-        TRIM(country::VARCHAR)::VARCHAR AS country,
         CURRENT_TIMESTAMP AS silver_loaded_at
     FROM phone_digits
 )

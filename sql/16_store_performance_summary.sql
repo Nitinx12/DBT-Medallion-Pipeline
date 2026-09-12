@@ -39,6 +39,8 @@ WITH store_base AS (
         s.store_id,
         s.store_name,
         s.city,
+        MIN(o.order_timestamp)::DATE AS earliest_order_date,
+        MAX(o.order_timestamp)::DATE AS latest_order_date,
         COUNT(DISTINCT o.order_id) AS total_orders,
         COUNT(DISTINCT o.order_id)
         FILTER (WHERE o.order_status = 'Completed') AS completed_orders,
@@ -58,9 +60,7 @@ WITH store_base AS (
             SUM(oi.quantity)::NUMERIC
             / NULLIF(COUNT(DISTINCT o.order_id), 0),
             2
-        ) AS avg_quantity_per_order,
-        MIN(o.order_timestamp)::DATE AS earliest_order_date,
-        MAX(o.order_timestamp)::DATE AS latest_order_date
+        ) AS avg_quantity_per_order
     FROM gold.dim_stores AS s
     INNER JOIN gold.dim_orders AS o
         ON s.store_id = o.store_id
