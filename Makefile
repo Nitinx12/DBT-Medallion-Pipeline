@@ -47,8 +47,8 @@ help: ## Show this help
 install: ## Install runtime dependencies
 	$(UV) sync
 
-install-dev: ## Install runtime + dev dependencies (lint/test/type-check tools)
-	$(UV) sync --extra dev
+install-dev: ## Install runtime + dev dependencies (lint/test tools)
+	$(UV) sync --group dev
 
 pre-commit-install: install-dev ## Install git pre-commit hooks
 	$(UV) run pre-commit install
@@ -58,13 +58,13 @@ lint: ## Lint Python (ruff), SQL (sqlfluff), and validate the dbt project parses
 	@echo "$(BOLD)>> ruff check$(RESET)"
 	$(UV) run ruff check $(SRC_DIRS)
 	@echo "$(BOLD)>> sqlfluff lint$(RESET)"
-	$(UV) run sqlfluff lint tests $(DBT_DIR)/models
+	$(UV) run sqlfluff lint sql tests $(DBT_DIR)/models
 	@echo "$(BOLD)>> dbt parse (validates the project graph without touching data)$(RESET)"
 	cd $(DBT_DIR) && $(UV) run dbt parse --quiet
 
 lint-fix: ## Auto-fix lint issues where possible
 	$(UV) run ruff check --fix $(SRC_DIRS)
-	$(UV) run sqlfluff fix tests $(DBT_DIR)/models
+	$(UV) run sqlfluff fix sql tests $(DBT_DIR)/models
 
 format: ## Format Python code in place
 	$(UV) run ruff format $(SRC_DIRS)
@@ -72,10 +72,12 @@ format: ## Format Python code in place
 format-check: ## Check formatting without modifying files (CI-safe)
 	$(UV) run ruff format --check $(SRC_DIRS)
 
-type-check: ## Static type-check Python with mypy
+type-check: ## Static type-check Python with mypy (not yet in dev deps — run `uv add --group dev mypy` first)
 	$(UV) run mypy $(SRC_DIRS)
 
-static-checks: lint format-check type-check ## Run all static checks (no tests, no data movement)
+# type-check is deliberately NOT part of static-checks until mypy is added
+# to the dev dependency group — until then it would fail on a missing tool.
+static-checks: lint format-check ## Run all static checks (no tests, no data movement)
 
 # ---- Unit tests ---------------------------------------------------------
 unit-test: ## Run fast unit tests (no live DB/Spark required)
@@ -141,13 +143,13 @@ data-pipeline: preflight extract test-bronze dbt-silver test-silver dbt-gold tes
 all: ci data-pipeline ## Full production gate: static checks + unit tests + the live 8-stage data pipeline
 
 # ---- Build / Release --------------------------------------------------------
-build: ## Build a distributable wheel; also builds a Docker image if a Dockerfile exists
+build: ## Build a distributable wheel; also builds a Docker image if the Dockerfile exists
 	$(UV) build
-	@if [ -f Dockerfile ]; then \
+	@if [ -f docker/Dockerfile ]; then \
 		echo "$(BOLD)>> Building Docker image walmart-pipeline:$(VERSION)$(RESET)"; \
-		docker build -t walmart-pipeline:$(VERSION) . ; \
+		docker build -t walmart-pipeline:$(VERSION) -f docker/Dockerfile . ; \
 	else \
-		echo "$(YELLOW)No Dockerfile found — skipping image build.$(RESET)"; \
+		echo "$(YELLOW)No docker/Dockerfile found — skipping image build.$(RESET)"; \
 	fi
 
 # ---- Housekeeping -----------------------------------------------------------
