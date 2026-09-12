@@ -16,18 +16,31 @@ scripts/
 │   ├── inspect_gold_schema.py
 │   ├── seed_demo_db.py
 │   └── sync_gold_to_databricks.py
-├── bash/
-│   └── monitor_logs.sh      # log tail / rotation helper
-├── extract.py               # deprecated shim → scripts/python/extract.py (kept for one release)
-├── sql_test.py              # deprecated shim → scripts/python/sql_test.py
-└── ...                      # other *.py shims same pattern
+└── bash/                    # bash helpers — detailed, production-grade
+    ├── preflight.sh         # [0/7] env & dependency preflight (uv, .env, pyspark 3.5.x)
+    ├── extract.sh           # [1/7] wrapper for python extract
+    ├── run_tests.sh         # [2/7,4/7,6/7] bronze/silver/gold via sql_test.py
+    ├── run_pipeline.sh      # full 8-stage pipeline (Linux mirror of run_pipeline.ps1)
+    ├── health_check.sh      # disk/ports + python health_check.py
+    ├── security_check.sh    # gitleaks + .env guard + python security_check.py
+    ├── setup_env.sh         # one-shot uv venv + .env.example → .env + hooks + dbt deps
+    ├── clean.sh             # caches, artifacts, --venv/--deep
+    └── monitor_logs.sh      # log tail, rotation, analysis (v2)
 ```
 
 Two core scripts live in `scripts/python/`: `extract.py` is the entire bronze layer — it's what
 populates Postgres from Mongo in the first place. `sql_test.py` is the
 generic runner behind every `*_sql_tests` pipeline stage documented in
-`tests.md`. Invoke as `uv run python scripts/python/extract.py` (the
-old `scripts/extract.py` path still works via shim but is deprecated).
+`tests.md`. Invoke as `uv run python scripts/python/extract.py`.
+
+Bash helpers in `scripts/bash/` mirror the Makefile and `run_pipeline.ps1` stages for Linux/macOS
+(see `scripts/bash/README.md` for the full table). Example:
+
+```bash
+bash scripts/bash/preflight.sh --strict
+bash scripts/bash/run_pipeline.sh --full-refresh
+bash scripts/bash/run_tests.sh all
+```
 
 > **Naming note:** `extract.py`'s own module docstring header reads
 > `scripts/mongo_exp.py`, and it names itself `"mongo_exp"` internally —
