@@ -29,10 +29,10 @@ repos:
     hooks:
       - id: sqlfluff-lint
         args: [--dialect, postgres]
-        files: ^(walmart_dbt/models|sql|tests)/.*\.sql$
+        files: ^(dbt/models|sql|tests)/.*\.sql$
       - id: sqlfluff-fix
         args: [--dialect, postgres]
-        files: ^(walmart_dbt/models|sql|tests)/.*\.sql$
+        files: ^(dbt/models|sql|tests)/.*\.sql$
 
   # ── Conventional Commits — local fast-feedback, same regex as commitlint.yml ──
   - repo: local

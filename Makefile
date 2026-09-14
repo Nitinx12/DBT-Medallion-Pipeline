@@ -18,7 +18,7 @@ SHELL         := /bin/bash
 
 UV       := uv
 PYTHON   := $(UV) run python
-DBT_DIR  := walmart_dbt
+DBT_DIR  := dbt
 SRC_DIRS := scripts/python pipeline utils tests/unit
 UNIT_DIR := tests/unit
 VERSION  := $(shell $(UV) run python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])" 2>/dev/null || echo "0.0.0-dev")

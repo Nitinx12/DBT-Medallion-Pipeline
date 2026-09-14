@@ -1,6 +1,6 @@
 # dbt
 
-Medallion models in `walmart_dbt/`.
+Medallion models in `dbt/`.
 
 ## Models
 
@@ -12,7 +12,7 @@ Medallion models in `walmart_dbt/`.
 `models/*/schema.yml` per model (`not_null`, `unique`, `relationships`, `accepted_values`). Custom generics in `tests/generic/` (unused, `dbt_utils` used instead).
 
 ```bash
-cd walmart_dbt
+cd dbt
 uv run dbt run --select silver && uv run dbt test --select silver
 uv run dbt run --select gold && uv run dbt test --select gold
 ```

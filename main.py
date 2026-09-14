@@ -8,9 +8,9 @@ Stage structure intentionally mirrors run_pipeline.ps1 exactly:
     0. Preflight        (pyspark <-> mongo-spark-connector version check)
     1. Extract          (scripts/python/extract.py)
     2. Bronze SQL tests (tests/bronze/*.sql)
-    3. dbt silver build + test (walmart_dbt, models/silver)  -- one stage
+    3. dbt silver build + test (dbt, models/silver)  -- one stage
     4. Silver SQL tests (tests/silver/*.sql)
-    5. dbt gold build + test (walmart_dbt, models/gold)      -- one stage
+    5. dbt gold build + test (dbt, models/gold)      -- one stage
     6. Gold SQL tests (tests/gold/*.sql)
     7. Great Expectations tests (Bronze, Silver, Gold)
 Stops immediately on the first failed stage.
@@ -27,7 +27,7 @@ from datetime import datetime
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent
-DBT_PROJECT_DIR = PROJECT_ROOT / "walmart_dbt"
+DBT_PROJECT_DIR = PROJECT_ROOT / "dbt"
 LOG_DIR = PROJECT_ROOT / "logs"
 ENV_FILE = PROJECT_ROOT / ".env"
 
@@ -188,7 +188,7 @@ def main() -> int:
         ),
         Stage(
             "Silver dbt",
-            "DBT SILVER (walmart_dbt)",
+            "DBT SILVER (dbt)",
             [
                 ["uv", "run", "dbt", "run", "--select", "silver"],
                 ["uv", "run", "dbt", "test", "--select", "silver"],
@@ -202,7 +202,7 @@ def main() -> int:
         ),
         Stage(
             "Gold dbt",
-            "DBT GOLD (walmart_dbt)",
+            "DBT GOLD (dbt)",
             [
                 ["uv", "run", "dbt", "run", "--select", "gold"],
                 ["uv", "run", "dbt", "test", "--select", "gold"],

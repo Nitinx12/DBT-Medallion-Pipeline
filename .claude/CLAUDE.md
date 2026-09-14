@@ -15,7 +15,7 @@ support Postgres) instead of this project's dbt-core + dbt-postgres.
 - Install/sync deps: `uv sync`
 - Run tests: `uv run pytest`
 - Run all lint/format hooks: `uv run pre-commit run --all-files`
-- dbt: run from inside `walmart_dbt/` or pass `--project-dir walmart_dbt`
+- dbt: run from inside `dbt/` or pass `--project-dir dbt`
   (`dbt debug`, `dbt parse`, `dbt test`)
 
 ## Git workflow
@@ -52,4 +52,3 @@ support Postgres) instead of this project's dbt-core + dbt-postgres.
   `-Index 24..33`.
 - `dos2unix` isn't available by default; check line endings with
   `file <path>` via `bash -c` instead, or normalize via `.gitattributes`.
-

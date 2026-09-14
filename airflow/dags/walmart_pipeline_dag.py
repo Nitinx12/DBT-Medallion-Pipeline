@@ -6,9 +6,9 @@ Mirrors pipeline/run_pipeline.ps1 stage-for-stage and in the same order:
     0. Preflight        (pyspark <-> mongo-spark-connector version check)
     1. Extract          (scripts/python/extract.py)
     2. Bronze SQL tests (tests/bronze/*.sql)
-    3. dbt silver build + test (walmart_dbt, models/silver)
+    3. dbt silver build + test (dbt, models/silver)
     4. Silver SQL tests (tests/silver/*.sql)
-    5. dbt gold build + test (walmart_dbt, models/gold)
+    5. dbt gold build + test (dbt, models/gold)
     6. Gold SQL tests (tests/gold/*.sql)
     7. Great Expectations tests (Bronze, Silver, Gold)
 
@@ -26,7 +26,7 @@ from airflow.sdk import dag, task
 # Adjust if your Airflow worker image mounts the walmart repo elsewhere.
 # ps1's own comment says this mirrors `ENV PYTHONPATH=/app` in docker/Dockerfile.
 PROJECT_ROOT = "/app"
-DBT_PROJECT_DIR = f"{PROJECT_ROOT}/walmart_dbt"
+DBT_PROJECT_DIR = f"{PROJECT_ROOT}/dbt"
 
 REQUIRED_PYSPARK_PREFIX = "3.5"
 

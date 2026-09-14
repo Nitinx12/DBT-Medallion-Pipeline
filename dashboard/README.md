@@ -1,7 +1,7 @@
 # Sales Dashboard
 
 Interactive Streamlit + Plotly dashboard reading directly from the
-`gold` star schema built by `walmart_dbt`.
+`gold` star schema built by the `dbt/` project.
 
 ## Run it
 

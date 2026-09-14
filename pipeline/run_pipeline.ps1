@@ -30,7 +30,7 @@ $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
 $script:ProjectRoot = Split-Path -Parent $PSScriptRoot
-$script:DbtProjectRoot = Join-Path $script:ProjectRoot "walmart_dbt"
+$script:DbtProjectRoot = Join-Path $script:ProjectRoot "dbt"
 $script:LogDir = Join-Path $script:ProjectRoot "logs"
 $script:LogFile = Join-Path $script:LogDir ("pipeline_" + (Get-Date -Format "yyyy-MM-dd") + ".log")
 $script:Divider = "-" * 60
@@ -137,7 +137,7 @@ function Assert-Prerequisites {
         "tests/bronze",
         "tests/silver",
         "tests/gold",
-        "walmart_dbt/dbt_project.yml"
+        "dbt/dbt_project.yml"
     )
 
     foreach ($relativePath in $requiredPaths) {

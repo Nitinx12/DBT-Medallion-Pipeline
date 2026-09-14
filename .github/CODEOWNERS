@@ -5,5 +5,5 @@
 
 # Optional: tighten ownership per area (uncomment when team grows)
 # /airflow/          @Nitinx12
-# /walmart_dbt/      @Nitinx12
+# /dbt/              @Nitinx12
 # /.github/workflows/ @Nitinx12

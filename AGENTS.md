@@ -65,7 +65,7 @@ scripts/        # python/ (extract.py, sql_test.py, ci_seed_bronze.py, ...) + ba
 sql/            # hand-written functions/triggers/reports
 tests/          # standalone SQL data-quality suite, one folder per layer
 utils/          # engine.py, connection.py, logger.py — shared infra
-walmart_dbt/    # dbt project: silver + gold models, schema tests
+dbt/             # dbt project: silver + gold models, schema tests
 reports/        # generated markdown reports + chart PNGs
 main.py         # entry point for the standalone Docker image
 ```

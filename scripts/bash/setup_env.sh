@@ -47,9 +47,9 @@ else
 fi
 
 # 4. dbt deps
-if [[ -d walmart_dbt ]]; then
+if [[ -d dbt ]]; then
   echo "Installing dbt packages..."
-  (cd walmart_dbt && uv run dbt deps || true)
+  (cd dbt && uv run dbt deps || true)
 fi
 
 echo ""

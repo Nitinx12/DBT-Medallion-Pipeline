@@ -33,7 +33,7 @@ done
 echo "${BOLD}── Clean ──${RESET}"
 rm -rf .pytest_cache .ruff_cache .mypy_cache
 find . -type d -name "__pycache__" -prune -exec rm -rf {} + 2>/dev/null || true
-rm -rf walmart_dbt/target walmart_dbt/logs walmart_dbt/dbt_packages
+rm -rf dbt/target dbt/logs dbt/dbt_packages
 rm -rf gx/uncommitted/data_docs 2>/dev/null || true
 
 if [[ $DO_DEEP -eq 1 ]]; then
