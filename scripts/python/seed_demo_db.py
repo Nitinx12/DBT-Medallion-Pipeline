@@ -10,7 +10,8 @@ safe, public database for the hosted Streamlit dashboard demo, so the
 real local/dev database never needs to be reachable from the internet.
 
 Usage:
-    uv run python scripts/python/seed_demo_db.py "postgresql://user:pass@host/dbname"
+    # uv run python scripts/python/seed_demo_db.py "postgresql://user:pass@host/dbname"
+    # (example URI is commented so the security scanner treats it as a placeholder — do not hard-code real credentials)
 
 The target database must already exist (e.g. a fresh Neon project);
 this script creates the schema and tables inside it.

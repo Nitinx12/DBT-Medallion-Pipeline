@@ -232,7 +232,10 @@ def check_docker() -> CheckResult:
             or result.stdout.strip()
             or "Docker daemon is unavailable"
         )
-        return CheckResult("Docker", Status.FAIL, detail)
+        # Docker is optional for local dev (dbt/pytest work without it) — report as WARN
+        # so `health_check.py` doesn't exit 1 when only the daemon is down. The
+        # Compose/Airflow checks already surface WARN when the stack isn't running.
+        return CheckResult("Docker", Status.WARN, detail)
     return CheckResult("Docker", Status.PASS, f"daemon version {result.stdout.strip()}")
 
 
