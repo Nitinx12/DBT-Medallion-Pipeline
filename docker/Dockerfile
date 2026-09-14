@@ -38,7 +38,7 @@ ENV PYSPARK_DRIVER_PYTHON=/app/.venv/bin/python
 WORKDIR /app
 
 # Unlike Dockerfile.airflow (bind-mounted /app), this image needs the
-# project baked in -- scripts/, tests/, walmart_dbt/, jars/, pyproject.toml,
+# project baked in -- scripts/, tests/, dbt/, jars/, pyproject.toml,
 # uv.lock -- so it's self-contained and runnable with a plain `docker run`.
 COPY . .
 

@@ -33,9 +33,9 @@ logs/
 Thumbs.db
 
 # dbt artifacts
-walmart_dbt/target/
-walmart_dbt/dbt_packages/
-walmart_dbt/logs/
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
 
 # Build artifacts
 build/

@@ -5,7 +5,7 @@
 # of python:3.12-slim, because the docker-compose stack needs Airflow's own
 # entrypoint, healthchecks, and user setup baked in.
 #
-# Project code (scripts/, tests/, walmart_dbt/, jars/, pyproject.toml,
+# Project code (scripts/, tests/, dbt/, jars/, pyproject.toml,
 # uv.lock) is bind-mounted to /app by docker-compose.yaml, not COPY'd in --
 # no rebuild needed when you edit a script or a dbt model, unlike
 # docker/Dockerfile.

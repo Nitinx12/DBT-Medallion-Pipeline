@@ -39,10 +39,10 @@ jars/*.jar filter=lfs diff=lfs merge=lfs -text
 # Linguist — keep repo language stats honest
 # ==========================
 jars/** linguist-vendored
-walmart_dbt/dbt_packages/** linguist-vendored
-walmart_dbt/target/** linguist-vendored
+dbt/dbt_packages/** linguist-vendored
+dbt/target/** linguist-vendored
 uv.lock linguist-generated
-walmart_dbt/package-lock.yml linguist-generated
+dbt/package-lock.yml linguist-generated
 *.min.js linguist-generated
 
 # ==========================

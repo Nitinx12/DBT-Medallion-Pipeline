@@ -12,7 +12,7 @@
 #      own runtime folders live in airflow/.
 #   3. Every airflow-common service additionally mounts the walmart project
 #      root to /app, so BashOperator tasks (`cd /app && uv run ...`) can see
-#      scripts/, tests/, walmart_dbt/, jars/, pyproject.toml, uv.lock, .env.
+#      scripts/, tests/, dbt/, jars/, pyproject.toml, uv.lock, .env.
 #      A second, anonymous volume shadows /app/.venv specifically so the
 #      venv `uv run` creates inside the container never touches the Windows
 #      .venv already sitting in that same folder on your host.

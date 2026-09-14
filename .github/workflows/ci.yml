@@ -48,7 +48,7 @@ jobs:
       - name: SQLFluff — dbt models + raw SQL
         run: >
           uv run sqlfluff lint
-          walmart_dbt/models sql/ tests/
+          dbt/models sql/ tests/
           --dialect postgres
 
   # ────────────────────────────────────────────────────────────
@@ -197,8 +197,8 @@ jobs:
       MONGO_URI: mongodb://localhost:27017
       MONGO_DB: unused_in_ci
       # Absolute path: the dbt run/test steps below set working-directory:
-      # walmart_dbt, so a relative "docker/dbt" here would resolve to
-      # walmart_dbt/docker/dbt (doesn't exist) instead of the repo root's
+      # dbt, so a relative "docker/dbt" here would resolve to
+      # dbt/docker/dbt (doesn't exist) instead of the repo root's
       # docker/dbt/profiles.yml.
       DBT_PROFILES_DIR: ${{ github.workspace }}/docker/dbt
       # `python scripts/foo.py` puts scripts/ (not the repo root) on sys.path,
@@ -217,7 +217,7 @@ jobs:
       - run: uv sync --frozen
 
       - name: Install dbt packages
-        working-directory: walmart_dbt
+        working-directory: dbt
         run: uv run dbt deps
 
       # NOTE: fixture loader lives at scripts/python/ci_seed_bronze.py.
@@ -228,22 +228,22 @@ jobs:
         run: uv run python scripts/python/sql_test.py tests/bronze
 
       - name: dbt run — silver
-        working-directory: walmart_dbt
+        working-directory: dbt
         run: uv run dbt run --select silver --target ci
 
       - name: dbt test — silver
-        working-directory: walmart_dbt
+        working-directory: dbt
         run: uv run dbt test --select silver --target ci
 
       - name: Silver SQL checks
         run: uv run python scripts/python/sql_test.py tests/silver
 
       - name: dbt run — gold
-        working-directory: walmart_dbt
+        working-directory: dbt
         run: uv run dbt run --select gold --target ci
 
       - name: dbt test — gold
-        working-directory: walmart_dbt
+        working-directory: dbt
         run: uv run dbt test --select gold --target ci
 
       - name: Gold SQL checks

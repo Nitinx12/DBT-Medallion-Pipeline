@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo 'Reminder: use `uv run` for pytest/pre-commit/ruff. dbt commands need --project-dir walmart_dbt. main requires a PR (CodeQL-gated) — never push directly.'"
+            "command": "echo 'Reminder: use `uv run` for pytest/pre-commit/ruff. dbt commands need --project-dir dbt. main requires a PR (CodeQL-gated) — never push directly.'"
           }
         ]
       }
