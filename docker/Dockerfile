@@ -18,6 +18,8 @@ FROM python:3.12-slim-bookworm
 RUN apt-get update && apt-get install -y --no-install-recommends \
     openjdk-17-jdk-headless \
     curl \
+    bash \
+    git \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -34,8 +36,8 @@ ENV PYTHONPATH=/app
 ENV SPARK_EXTRA_CLASSPATH=/app/jars/*
 ENV PYSPARK_PYTHON=/app/.venv/bin/python
 ENV PYSPARK_DRIVER_PYTHON=/app/.venv/bin/python
-
-WORKDIR /app
+ENV RUNNING_IN_DOCKER=1
+ENV DBT_PROFILES_DIR=/app/docker/dbt
 
 # Unlike Dockerfile.airflow (bind-mounted /app), this image needs the
 # project baked in -- scripts/, tests/, dbt/, jars/, pyproject.toml,
@@ -43,6 +45,10 @@ WORKDIR /app
 COPY . .
 
 RUN uv sync --frozen
+
+# dbt_packages is gitignored (.dockerignore) but required for `dbt run` (dbt_utils).
+# Install it at build time so the image is self-contained (needs git + DBT_PROFILES_DIR).
+RUN uv run dbt deps --project-dir dbt --profiles-dir docker/dbt
 
 # entrypoint.sh comes in via the COPY above as a plain file -- not marked
 # executable on disk -- so it needs chmod +x before it can serve as ENTRYPOINT.
