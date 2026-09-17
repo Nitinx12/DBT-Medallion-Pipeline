@@ -21,8 +21,13 @@ Databricks support requires the `databricks-sql-connector` package
 
 import logging
 
-from databricks import sql as databricks_sql
-from databricks.sql.exc import Error as DatabricksError
+try:
+    from databricks import sql as databricks_sql
+    from databricks.sql.exc import Error as DatabricksError
+except ModuleNotFoundError:  # optional on Streamlit Cloud / dashboard
+    databricks_sql = None  # type: ignore[assignment]
+    DatabricksError = Exception  # type: ignore[assignment,misc]
+
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 from sqlalchemy import create_engine
@@ -107,6 +112,12 @@ def get_postgres_engine():
 def get_databricks_connection():
     """Return a cached Databricks SQL connection, creating it on first use."""
     global _databricks_connection
+
+    if databricks_sql is None:
+        raise ModuleNotFoundError(
+            "databricks-sql-connector is not installed; "
+            "install it with `uv add databricks-sql-connector` to use Databricks"
+        )
 
     if _databricks_connection is None:
         # Unlike Postgres/Mongo, these are only soft-validated in engine.py,
