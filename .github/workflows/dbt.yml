@@ -1,0 +1,274 @@
+name: dbt
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "dbt/**"
+      - ".github/workflows/dbt.yml"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "dbt/**"
+      - ".github/workflows/dbt.yml"
+  workflow_dispatch:
+    inputs:
+      dbt_command:
+        description: "dbt command to run"
+        required: false
+        default: "build"
+        type: choice
+        options:
+          - build
+          - run
+          - test
+          - compile
+      target:
+        description: "dbt target"
+        required: false
+        default: "ci"
+        type: choice
+        options:
+          - ci
+          - dev
+      full_refresh:
+        description: "Run with --full-refresh"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: dbt-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.11"
+  DBT_PROFILES_DIR: ${{ github.workspace }}/docker/dbt
+  PYTHONPATH: ${{ github.workspace }}
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - run: uv python install ${{ env.PYTHON_VERSION }}
+      - run: uv sync --frozen
+      - name: sqlfluff lint
+        run: uv run sqlfluff lint dbt/models --dialect postgres
+      - name: sqlfluff format check
+        run: uv run sqlfluff format dbt/models --dialect postgres --diff
+      - name: dbt parse
+        working-directory: dbt
+        run: uv run dbt parse --target ci
+      - name: dbt compile
+        working-directory: dbt
+        run: uv run dbt compile --target ci
+
+  build:
+    runs-on: ubuntu-latest
+    needs: lint
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: walmart
+          POSTGRES_PASSWORD: walmart
+          POSTGRES_DB: walmart_db
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U walmart"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_USERNAME: walmart
+      POSTGRES_PASSWORD: walmart
+      POSTGRES_DATABASE: walmart_db
+      POSTGRES_SCHEMA_BRONZE: bronze
+      POSTGRES_SCHEMA_SILVER: silver
+      POSTGRES_SCHEMA_GOLD: gold
+      MONGO_URI: mongodb://localhost:27017
+      MONGO_DB: unused_in_ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - run: uv python install ${{ env.PYTHON_VERSION }}
+      - run: uv sync --frozen
+      - name: dbt deps
+        working-directory: dbt
+        run: uv run dbt deps
+      - name: dbt debug
+        working-directory: dbt
+        run: uv run dbt debug --target ci
+      - name: seed bronze
+        run: uv run python scripts/python/ci_seed_bronze.py
+      - name: dbt build silver
+        working-directory: dbt
+        run: uv run dbt build --select silver --target ci ${{ inputs.full_refresh == true && '--full-refresh' || '' }}
+      - name: dbt build gold
+        working-directory: dbt
+        run: uv run dbt build --select gold --target ci ${{ inputs.full_refresh == true && '--full-refresh' || '' }}
+      - name: upload silver artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dbt-target-silver
+          path: |
+            dbt/target/
+            dbt/logs/
+          if-no-files-found: warn
+          retention-days: 7
+      - name: upload gold artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dbt-target-gold
+          path: |
+            dbt/target/
+            dbt/logs/
+          if-no-files-found: warn
+          retention-days: 7
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: walmart
+          POSTGRES_PASSWORD: walmart
+          POSTGRES_DB: walmart_db
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U walmart"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_USERNAME: walmart
+      POSTGRES_PASSWORD: walmart
+      POSTGRES_DATABASE: walmart_db
+      POSTGRES_SCHEMA_BRONZE: bronze
+      POSTGRES_SCHEMA_SILVER: silver
+      POSTGRES_SCHEMA_GOLD: gold
+      MONGO_URI: mongodb://localhost:27017
+      MONGO_DB: unused_in_ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - run: uv python install ${{ env.PYTHON_VERSION }}
+      - run: uv sync --frozen
+      - name: dbt deps
+        working-directory: dbt
+        run: uv run dbt deps
+      - name: seed bronze
+        run: uv run python scripts/python/ci_seed_bronze.py
+      - name: dbt run silver
+        working-directory: dbt
+        run: uv run dbt run --select silver --target ci
+      - name: dbt test silver
+        working-directory: dbt
+        run: uv run dbt test --select silver --target ci --store-failures
+      - name: dbt run gold
+        working-directory: dbt
+        run: uv run dbt run --select gold --target ci
+      - name: dbt test gold
+        working-directory: dbt
+        run: uv run dbt test --select gold --target ci --store-failures
+      - name: dbt source freshness
+        working-directory: dbt
+        continue-on-error: true
+        run: uv run dbt source freshness --target ci
+      - name: upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dbt-test-results
+          path: |
+            dbt/target/
+            dbt/logs/
+          if-no-files-found: warn
+          retention-days: 7
+
+  docs:
+    runs-on: ubuntu-latest
+    needs: build
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: walmart
+          POSTGRES_PASSWORD: walmart
+          POSTGRES_DB: walmart_db
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U walmart"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_USERNAME: walmart
+      POSTGRES_PASSWORD: walmart
+      POSTGRES_DATABASE: walmart_db
+      POSTGRES_SCHEMA_BRONZE: bronze
+      POSTGRES_SCHEMA_SILVER: silver
+      POSTGRES_SCHEMA_GOLD: gold
+      MONGO_URI: mongodb://localhost:27017
+      MONGO_DB: unused_in_ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - run: uv python install ${{ env.PYTHON_VERSION }}
+      - run: uv sync --frozen
+      - name: dbt deps
+        working-directory: dbt
+        run: uv run dbt deps
+      - name: seed bronze
+        run: uv run python scripts/python/ci_seed_bronze.py
+      - name: dbt run all
+        working-directory: dbt
+        run: uv run dbt run --target ci
+      - name: dbt docs generate
+        working-directory: dbt
+        run: uv run dbt docs generate --target ci
+      - name: upload docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: dbt-docs
+          path: dbt/target/
+          if-no-files-found: error
+          retention-days: 14
+
+  summary:
+    runs-on: ubuntu-latest
+    needs: [lint, build, test, docs]
+    if: always()
+    steps:
+      - name: check results
+        run: |
+          echo "lint=${{ needs.lint.result }} build=${{ needs.build.result }} test=${{ needs.test.result }} docs=${{ needs.docs.result }}"
+          if [ "${{ needs.lint.result }}" != "success" ] || [ "${{ needs.build.result }}" != "success" ] || [ "${{ needs.test.result }}" != "success" ] || [ "${{ needs.docs.result }}" != "success" ]; then
+            echo "dbt workflow failed"
+            exit 1
+          fi
+          echo "dbt workflow passed"
