@@ -130,6 +130,21 @@ def get_filter_options() -> dict:
     }
 
 
+@st.cache_data(ttl=600)
+def get_gold_meta() -> dict:
+    """Lightweight warehouse metadata for the header/footer."""
+    engine = get_postgres_engine()
+    row = pd.read_sql(
+        f"""
+        SELECT
+            (SELECT COUNT(*) FROM {GOLD}.fact_order_items WHERE is_active = true) AS fact_rows,
+            (SELECT MAX(order_timestamp) FROM {GOLD}.dim_orders WHERE is_active = true) AS last_order_ts
+        """,
+        engine,
+    ).iloc[0]
+    return {"fact_rows": int(row["fact_rows"]), "last_order_ts": row["last_order_ts"]}
+
+
 # ---------------------------------------------------------------------------
 # KPIs
 # ---------------------------------------------------------------------------
