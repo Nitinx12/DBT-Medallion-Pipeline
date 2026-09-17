@@ -270,6 +270,8 @@ def build_spark_session() -> SparkSession:
         .config("spark.mongodb.read.connection.uri", config.MONGO_URI)
         .config("spark.mongodb.read.database", config.MONGO_DB)
         .config("spark.sql.session.timeZone", "UTC")
+        .config("spark.ui.port", "0")
+        .config("spark.ui.enabled", "true")
     )
 
     if have_local_jars:
