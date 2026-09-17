@@ -471,7 +471,7 @@ with tab_overview:
                 textposition="outside",
                 textinfo="percent+label",
                 hovertemplate="%{label}: $%{value:,.0f} (%{percent})<extra></extra>",
-                marker=dict(line=dict(color="white", width=2)),
+                marker={"line": {"color": "white", "width": 2}},
             )
             st.plotly_chart(
                 style(fig_cat, currency=False, legend=True, height=360),
@@ -546,7 +546,7 @@ with tab_trends:
                 textposition="outside",
                 textinfo="percent+label",
                 hovertemplate="%{label}: $%{value:,.0f}<extra></extra>",
-                marker=dict(line=dict(color="white", width=2)),
+                marker={"line": {"color": "white", "width": 2}},
             )
             st.plotly_chart(
                 style(fig_pay, currency=False, height=380),
