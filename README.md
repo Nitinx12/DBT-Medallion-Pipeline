@@ -63,7 +63,7 @@
 
 <p align="center">
   <a href="https://walmartdbt-b3fdfqwyky3ghzr5syyxtu.streamlit.app/">
-    <img src="assets/task_image.png" width="90%" alt="Walmart Sales Dashboard — gold schema" style="border-radius:12px; border:1px solid #e2e8f0; box-shadow: 0 8px 30px rgba(15,23,42,0.12);" />
+    <img src="assets/image.png" width="90%" alt="Walmart Sales Dashboard — gold schema" style="border-radius:12px; border:1px solid #e2e8f0; box-shadow: 0 8px 30px rgba(15,23,42,0.12);" />
   </a>
 </p>
 <p align="center"><sub>Seeded demo DB &mdash; not the live pipeline. See <a href="scripts/python/seed_demo_db.py"><code>seed_demo_db.py</code></a>.</sub></p>
