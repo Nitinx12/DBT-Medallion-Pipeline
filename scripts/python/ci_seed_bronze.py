@@ -175,6 +175,26 @@ def seed_collection(engine, schema: str, fixture_path: Path) -> tuple[int, int]:
                 lambda v: json.dumps(v) if isinstance(v, (dict, list)) else v
             )
 
+    # Coerce string numerics (e.g. "10.00", "75000") to real numeric types
+    # so Postgres columns are typed correctly. GX `expect_column_values_to_be_between`
+    # needs numeric columns -- with TEXT columns it fails with "? unexpected".
+    # This also makes the loader resilient if a future fixture accidentally
+    # quotes a numeric value. Skip _id which must stay TEXT.
+    for col in df.columns:
+        if col == PRIMARY_KEY_COLUMN:
+            continue
+        if df[col].dtype == object:
+            # Only try if every non-null value looks numeric
+            non_null = df[col].dropna()
+            if len(non_null) == 0:
+                continue
+            try:
+                converted = pd.to_numeric(non_null, errors="coerce")
+                if converted.notna().all():
+                    df[col] = pd.to_numeric(df[col], errors="coerce")
+            except Exception:  # noqa: BLE001, S110
+                pass
+
     df.to_sql(collection, engine, schema=schema, if_exists="replace", index=False)
 
     with engine.begin() as conn:
