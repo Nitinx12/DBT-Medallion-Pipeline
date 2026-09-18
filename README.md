@@ -4,7 +4,7 @@
   </a>
 </p>
 
-<h1 align="center">Walmart Medallion Data Pipeline</h1>
+<h1 align="center">DBT Medallion Data Pipeline</h1>
 
 <p align="center">
   A production-style <b>MongoDB → PostgreSQL → dbt</b> pipeline: incremental PySpark extraction,<br/>
