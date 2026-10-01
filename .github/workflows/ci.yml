@@ -5,7 +5,10 @@ on:
     branches: [main, develop]
   push:
     branches: [main, develop]
-    tags: ["v*.*.*"]
+    # No tags here — versioned tags (v*.*.*) are owned by release.yml, which
+    # runs its own smoke gate before publishing. Running the full CI matrix
+    # on tags as well would duplicate every heavy job (docker + postgres)
+    # in parallel with the release build.
   workflow_dispatch:
 
 permissions:
@@ -30,7 +33,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: astral-sh/setup-uv@v3
+      - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
 
@@ -55,8 +58,10 @@ jobs:
   # 2. Dashboard smoke — must import with ONLY dashboard/requirements.txt
   #    (no databricks-sql-connector). Catches regressions like the
   #    unconditional `from databricks import sql` that broke Streamlit Cloud.
+  #    Needs lint: no point smoke-testing code that fails style checks.
   # ────────────────────────────────────────────────────────────
   dashboard-smoke:
+    needs: lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -109,7 +114,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: astral-sh/setup-uv@v3
+      - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
 
@@ -135,7 +140,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: astral-sh/setup-uv@v3
+      - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
 
@@ -211,9 +216,11 @@ jobs:
   #    bronze → (3 checks) → silver → (dbt test + 9 checks) →
   #    gold → (dbt test + 7 checks) → Great Expectations,
   #    same gate logic as run_pipeline.ps1
+  #    Needs ALL prior jobs: it is the final gate, so a green run means
+  #    lint + smoke + unit + DAG + both images all passed first.
   # ────────────────────────────────────────────────────────────
   integration:
-    needs: [unit-tests, dag-integrity]
+    needs: [unit-tests, dag-integrity, docker-build, dashboard-smoke]
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -258,7 +265,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: astral-sh/setup-uv@v3
+      - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
 

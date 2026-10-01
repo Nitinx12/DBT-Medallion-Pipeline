@@ -23,14 +23,20 @@ concurrency:
 
 jobs:
   publish:
+    # workflow_run event: only publish green CI on main.
+    # workflow_dispatch event: explicit manual publish (no workflow_run
+    # payload exists, so the workflow_run.* conditions are skipped).
     if: >-
-      ${{ github.event.workflow_run.conclusion == 'success' &&
-          github.event.workflow_run.head_branch == 'main' }}
+      ${{ github.event_name == 'workflow_dispatch' ||
+          (github.event.workflow_run.conclusion == 'success' &&
+           github.event.workflow_run.head_branch == 'main') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          # Manual dispatch has no workflow_run payload — fall back to the
+          # triggering SHA so the step never resolves to an empty ref.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
           # lfs: true — jars/*.jar are LFS objects baked into the images
           lfs: true
 

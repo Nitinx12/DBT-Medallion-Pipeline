@@ -20,6 +20,12 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
+  PYTHON_VERSION: "3.11"
+
+# Two tags pushed in quick succession must not interleave publishes.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   validate-tag:
@@ -46,8 +52,40 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Releasing $VERSION"
 
-  build-and-publish:
+  # Order gate: a tag must never publish broken images. CI no longer runs
+  # on tags (it validates branches/PRs), so re-run the cheap static gate
+  # here — ruff + dbt parse need no live DB and fail fast before any
+  # docker build/push. (Full medallion validation already ran on the main
+  # HEAD the tag was cut from; tags must only be created from green main.)
+  smoke:
     needs: validate-tag
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate-tag.outputs.version }}
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - run: uv python install ${{ env.PYTHON_VERSION }}
+      - run: uv sync --frozen
+
+      - name: Ruff — lint + format check
+        run: uv run ruff check . && uv run ruff format --check .
+
+      - name: dbt parse (no DB needed)
+        working-directory: dbt
+        env:
+          DBT_PROFILES_DIR: ${{ github.workspace }}/docker/dbt
+        run: |
+          uv run dbt deps
+          uv run dbt parse --target ci
+
+  build-and-publish:
+    needs: [validate-tag, smoke]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
