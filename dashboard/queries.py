@@ -64,6 +64,21 @@ class Filters:
             statuses=self.statuses,
         )
 
+    def split_in_half(self) -> tuple[Filters, Filters]:
+        """Split the window into two equal halves — fallback baseline when
+        the prior period is empty (e.g. 'All time' starts at MIN(date))."""
+        span = (self.end_date - self.start_date).days
+        mid = self.start_date + timedelta(days=span // 2)
+        common = {
+            "stores": self.stores,
+            "categories": self.categories,
+            "statuses": self.statuses,
+        }
+        return (
+            Filters(start_date=self.start_date, end_date=mid, **common),
+            Filters(start_date=mid, end_date=self.end_date, **common),
+        )
+
 
 def _where(filters: Filters) -> tuple[str, dict]:
     """Shared WHERE clause + params for every query. Empty tuples are

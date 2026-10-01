@@ -346,9 +346,50 @@ deltas = {
     "customers": _delta_pct(float(current["customers"]), float(previous["customers"])),
     "aov": _delta_pct(current["aov"], previous["aov"]),
 }
+delta_label = "vs prior"
+comparison_subtitle = "Current vs. equal-length prior period"
+comparison_current_label = "Current"
+comparison_prior_label = "Prior"
+
+# Fallback: at the left edge of history (e.g. "All time") the equal-length
+# prior window is empty, so every delta is None. Split the current window
+# in half instead — 2nd half vs 1st half — so the cards still show a trend.
+# KPI values stay full-window; only the delta baseline changes.
+comp_current, comp_prior = current, previous
+if previous["orders"] == 0 and previous["revenue"] == 0:
+    span_days = (filters.end_date - filters.start_date).days
+    if span_days >= 2:
+        first_half, second_half = filters.split_in_half()
+        try:
+            with st.spinner("Loading comparison baseline…"):
+                first = get_kpis(first_half)
+                second = get_kpis(second_half)
+            if first["orders"] > 0 or first["revenue"] > 0:
+                deltas = {
+                    "revenue": _delta_pct(second["revenue"], first["revenue"]),
+                    "orders": _delta_pct(
+                        float(second["orders"]), float(first["orders"])
+                    ),
+                    "customers": _delta_pct(
+                        float(second["customers"]), float(first["customers"])
+                    ),
+                    "aov": _delta_pct(second["aov"], first["aov"]),
+                }
+                delta_label = "vs 1st half"
+                comp_current, comp_prior = second, first
+                comparison_subtitle = "2nd half vs. 1st half of the selected period"
+                comparison_current_label = "2nd half"
+                comparison_prior_label = "1st half"
+        except Exception:
+            log.exception("split-half fallback failed; keeping prior-period deltas")
 
 kpi_cards(
-    current["revenue"], current["orders"], current["customers"], current["aov"], deltas
+    current["revenue"],
+    current["orders"],
+    current["customers"],
+    current["aov"],
+    deltas,
+    delta_label=delta_label,
 )
 
 # ---------------------------------------------------------------------------
@@ -482,25 +523,25 @@ with tab_overview:
 
     # KPI vs previous period — small comparison bar
     st.markdown(
-        '<div class="section-head"><h3>Period comparison</h3><p>Current vs. equal-length prior period</p></div>',
+        f'<div class="section-head"><h3>Period comparison</h3><p>{html.escape(comparison_subtitle)}</p></div>',
         unsafe_allow_html=True,
     )
     comp_df = pd.DataFrame(
         [
             {
                 "metric": "Revenue",
-                "Current": current["revenue"],
-                "Prior": previous["revenue"],
+                comparison_current_label: comp_current["revenue"],
+                comparison_prior_label: comp_prior["revenue"],
             },
             {
                 "metric": "Orders",
-                "Current": float(current["orders"]),
-                "Prior": float(previous["orders"]),
+                comparison_current_label: float(comp_current["orders"]),
+                comparison_prior_label: float(comp_prior["orders"]),
             },
             {
                 "metric": "Customers",
-                "Current": float(current["customers"]),
-                "Prior": float(previous["customers"]),
+                comparison_current_label: float(comp_current["customers"]),
+                comparison_prior_label: float(comp_prior["customers"]),
             },
         ]
     )
@@ -511,7 +552,10 @@ with tab_overview:
         y="Value",
         color="Period",
         barmode="group",
-        color_discrete_map={"Current": WALMART_BLUE, "Prior": "#94A3B8"},
+        color_discrete_map={
+            comparison_current_label: WALMART_BLUE,
+            comparison_prior_label: "#94A3B8",
+        },
     )
     fig_comp.update_traces(
         hovertemplate="%{x} · %{fullData.name}: %{y:,.0f}<extra></extra>"

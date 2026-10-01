@@ -36,6 +36,7 @@ def kpi_cards(
     customers: int,
     aov: float,
     deltas: dict[str, float | None],
+    delta_label: str = "vs prior",
 ) -> None:
     """Render the 4-card KPI row as a single HTML grid (one st.markdown call)."""
     items = [
@@ -78,6 +79,7 @@ def kpi_cards(
         pct = item["delta"]
         state = _delta_state(pct)
         icon = _DELTA_ICON[state]
+        label_e = html_lib.escape(delta_label)
         if pct is None:
             delta_html = '<span class="kpi-card__delta kpi-card__delta--flat">— no prior period</span>'
         else:
@@ -87,7 +89,7 @@ def kpi_cards(
                 "flat": "kpi-card__delta--flat",
             }[state]
             # green for up on revenue/orders, but keep same treatment for all 4 for simplicity
-            delta_html = f'<span class="kpi-card__delta {cls}">{icon} {pct:+.1f}% vs prior</span>'
+            delta_html = f'<span class="kpi-card__delta {cls}">{icon} {pct:+.1f}% {label_e}</span>'
 
         # Escape dynamic text safely
         label = html_lib.escape(item["label"])
