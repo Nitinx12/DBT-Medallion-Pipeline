@@ -356,14 +356,14 @@ comparison_prior_label = "Prior"
 # in half instead — 2nd half vs 1st half — so the cards still show a trend.
 # KPI values stay full-window; only the delta baseline changes.
 comp_current, comp_prior = current, previous
+baseline_note = ""
 if previous["orders"] == 0 and previous["revenue"] == 0:
     span_days = (filters.end_date - filters.start_date).days
     if span_days >= 2:
         first_half, second_half = filters.split_in_half()
         try:
-            with st.spinner("Loading comparison baseline…"):
-                first = get_kpis(first_half)
-                second = get_kpis(second_half)
+            first = get_kpis(first_half)
+            second = get_kpis(second_half)
             if first["orders"] > 0 or first["revenue"] > 0:
                 deltas = {
                     "revenue": _delta_pct(second["revenue"], first["revenue"]),
@@ -377,11 +377,31 @@ if previous["orders"] == 0 and previous["revenue"] == 0:
                 }
                 delta_label = "vs 1st half"
                 comp_current, comp_prior = second, first
-                comparison_subtitle = "2nd half vs. 1st half of the selected period"
+                f_start, f_end = (
+                    first_half.start_date,
+                    first_half.end_date - timedelta(days=1),
+                )
+                s_start, s_end = (
+                    second_half.start_date,
+                    second_half.end_date - timedelta(days=1),
+                )
+                comparison_subtitle = (
+                    f"2nd half ({s_start:%b %d, %Y} – {s_end:%b %d, %Y}) "
+                    f"vs 1st half ({f_start:%b %d, %Y} – {f_end:%b %d, %Y})"
+                )
                 comparison_current_label = "2nd half"
                 comparison_prior_label = "1st half"
+                baseline_note = (
+                    f"Baseline: full history selected, so deltas compare "
+                    f"2nd half vs 1st half ({f_start:%b %d, %Y} – {s_end:%b %d, %Y})."
+                )
+            else:
+                comparison_subtitle = (
+                    "No prior or split-half baseline has data for these filters"
+                )
         except Exception:
             log.exception("split-half fallback failed; keeping prior-period deltas")
+            comparison_subtitle = "Baseline lookup failed — showing current period only"
 
 kpi_cards(
     current["revenue"],
@@ -391,6 +411,8 @@ kpi_cards(
     deltas,
     delta_label=delta_label,
 )
+if baseline_note:
+    st.caption(f"ℹ️ {baseline_note}")
 
 # ---------------------------------------------------------------------------
 # Data loads (outside tabs so all tabs share same queries without re-fetch)
