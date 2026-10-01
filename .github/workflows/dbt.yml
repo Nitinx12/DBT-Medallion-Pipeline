@@ -57,8 +57,11 @@ jobs:
       - name: sqlfluff lint
         run: uv run sqlfluff lint dbt/models --dialect postgres
 
-      - name: sqlfluff format check
-        run: uv run sqlfluff format dbt/models --dialect postgres --diff
+      # NOTE: sqlfluff 4.x `format` has no dry-run flag (it rewrites files
+      # in place), so there is no format *check* to gate on — `lint` above
+      # already enforces layout/style rules. Do not re-add
+      # `sqlfluff format ... --diff` here: that flag does not exist and
+      # fails the job (exit code 2).
 
       - name: dbt deps
         working-directory: dbt
