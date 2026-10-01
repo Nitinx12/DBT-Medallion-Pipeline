@@ -11,6 +11,8 @@ Version bumps happen on `release/vX.Y.Z` branches; the `vX.Y.Z` tag triggers
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-10-01
+
 ### Added
 
 - **Windows Batch runner.** Added `pipeline/run_pipeline.bat` — CMD-native mirror of `pipeline/run_pipeline.ps1` and `scripts/bash/run_pipeline.sh` — plus root wrapper `run_pipeline.bat`. Same 8-stage gate (preflight → extract → bronze tests → dbt silver → silver tests → dbt gold → gold tests → Great Expectations), fail-fast, `.env` loading, `pyspark 3.5.x` preflight, ANSI colors, and `logs/pipeline_YYYY-MM-DD.log` logging. Enables double-click / `cmd.exe` execution on Windows without PowerShell.
