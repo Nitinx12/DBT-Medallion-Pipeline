@@ -67,15 +67,14 @@ jobs:
         working-directory: dbt
         run: uv run dbt deps
 
-      # parse + compile need only the profiles.yml file, not a live DB —
+      # parse needs only the project files + profiles.yml, no live DB —
       # so this job deliberately has no postgres service block.
+      # (dbt compile/run/test DO need a DB; they live in ci.yml's
+      # `integration` job, which seeds bronze and runs the full
+      # silver → gold gate against a Postgres service.)
       - name: dbt parse
         working-directory: dbt
         run: uv run dbt parse --target ${{ inputs.target || 'ci' }}
-
-      - name: dbt compile
-        working-directory: dbt
-        run: uv run dbt compile --target ${{ inputs.target || 'ci' }}
 
       - name: upload compile artifacts (debug on failure)
         if: failure()
