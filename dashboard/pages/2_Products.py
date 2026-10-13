@@ -12,8 +12,9 @@ if str(PROJECT_ROOT) not in sys.path:
 import plotly.express as px
 import streamlit as st
 
+from dashboard.helpers import plotly_template
 from dashboard.helpers.components import dataframe_with_download
-from dashboard.helpers.theme import WALMART_BLUE, inject_css, style
+from dashboard.helpers.theme import WALMART_BLUE, get_theme, inject_css, style
 from dashboard.lib.filters import sidebar_filters
 from dashboard.lib.queries import (
     get_category_brand_treemap,
@@ -22,6 +23,7 @@ from dashboard.lib.queries import (
 )
 
 st.set_page_config(page_title="Products", page_icon="📦", layout="wide")
+plotly_template.apply_default_template(get_theme())
 st.markdown(inject_css(), unsafe_allow_html=True)
 st.title("Products")
 

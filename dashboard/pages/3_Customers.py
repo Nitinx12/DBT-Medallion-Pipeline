@@ -11,12 +11,14 @@ if str(PROJECT_ROOT) not in sys.path:
 
 import streamlit as st
 
+from dashboard.helpers import plotly_template
 from dashboard.helpers.components import dataframe_with_download
-from dashboard.helpers.theme import inject_css
+from dashboard.helpers.theme import get_theme, inject_css
 from dashboard.lib.filters import sidebar_filters
 from dashboard.lib.queries import get_recent_order_lines, get_top_customers
 
 st.set_page_config(page_title="Customers", page_icon="🧑‍🤝‍🧑", layout="wide")
+plotly_template.apply_default_template(get_theme())
 st.markdown(inject_css(), unsafe_allow_html=True)
 st.title("Customers")
 

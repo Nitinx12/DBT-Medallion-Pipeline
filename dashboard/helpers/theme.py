@@ -12,23 +12,26 @@ and WCAG AA contrast.
 from __future__ import annotations
 
 import plotly.graph_objects as go
+import streamlit as st
 
 # ---------------------------------------------------------------------------
 # Brand & semantic tokens
 # ---------------------------------------------------------------------------
 WALMART_BLUE = "#0071CE"
 WALMART_YELLOW = "#FFC220"
+DEEP_NAVY = "#0B1F3A"
+APP_BG = "#F4F7FB"
 
 # Extended palette — ordered for sequential colorway assignment.
 PALETTE = [
     "#0071CE",  # Walmart blue — primary
-    "#FFC220",  # Walmart yellow — accent
-    "#004C91",  # deep blue
-    "#00A9E0",  # sky
+    "#FFC220",  # Spark yellow — highlight / accent
+    "#00A9E0",  # sky — secondary series
     "#0E9F6E",  # teal / success
+    "#7B5CFF",  # violet — tertiary series
     "#E7462A",  # coral / alert
-    "#7B5CFF",  # violet
-    "#6E7B8B",  # slate
+    "#004C91",  # deep blue
+    "#64748B",  # slate
     "#94A3B8",  # muted slate (for "other" slices)
 ]
 
@@ -47,6 +50,34 @@ SEMANTIC = {
     "text_muted": "#64748B",
     "text_faint": "#94A3B8",
 }
+
+# Dark-mode overrides, applied on top of the base CSS when the sidebar
+# "Dark mode" toggle is on. Keys mirror SEMANTIC + app/sidebar surfaces.
+DARK = {
+    "app_bg": "#0B1220",
+    "surface": "#111B2E",
+    "surface_alt": "#0B1220",
+    "surface_muted": "#16213A",
+    "border": "#1E2A44",
+    "border_strong": "#2A3A58",
+    "text": "#E6EDF7",
+    "text_muted": "#94A3B8",
+    "text_faint": "#64748B",
+    "grid": "#1E2A44",
+}
+
+
+def get_theme() -> str:
+    """Return the active theme ("light" or "dark") from session state.
+
+    Safe to call outside a Streamlit runtime (bare python): session_state
+    is empty there, so it falls back to "light".
+    """
+    try:
+        return "dark" if st.session_state.get("theme") == "dark" else "light"
+    except Exception:  # noqa: BLE001 -- no runtime yet, light is the safe default
+        return "light"
+
 
 FONT_FAMILY = "'Inter','Segoe UI',Helvetica,Arial,sans-serif"
 FONT_MONO = "'JetBrains Mono','SF Mono',Consolas,monospace"
@@ -73,19 +104,24 @@ def style(
     - Consistent font, colorway, margins, hoverlabel.
     - Subtle grid only on Y (X grid is noise for most dashboards).
     - Currency-formatted Y axis when ``currency`` is True.
+    - Theme-aware: text/grid colors follow the sidebar theme toggle.
     """
+    dark = get_theme() == "dark"
+    ink = DARK["text"] if dark else DEEP_NAVY
+    muted = DARK["text_muted"] if dark else SEMANTIC["text_muted"]
+    grid = DARK["grid"] if dark else "rgba(15,23,42,0.06)"
     fig.update_layout(
-        font={"family": FONT_FAMILY, "size": 13, "color": SEMANTIC["text"]},
+        font={"family": FONT_FAMILY, "size": 13, "color": ink},
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
-        margin={"l": 12, "r": 12, "t": 36, "b": 16},
+        margin={"l": 8, "r": 8, "t": 48, "b": 8},
         showlegend=legend,
         colorway=PALETTE,
         height=height,
         hoverlabel={
             "font_size": 13,
             "font_family": FONT_FAMILY,
-            "bgcolor": "#0F172A",
+            "bgcolor": "#0B1F3A",
             "font_color": "#FFFFFF",
             "bordercolor": "rgba(255,255,255,0.15)",
         },
@@ -95,7 +131,7 @@ def style(
             "y": 1.02,
             "xanchor": "right",
             "x": 1,
-            "font": {"size": 11, "color": SEMANTIC["text_muted"]},
+            "font": {"size": 11, "color": muted},
         },
         bargap=0.22,
         uniformtext_minsize=10,
@@ -104,17 +140,17 @@ def style(
     fig.update_xaxes(
         showgrid=False,
         showline=False,
-        tickfont={"size": 11, "color": SEMANTIC["text_muted"]},
-        title_font={"size": 11, "color": SEMANTIC["text_muted"]},
+        tickfont={"size": 11, "color": muted},
+        title_font={"size": 11, "color": muted},
     )
     fig.update_yaxes(
         showgrid=show_grid_y,
-        gridcolor="rgba(15,23,42,0.06)",
+        gridcolor=grid,
         gridwidth=1,
         zeroline=False,
         showline=False,
-        tickfont={"size": 11, "color": SEMANTIC["text_muted"]},
-        title_font={"size": 11, "color": SEMANTIC["text_muted"]},
+        tickfont={"size": 11, "color": muted},
+        title_font={"size": 11, "color": muted},
     )
     if currency:
         fig.update_yaxes(tickprefix="$", tickformat=",.0f", hoverformat=",.2f")
@@ -131,18 +167,23 @@ def style(
 # ---------------------------------------------------------------------------
 # Global CSS
 # ---------------------------------------------------------------------------
-def inject_css() -> str:
+def inject_css(theme: str | None = None) -> str:
     """Return a <style> block that upgrades Streamlit's default chrome to a
     professional dashboard shell: card surfaces, metric styling, tab polish,
-    table polish, and subtle motion."""
-    return f"""
+    table polish, and subtle motion.
+
+    ``theme`` defaults to the sidebar toggle ("light"/"dark"); "dark"
+    appends an override block that re-skins surfaces and text.
+    """
+    active = theme or get_theme()
+    base = f"""
     <style>
     /* -- Google Font (Inter) — loaded once, cached by browser -- */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
     /* -- App background -- */
     .stApp {{
-        background: #F8FAFC;
+        background: {APP_BG};
     }}
     /* Hide default Streamlit header / footer chrome */
     header[data-testid="stHeader"] {{
@@ -447,3 +488,65 @@ def inject_css() -> str:
     .dash-footer a:hover {{ text-decoration: underline; }}
     </style>
     """
+    if active == "dark":
+        base += f"""
+    <style>
+    /* -- Dark mode overrides -- */
+    .stApp {{
+        background: {DARK["app_bg"]};
+    }}
+    section[data-testid="stSidebar"] {{
+        background: {DARK["surface"]};
+        border-right: 1px solid {DARK["border"]};
+    }}
+    .dash-card, .kpi-card {{
+        background: {DARK["surface"]};
+        border: 1px solid {DARK["border"]};
+    }}
+    .kpi-card__value, .dash-card__title, .section-head h3,
+    div[data-testid="stMetricValue"] {{
+        color: {DARK["text"]};
+    }}
+    .kpi-card__label, div[data-testid="stMetricLabel"], .section-head p,
+    .dash-card__subtitle {{
+        color: {DARK["text_muted"]};
+    }}
+    .kpi-card__foot, .empty-state {{
+        color: {DARK["text_muted"]};
+    }}
+    .empty-state {{
+        background: {DARK["surface_alt"]};
+        border: 1px dashed {DARK["border_strong"]};
+    }}
+    .empty-state strong {{ color: {DARK["text"]}; }}
+    .kpi-card__delta--flat {{
+        background: {DARK["surface_muted"]};
+        color: {DARK["text_muted"]};
+        border: 1px solid {DARK["border_strong"]};
+    }}
+    .chip--slate {{
+        background: {DARK["surface_muted"]};
+        color: {DARK["text_muted"]};
+        border-color: {DARK["border_strong"]};
+    }}
+    div[data-testid="stMetric"] {{
+        background: {DARK["surface"]};
+        border: 1px solid {DARK["border"]};
+    }}
+    div[data-testid="stDataFrame"] {{
+        border: 1px solid {DARK["border"]};
+    }}
+    details[data-testid="stExpander"] {{
+        background: {DARK["surface"]};
+        border: 1px solid {DARK["border"]};
+    }}
+    .dash-footer {{
+        border-top: 1px solid {DARK["border"]};
+        color: {DARK["text_faint"]};
+    }}
+    hr {{
+        background: {DARK["border"]};
+    }}
+    </style>
+    """
+    return base

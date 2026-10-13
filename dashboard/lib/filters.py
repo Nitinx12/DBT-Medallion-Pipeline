@@ -15,6 +15,15 @@ def sidebar_filters(key_prefix: str = "") -> tuple[Filters, dict]:
     max_date: date = options["max_date"]
 
     with st.sidebar:
+        # Global theme switch (one key for every page so the choice sticks
+        # across navigation; read by theme.get_theme()/inject_css()/style()).
+        is_dark = st.checkbox(
+            "Dark mode",
+            value=st.session_state.get("theme", "light") == "dark",
+            key="theme_toggle_global",
+        )
+        st.session_state["theme"] = "dark" if is_dark else "light"
+
         st.markdown("**Date presets**")
         c1, c2, c3 = st.columns(3)
         if c1.button("7D", use_container_width=True, key=f"{key_prefix}preset_7d"):
