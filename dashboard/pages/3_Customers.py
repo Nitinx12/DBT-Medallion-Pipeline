@@ -11,6 +11,11 @@ if str(PROJECT_ROOT) not in sys.path:
 
 import streamlit as st
 
+from dashboard.lib.db import apply_secrets
+
+# Secrets first: pages after this read config at import time.
+apply_secrets()
+
 from dashboard.helpers import plotly_template
 from dashboard.helpers.components import dataframe_with_download
 from dashboard.helpers.theme import get_theme, inject_css

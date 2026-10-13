@@ -11,6 +11,11 @@ if str(PROJECT_ROOT) not in sys.path:
 
 import streamlit as st
 
+from dashboard.lib.db import apply_secrets
+
+# Secrets first: pages after this read config at import time.
+apply_secrets()
+
 from dashboard.helpers import plotly_template
 from dashboard.helpers.components import footer, kpi_cards
 from dashboard.helpers.theme import get_theme, inject_css
@@ -22,9 +27,7 @@ plotly_template.apply_default_template(get_theme())
 st.markdown(inject_css(), unsafe_allow_html=True)
 
 st.title("Walmart Gold Dashboard")
-st.caption(
-    "Use the sidebar pages: Sales, Products, Customers, Categories. Full tabbed view lives in app.py."
-)
+st.caption("Use the sidebar pages: Sales, Products, Customers, Categories.")
 
 try:
     filters, meta = sidebar_filters(key_prefix="home_")
