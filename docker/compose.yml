@@ -8,6 +8,13 @@ x-airflow-common: &airflow-common
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-metadata:5432/airflow
+    AIRFLOW__CORE__EXECUTION_API_SERVER_URL: "http://airflow-apiserver:8080/execution/"
+    # Local-dev-only shared secrets so scheduler/apiserver mint and verify the
+    # same Execution API JWTs. When unset, Airflow 3.3 autogenerates these per
+    # container, so any independent recreate breaks JWT verification (403
+    # "Signature verification failed"). Move to a secret store for real deploys.
+    AIRFLOW__API__SECRET_KEY: "TMYZ78E8I5GFojcAoJ6KV4GT0Qs2qnJ3o8S-5UpgseU"
+    AIRFLOW__API_AUTH__JWT_SECRET: "V2dbfyEcbPYodgceY-rfTz8k_DyskA9SoaNj790ik-c"
   volumes:
     - ../airflow/dags:/opt/airflow/dags
     - ../airflow/logs:/opt/airflow/logs
