@@ -226,3 +226,35 @@ def share_area(df: pd.DataFrame):
         hovertemplate="%{fullData.name}<br>%{x|%b %Y}: %{y:.1f}%<extra></extra>"
     )
     return style(fig, currency=False)
+
+
+def store_map(df: pd.DataFrame):
+    """Store bubble map: size = revenue, color = prior period growth.
+
+    Expects store_name, latitude, longitude, revenue, growth_pct. Rows
+    without coordinates are dropped so a missing point can never break
+    centering. Keyless carto-positron basemap, no token needed.
+    """
+    df = df.dropna(subset=["latitude", "longitude"])
+    fig = px.scatter_map(
+        df,
+        lat="latitude",
+        lon="longitude",
+        size="revenue",
+        color="growth_pct",
+        color_continuous_scale=["#E7462A", "#F4F7FB", "#0E9F6E"],
+        color_continuous_midpoint=0,
+        hover_name="store_name",
+        hover_data={
+            "revenue": ":$,.0f",
+            "growth_pct": ":.1f",
+            "latitude": False,
+            "longitude": False,
+        },
+        size_max=36,
+        zoom=3,
+        height=520,
+        map_style="carto-positron",
+    )
+    fig.update_layout(margin={"l": 0, "r": 0, "t": 0, "b": 0})
+    return style(fig, currency=False, legend=False)

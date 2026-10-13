@@ -39,7 +39,7 @@ plotly_template.apply_default_template(get_theme())
 st.markdown(inject_css(), unsafe_allow_html=True)
 
 st.title("Walmart Gold Dashboard")
-st.caption("Use the sidebar pages: Sales, Products, Customers, Categories.")
+st.caption("Use the sidebar pages: Sales, Products, Customers, Categories, Geo.")
 
 try:
     filters, meta = sidebar_filters()

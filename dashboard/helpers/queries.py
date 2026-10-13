@@ -357,6 +357,7 @@ _DIMENSION_COLUMNS = {
     "brand": "b.brand_name",
     "payment_method": "pm.payment_method_name",
     "order_status": "o.order_status",
+    "province": "s.province",
 }
 
 
@@ -469,6 +470,22 @@ def get_sunburst_revenue(filters: Filters) -> pd.DataFrame:
         WHERE {where}
           AND c.category_name IS NOT NULL
           AND b.brand_name IS NOT NULL
+        GROUP BY 1, 2, 3
+        ORDER BY revenue DESC
+    """
+    return _run(sql, params)
+
+
+@st.cache_data(ttl=600)
+def get_store_revenue(filters: Filters) -> pd.DataFrame:
+    """Revenue + orders per store (map bubbles and leaderboard input)."""
+    where, params = _where(filters)
+    sql = f"""
+        SELECT o.store_id, s.store_name, s.province,
+               SUM(foi.line_amount) AS revenue,
+               COUNT(DISTINCT o.order_id) AS orders
+        {BASE_FROM}
+        WHERE {where}
         GROUP BY 1, 2, 3
         ORDER BY revenue DESC
     """
