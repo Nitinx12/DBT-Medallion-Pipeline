@@ -8,11 +8,26 @@ so it can be tested and restyled in one place.
 from __future__ import annotations
 
 import html as html_lib
+import textwrap
 
 import pandas as pd
 import streamlit as st
 
 from dashboard.helpers.theme import SEMANTIC, WALMART_BLUE, WALMART_YELLOW
+
+
+def _safe_html(raw: str) -> str:
+    """Collapse an indented HTML template into one markdown-safe line.
+
+    Markdown treats 4+-space-indented lines as code blocks and blank lines
+    end an HTML block -- both failure modes render styled cards as literal
+    text with a copy button. Stripping every line and dropping blanks keeps
+    the fragment a single HTML block that Streamlit passes through intact.
+    """
+    return "".join(
+        line.strip() for line in textwrap.dedent(raw).splitlines() if line.strip()
+    )
+
 
 # ---------------------------------------------------------------------------
 # KPI cards
@@ -104,7 +119,9 @@ def kpi_cards(
         </div>
         """
 
-    st.markdown(f'<div class="kpi-grid">{cards_html}</div>', unsafe_allow_html=True)
+    st.markdown(
+        _safe_html(f'<div class="kpi-grid">{cards_html}</div>'), unsafe_allow_html=True
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -123,25 +140,29 @@ def card_header(title: str, subtitle: str = "", accent: str = "blue") -> None:
     # This is the opening of a card — caller should close with card_footer or just let markdown flow;
     # for Streamlit we render it as a standalone block above the chart.
     st.markdown(
-        f"""
+        _safe_html(
+            f"""
         <div style="margin-bottom:2px;">
             <div class="dash-card__title">{title_e}</div>
             {sub_html}
             <div class="dash-card__accent{accent_cls}"></div>
         </div>
-        """,
+        """
+        ),
         unsafe_allow_html=True,
     )
 
 
 def section_head(title: str, subtitle: str = "") -> None:
     st.markdown(
-        f"""
+        _safe_html(
+            f"""
         <div class="section-head">
             <h3>{html_lib.escape(title)}</h3>
             <p>{html_lib.escape(subtitle)}</p>
         </div>
-        """,
+        """
+        ),
         unsafe_allow_html=True,
     )
 
@@ -164,12 +185,16 @@ def filter_chips(filters) -> None:
         f'<span class="chip chip--slate">● {len(filters.statuses)} status(s)</span>'
     )
     row = "".join(chips)
-    st.markdown(f'<div class="chip-row">{row}</div>', unsafe_allow_html=True)
+    st.markdown(
+        _safe_html(f'<div class="chip-row">{row}</div>'), unsafe_allow_html=True
+    )
 
 
 def empty_state(title: str, hint: str = "") -> None:
     st.markdown(
-        f'<div class="empty-state"><strong>{html_lib.escape(title)}</strong><br/>{html_lib.escape(hint)}</div>',
+        _safe_html(
+            f'<div class="empty-state"><strong>{html_lib.escape(title)}</strong><br/>{html_lib.escape(hint)}</div>'
+        ),
         unsafe_allow_html=True,
     )
 
@@ -200,11 +225,13 @@ def dataframe_with_download(
 
 def footer() -> None:
     st.markdown(
-        f"""
+        _safe_html(
+            f"""
         <div class="dash-footer">
             <span>© 2026 Walmart Medallion Pipeline · <span style="color:{SEMANTIC["text_muted"]}; font-family:{SEMANTIC.get("text", "")}">gold</span> schema · live from Postgres</span>
             <span><a href="https://github.com/anomalyco/walmart" target="_blank">View source</a> &nbsp;·&nbsp; Built with Streamlit + Plotly</span>
         </div>
-        """,
+        """
+        ),
         unsafe_allow_html=True,
     )
