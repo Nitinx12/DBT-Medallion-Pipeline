@@ -1,0 +1,424 @@
+================================================================================
+STREAMLIT DASHBOARD — COMPLETE FILE-BY-FILE REFERENCE
+Walmart Medallion Pipeline / dashboard/
+================================================================================
+This file documents every dashboard-related script in detail: entry point,
+pages, helpers, lib, Streamlit config, container files, and the demo-seed
+script. Line counts below are exact at time of writing.
+
+--------------------------------------------------------------------------------
+0. BIG PICTURE
+--------------------------------------------------------------------------------
+- Interactive Streamlit + Plotly dashboard that reads DIRECTLY from the
+  `gold` star schema in Postgres (no extracts, no CSVs, no middle layer).
+- Multipage app. Entry point is dashboard/home.py; the sidebar pages are
+  dashboard/pages/1_Sales.py .. 4_Categories.py (numeric prefixes control
+  sidebar order).
+- Run it (always via `streamlit run`, NEVER bare `python ...home.py` —
+  bare python has no Streamlit runtime and every widget call degrades
+  into "missing ScriptRunContext" warnings):
+      uv run streamlit run dashboard/home.py
+      # -> http://localhost:8501
+- Deployed demo (Streamlit Community Cloud) reads credentials from
+  `st.secrets` instead of `.env`; local runs use `.env` via
+  src/utils/engine.py + src/utils/connection.py, so nothing extra to
+  configure.
+- Every page follows the same pipeline: page config -> inject CSS ->
+  sidebar_filters() -> parameterized SQL from the query layer ->
+  Plotly chart (styled by shared style()) or dataframe + CSV download.
+- Aggregation ALWAYS happens in Postgres (GROUP BY in SQL); only
+  summarized rows travel to the app. The single exception is the bounded
+  200-row recent-orders sample, which is filtered client-side for search.
+- Soft-delete convention: every query filters `foi.is_active = true`
+  AND `o.is_active = true`, matching the gold layer convention.
+
+File inventory (path relative to repo root, exact line counts):
+  dashboard/home.py                    57 lines   entry point, KPIs + gold meta
+  dashboard/pages/1_Sales.py           56 lines   revenue trend + store/payment mix
+  dashboard/pages/2_Products.py        66 lines   top products, brands, treemap
+  dashboard/pages/3_Customers.py       41 lines   top customers + searchable recents
+  dashboard/pages/4_Categories.py      48 lines   category donut + status breakdown
+  dashboard/helpers/components.py     232 lines   reusable UI blocks (KPIs, chips, tables, footer)
+  dashboard/helpers/theme.py          449 lines   palette, plotly style(), global CSS
+  dashboard/helpers/queries.py        305 lines   ALL gold SQL + Filters dataclass
+  dashboard/lib/queries.py             29 lines   stable re-export shim for pages
+  dashboard/lib/filters.py             90 lines   shared sidebar filter builder
+  dashboard/lib/charts.py              52 lines   shared Plotly builders
+  dashboard/lib/db.py                  28 lines   Streamlit-secrets bridge + engine
+  dashboard/requirements.txt            7 lines   pinned Cloud/container deps
+  dashboard/Dockerfile                 12 lines   container image for the app
+  dashboard/.streamlit/config.toml            app chrome / server / client tuning
+  dashboard/.streamlit/secrets.toml           LOCAL credentials (git-ignored, never commit)
+  dashboard/.streamlit/secrets.toml.example   placeholder template (committed)
+  dashboard/README.md                  72 lines   portfolio-style dashboard readme
+  scripts/seed_demo_db.py             108 lines   one-off public-demo seeder (NOT pipeline)
+
+--------------------------------------------------------------------------------
+1. ENTRY POINT — dashboard/home.py (57 lines)
+--------------------------------------------------------------------------------
+- Lines 1-10: module docstring + PROJECT_ROOT bootstrap. home.py lives two
+  levels below the repo root, so it inserts the root into sys.path — this
+  exact snippet is repeated in every page file so `from dashboard...` and
+  `from src...` imports resolve no matter the working directory.
+- Line 12: `import streamlit as st`.
+- Line 14: imports `footer, kpi_cards` from dashboard.helpers.components.
+- Line 15: imports `inject_css` from dashboard.helpers.theme.
+- Line 16: imports `sidebar_filters` from dashboard.lib.filters.
+- Line 17: imports `get_gold_meta, get_kpis` from dashboard.lib.queries.
+- Line 19: set_page_config(title "Walmart — Home", icon cart, wide layout).
+- Line 20: injects the global CSS (`st.markdown(inject_css(),
+  unsafe_allow_html=True)`). Every page repeats this as its second call.
+- Lines 22-25: title "Walmart Gold Dashboard" + caption telling users the
+  sidebar holds Sales/Products/Customers/Categories.
+- Lines 27-49 (inside try): the data flow —
+    * `sidebar_filters(key_prefix="home_")` builds the sidebar and returns
+      (Filters, meta).
+    * `get_gold_meta()` fetches live fact-row count + last order timestamp.
+    * `get_kpis(filters)` for the current window and
+      `get_kpis(filters.previous_period())` for the equal-length prior
+      window.
+    * local `_pct(curr, prev)` helper: (curr-prev)/prev*100, None when
+      prev is 0 (avoids ZeroDivisionError; None renders the "no prior
+      period" pill).
+    * `kpi_cards(revenue, orders, customers, aov, {deltas})` renders the
+      4-card KPI row.
+- Lines 50-52: `st.info` banner: "Gold fact rows: N · Last order: <ts>".
+- Lines 53-55: broad `except Exception` -> `st.error("Could not connect
+  to Postgres: ...")` + `st.stop()` so a dead database shows a clean
+  error page instead of a traceback.
+- Line 57: `footer()`.
+- NOTE (stale reference, do not chase): the caption says "Full tabbed
+  view lives in app.py" but NO app.py exists in the repo — the app is
+  multipage (home + pages/), not tabbed. Treat the caption as outdated.
+
+--------------------------------------------------------------------------------
+2. PAGES — dashboard/pages/
+--------------------------------------------------------------------------------
+All four pages share the same skeleton: docstring, PROJECT_ROOT bootstrap,
+`import streamlit as st`, set_page_config, inject_css(), title,
+`sidebar_filters(key_prefix="<page>_")`, query calls, charts/tables.
+The per-page `key_prefix` ("sales_", "prod_", "cust_", "cat_", "home_")
+namespaces sidebar widget + session-state keys so each page keeps
+independent filter state.
+
+--- 2a. pages/1_Sales.py (56 lines): "Sales page — revenue trend and store mix."
+- Granularity radio: Day / Week / Month (default Week), lowercased before
+  passing to get_revenue_trend (which only accepts "day"|"week"|"month").
+- Queries: get_revenue_trend(filters, granularity),
+  get_revenue_by(filters, "store"), get_revenue_by(filters, "payment_method").
+- Layout: full-width area chart (revenue_trend_chart), then two columns:
+  left "Revenue by Store" bar chart + CSV download
+  (revenue_by_store.csv, key dl_sales_store); right "Revenue by Payment"
+  donut. Each block renders only `if not <df>.empty`.
+- All plotly charts pass `config={"displayModeBar": False}` (hides the
+  Plotly modebar for a cleaner look).
+
+--- 2b. pages/2_Products.py (66 lines): "Products page — top products, brands, category treemap."
+- Queries: get_top_products(filters, limit=10),
+  get_revenue_by(filters, "brand", limit=10),
+  get_category_brand_treemap(filters).
+- Layout: "Top 10 Products" table + CSV (top_products.csv, key
+  dl_prod_top); then two columns: left horizontal Top-10-Brands bar
+  (built inline with px.bar on x=revenue/y=brand, y-axis
+  categoryorder="total ascending", WALMART_BLUE markers, height 420);
+  right Category -> Brand treemap (px.treemap path
+  ["category_name","brand_name"], values=revenue, currency=False,
+  legend=False, height 420).
+- This page imports plotly.express + WALMART_BLUE + style directly
+  because its brand bar is bespoke; everything else uses lib/charts.py.
+
+--- 2c. pages/3_Customers.py (41 lines): "Customers page — top customers and recent orders."
+- Queries: get_top_customers(filters, limit=10),
+  get_recent_order_lines(filters, limit=200).
+- "Top 10 Customers" table + CSV (top_customers.csv, key dl_cust_top).
+- "Recent order lines (200)": a `st.text_input` search box; when a query
+  is typed, EVERY column is cast to str, lowercased, and substring-matched
+  (`na=False`), OR-ed across columns — client-side pandas filtering on
+  the bounded 200-row sample. Result table + CSV (recent_orders.csv,
+  key dl_cust_recent).
+
+--- 2d. pages/4_Categories.py (48 lines): "Categories page — category and status breakdown."
+- Queries: get_revenue_by(filters, "category"),
+  get_revenue_by(filters, "order_status").
+- Two columns: left "Revenue by Category" donut + CSV
+  (revenue_by_category.csv, key dl_cat_tbl); right "Revenue by Order
+  Status" bar chart. The x-column is picked defensively
+  (`"status" if "status" in columns else columns[0]`) because the
+  dimension key names the column "order_status".
+
+--------------------------------------------------------------------------------
+3. HELPERS — dashboard/helpers/
+--------------------------------------------------------------------------------
+--- 3a. helpers/theme.py (449 lines): the design system. Single source of
+truth so charts, tables, and cards share one professional look.
+- Brand tokens: WALMART_BLUE "#0071CE", WALMART_YELLOW "#FFC220".
+- PALETTE (ordered, 9 entries): Walmart blue, yellow, deep blue #004C91,
+  sky #00A9E0, teal/success #0E9F6E, coral/alert #E7462A, violet #7B5CFF,
+  slate #6E7B8B, muted slate #94A3B8 (for "other" slices). Used as the
+  Plotly colorway and donut sequence.
+- SEMANTIC dict: success/danger/warning/neutral, border/border_strong
+  (translucent slate), surface/surface_alt/surface_muted backgrounds,
+  text/text_muted/text_faint.
+- Fonts: FONT_FAMILY Inter stack, FONT_MONO JetBrains Mono stack.
+- SCALE_BLUE / SCALE_BLUE_YELLOW sequential scales for continuous charts.
+- style(fig, currency=True, legend=True, height=380, show_grid_y=True):
+  transparent plot+paper background (cards supply the surface), shared
+  font/colorway/margins/hoverlabel (dark tooltip), horizontal legend on
+  top, bargap 0.22, hidden X grid + subtle Y grid, currency Y axis
+  ($ prefix, ",.0f" ticks, ",.2f" hover), bar marker line width 0.
+- inject_css(): one <style> block covering — Inter/JetBrains Mono font
+  import; #F8FAFC app background; blurred sticky header; hidden footer
+  element; global font family; sidebar surface + uppercase section heads;
+  .dash-card surface/hover/accent variants; the full .kpi-card system
+  (4-col grid -> 2-col under 1100px -> 1-col under 600px, top accent bar
+  via --kpi-accent, label/value/delta-pill/foot classes with
+  up-green/down-red/flat-grey variants); section heads; filter chips;
+  hr polish; tab styling; stMetric card fallback (so native metrics also
+  look like cards); dataframe/expander/button/alert polish; scrollbars;
+  Plotly modebar fade; empty-state; .dash-footer.
+
+--- 3b. helpers/components.py (232 lines): reusable UI blocks. Pages stay
+focused on layout/data flow; ALL raw-HTML card rendering lives here.
+- _safe_html(raw): dedents, strips every line, drops blank lines, joins
+  into ONE line. WHY IT EXISTS: Markdown treats 4+-space-indented lines
+  as code blocks and blank lines end an HTML block — both failure modes
+  render styled cards as literal `<div...>` text with a copy button
+  (this exact bug hit the KPI cards). Every st.markdown HTML call in this
+  file is routed through _safe_html; NEVER pass indented triple-quoted
+  HTML to st.markdown directly.
+- _DELTA_ICON = {"up": "▲", "down": "▼", "flat": "—"}; _delta_state(pct):
+  None -> flat; pct > +0.05 -> up; pct < -0.05 -> down; else flat
+  (deadband avoids flickering on noise).
+- kpi_cards(revenue, orders, customers, aov, deltas, delta_label="vs
+  prior"): builds ONE 4-card grid in a single st.markdown call. The four
+  cards: Total Revenue (icon money-bag, value $X rounded, foot "Gross
+  merchandise value", WALMART_BLUE accent) / Orders (package icon, int
+  with thousands separators, foot "Distinct order_id", #0E9F6E) /
+  Customers (people icon, foot "Unique shoppers", #7B5CFF) / Avg Order
+  Value (receipt icon, $X.XX, foot "Revenue / orders", WALMART_YELLOW).
+  Delta pill: "— no prior period" (flat class) when pct is None, else
+  "{icon} {pct:+.1f}% {delta_label}" with up/down/flat class. All dynamic
+  text is html-escaped. Used ONLY by home.py.
+- card_header(title, subtitle, accent="blue"|"amber"|"teal"): card title +
+  optional subtitle + 28px accent bar (standalone block above a chart).
+  Currently reserved (no page calls it yet).
+- section_head(title, subtitle): spaced h3 + muted paragraph row.
+  Currently reserved.
+- filter_chips(filters): compact chip row — date range chip (exclusive
+  end noted), store count (amber), category count (slate), status count
+  (slate). Currently reserved.
+- empty_state(title, hint): dashed-border centered notice. Used by
+  dataframe_with_download on empty frames.
+- dataframe_with_download(df, filename, key, column_config=None): empty
+  guard -> empty_state; else st.dataframe (full width, hidden index) +
+  CSV download button (utf-8, mime text/csv). Used by ALL four pages with
+  per-table filenames/keys (see §2).
+- footer(): .dash-footer bar — "© 2026 Walmart Medallion Pipeline · gold
+  schema · live from Postgres" + source link + "Built with Streamlit +
+  Plotly". Used by home.py.
+
+--- 3c. helpers/queries.py (305 lines): ALL SQL against gold lives here.
+Two rules drive the file: (1) every value is bound via SQLAlchemy text()
++ params — NEVER f-string-interpolated — so sidebar input can't inject
+SQL; (2) filtering AND aggregation run in Postgres, only summarized rows
+return.
+- GOLD = config.POSTGRES_SCHEMA_GOLD (schema name from .env, never
+  hardcoded).
+- BASE_FROM: the single shared join graph every query reuses —
+  fact_order_items foi JOIN dim_orders o (inner) + LEFT JOIN dim_products
+  p, dim_brands b, dim_categories c, dim_stores s, dim_payment_methods pm,
+  dim_customers cu. LEFT JOINs (not inner) so facts with null
+  brand/category/payment FKs still count.
+- Filters: frozen dataclass (hashable, so st.cache_data keys on it) with
+  start_date, end_date (EXCLUSIVE upper bound), stores/categories/
+  statuses tuples; previous_period() shifts the window back one full
+  span for period-over-period deltas; split_in_half() halves the window
+  (fallback baseline when the prior period is empty).
+- _where(filters): shared WHERE + params — foi/o is_active true, order
+  timestamp in [start, end), store/category/status IN-lists. Empty tuples
+  are VALID: "no selection = match nothing" via expanding IN.
+- _run(sql, params): marks tuple params as bindparam(expanding=True),
+  executes on a short-lived connection, returns a DataFrame.
+- get_filter_options() [ttl=3600]: distinct active stores, all
+  categories, distinct active statuses, min/max order dates (sidebar
+  bounds + preset anchors).
+- get_gold_meta() [ttl=600]: active fact row count + max order timestamp
+  (home header/footer).
+- get_kpis(filters) [ttl=600]: revenue SUM(line_amount), DISTINCT orders,
+  DISTINCT customers, aov = revenue/orders (0.0 guard when orders = 0).
+- get_revenue_trend(filters, granularity) [ttl=600]: date_trunc buckets
+  at day|week|month (whitelist-validated, ValueError otherwise).
+- _DIMENSION_COLUMNS whitelist (store/category/brand/payment_method/
+  order_status -> real "alias.column") + get_revenue_by(filters,
+  dimension, limit) [ttl=600]: GROUP BY revenue DESC, NULL members
+  excluded, LIMIT int-cast (never raw text).
+- get_category_brand_treemap(filters) [ttl=600]: category x brand revenue
+  matrix for the treemap.
+- get_top_products(filters, limit=10) [ttl=600]: name/brand/category +
+  revenue + units_sold, top-N by revenue.
+- get_top_customers(filters, limit=10) [ttl=600]: name + revenue +
+  DISTINCT orders, top-N.
+- get_recent_order_lines(filters, limit=200) [ttl=600]: bounded newest-
+  first sample (timestamp/store/customer/product/brand/category/qty/
+  prices/status/payment) for the searchable table — deliberately NOT the
+  full filtered set.
+
+--------------------------------------------------------------------------------
+4. LIB — dashboard/lib/
+--------------------------------------------------------------------------------
+--- 4a. lib/filters.py (90 lines): `sidebar_filters(key_prefix="")` —
+the ONE sidebar builder every page calls. Returns (Filters, meta).
+  Sidebar contents: "Date presets" label + 7D/30D/90D buttons in 3
+  columns (each writes (max_date-days, max_date) into namespaced
+  session_state); date_input clamped to [min_date, max_date] with
+  start/end auto-swap if reversed; "---" divider; Store(s) /
+  Categor(y/ies) / Order status multiselects, all defaulting to ALL
+  options selected. Builds Filters with end_date = inclusive_end + 1
+  day (exclusive convention) and tuples for cache hashing; meta carries
+  start_date/end_inclusive/options for display. key_prefix namespaces
+  widget keys + session state so each page keeps independent filters.
+
+--- 4b. lib/charts.py (52 lines): shared Plotly builders (all return
+styled figures; pages only call st.plotly_chart on them).
+  revenue_trend_chart(trend, granularity): blue area chart (2.6px line,
+  12% fill, "$X / Mon DD, YYYY" hover), height 360. bar_by(df, x,
+  title): vertical bars colored by revenue on a DBEAFE->blue continuous
+  scale (colorbar hidden), "$X" hover, height 360. donut(df, names):
+  58%-hole pie in PALETTE colors, outside percent+label text, white
+  2px slice separators, currency=False, height 360.
+
+--- 4c. lib/queries.py (29 lines): thin STABLE re-export shim — pages do
+`from dashboard.lib.queries import ...` and this re-exports Filters +
+all ten query functions from dashboard.helpers.queries with an explicit
+__all__. Add new queries to helpers/queries.py and re-export here; pages
+never import helpers directly for data.
+
+--- 4d. lib/db.py (28 lines): Streamlit-secrets bridge. apply_secrets()
+copies every st.secrets entry into os.environ (setdefault — .env wins;
+silently passes outside a Streamlit runtime); get_engine() applies
+secrets then returns the shared src.utils.connection engine via a lazy
+import. NOTE: no page currently imports it (pages query through
+helpers/queries.py, which uses get_postgres_engine directly); it exists
+for Streamlit Cloud, where there is no .env and secrets are the ONLY
+credentials — and it is covered by the import smoke test.
+
+--------------------------------------------------------------------------------
+5. CONFIG, CONTAINER, SECRETS — dashboard/.streamlit/, requirements, Dockerfile
+--------------------------------------------------------------------------------
+- .streamlit/config.toml: [theme] Walmart blue primary #0071CE, white
+  background, #F8FAFC secondary, dark-slate text, sans-serif font;
+  [server] runOnSave, headless=true, port 8501, CORS off, XSRF on,
+  maxUploadSize 50; [browser] usage stats OFF, localhost; [client]
+  error details shown, minimal toolbar; [runner] magic OFF, fastReruns;
+  [logger] warning level; [deprecation] + [mapbox] defaults.
+- .streamlit/secrets.toml: LOCAL real credentials (POSTGRES_HOST/PORT/
+  DATABASE/USERNAME/PASSWORD + BRONZE/SILVER/GOLD schemas). Values are
+  NOT reproduced here on purpose — the file is git-ignored (root
+  .gitignore: `**/secrets.toml`) and must never be committed.
+- .streamlit/secrets.toml.example: committed placeholder template (same
+  keys, dummy values) — copy to secrets.toml and fill in for Cloud.
+- dashboard/requirements.txt (7 pinned lines): streamlit 1.62.0,
+  pandas 3.0.5, plotly 7.0.0, SQLAlchemy 2.0.51, psycopg2-binary 2.9.12,
+  pymongo 4.17.0, python-dotenv 1.2.2.
+- dashboard/Dockerfile (12 lines): python:3.12-slim-bookworm, WORKDIR
+  /app, pip-install requirements, COPY the repo, EXPOSE 8501, CMD
+  `streamlit run dashboard/home.py --server.port=8501
+  --server.address=0.0.0.0`.
+- dashboard/.gitignore: ignores local secrets material.
+
+--------------------------------------------------------------------------------
+6. DEMO SEEDER — scripts/seed_demo_db.py (108 lines, NOT part of the pipeline)
+--------------------------------------------------------------------------------
+One-off utility that copies the gold schema from LOCAL Postgres into a
+separate PUBLIC demo Postgres (e.g. free Neon/Supabase) so the hosted
+demo never needs the real dev database reachable from the internet.
+- Usage: `uv run python scripts/seed_demo_db.py "<target-postgres-URL>"
+  [--schema gold]` (target DB must already exist; credentials stay on
+  the command line, never hardcoded — the example URI in the docstring
+  is deliberately commented for the security scanner).
+- SOURCE_SCHEMA = POSTGRES_SCHEMA_GOLD from .env; TABLES (dims before
+  facts for readability; no FKs are created on target): dim_brands,
+  dim_categories, dim_payment_methods, dim_products, dim_stores,
+  dim_customers, dim_orders, fact_order_items.
+- Flow: CREATE SCHEMA IF NOT EXISTS on target -> per table
+  `SELECT *` via pandas -> anonymize dim_customers -> to_sql(replace).
+- anonymize_customers(df): deterministic PII scrub keyed off
+  customer_id — "Customer <id>", "customer<id>@example.com", phone
+  "555-0100", phone_extension NULL — so joins/aggregations behave
+  identically with only identifying text changed.
+
+--------------------------------------------------------------------------------
+7. CACHING & PERFORMANCE MODEL
+--------------------------------------------------------------------------------
+- st.cache_data(ttl=3600) on slow-changing filter options; ttl=600 on all
+  data queries (KPIs, trends, breakdowns, meta). Refresh = clear cache +
+  rerun (the documented `Refresh` pattern clears st.cache_data).
+- Filters is frozen/hashable precisely so it can be a cache key; tuples
+  (never lists) for the multiselect values.
+- GROUP BYs run in Postgres; Streamlit receives tens/hundreds of rows,
+  never the 30k-row fact table (except the deliberate 200-row sample).
+- Expanding IN binds handle empty selections as "match nothing" instead
+  of crashing or matching everything.
+
+--------------------------------------------------------------------------------
+8. RULES & GOTCHAS FOR ANYONE TOUCHING THE DASHBOARD
+--------------------------------------------------------------------------------
+1. Entry pages MUST bootstrap sys.path (copy the PROJECT_ROOT snippet
+   from home.py) or `from dashboard...` / `from src...` imports fail.
+2. NEVER run a page with bare `python` — always `streamlit run` (see §0).
+3. NEVER pass indented/blank-line HTML to st.markdown — route every raw-
+   HTML block through components._safe_html (the §3b lesson).
+4. NEVER interpolate filter values into SQL — use bound params; new
+   GROUP BY dimensions go through the _DIMENSION_COLUMNS whitelist.
+5. New queries live in helpers/queries.py (+ re-export in lib/queries.py),
+   new charts in lib/charts.py, new shared widgets in
+   helpers/components.py — pages stay thin (import, filter, query, plot).
+6. New tables need no dashboard code change as long as gold contracts +
+   models cover them; sidebar options come from live DISTINCT queries.
+7. Secrets: local runs use .env; Cloud uses st.secrets via lib/db.py;
+   secrets.toml values never go into git, docs, logs, or screenshots.
+8. home.py's "Full tabbed view lives in app.py" caption is STALE — there
+   is no app.py; navigation is the sidebar multipage menu.
+================================================================================
+END OF streamlit.txt
+================================================================================
+
+================================================================================
+ADDENDUM 2026-10 — STAKEHOLDER UPGRADE (see dashboard/README.md Upgrade pass)
+================================================================================
+The inventory above describes the pre upgrade tree. Current line counts and
+deltas after the upgrade build (branch feat/dashboard-theme):
+
+  dashboard/home.py                   210 lines (was 57: live fragment, quality row, badge)
+  dashboard/pages/1_Sales.py          105 lines (heatmap, waterfall)
+  dashboard/pages/2_Products.py       102 lines (treemap builder, Pareto, bubble)
+  dashboard/pages/3_Customers.py       96 lines (RFM, cohort, kept top/search)
+  dashboard/pages/4_Categories.py      83 lines (sunburst, funnel, share trend)
+  dashboard/pages/5_Geo.py            103 lines (NEW: map plus click to filter)
+  dashboard/pages/6_Data_Health.py     62 lines (NEW: freshness, counts, runs)
+  dashboard/helpers/components.py     329 lines (_safe_html, sparklines, badge, chips)
+  dashboard/helpers/theme.py          552 lines (dark theme, theme aware style)
+  dashboard/helpers/plotly_template.py 118 lines (NEW: walmart/walmart_dark)
+  dashboard/helpers/queries.py        689 lines (new filters, 12 new queries, ttl 60)
+  dashboard/lib/queries.py             57 lines (re exports for all new queries)
+  dashboard/lib/filters.py            158 lines (shared state, URL params, reset)
+  dashboard/lib/charts.py             297 lines (13 builders incl map, funnel, cohort)
+  dashboard/lib/geo.py                 49 lines (NEW: static store coordinates)
+  dashboard/README.md                 126 lines (layout refresh, upgrade notes)
+  scripts/simulate_orders.py          209 lines (NEW: demo order simulator)
+  .github/workflows/refresh.yml       NEW (Neon gold refresh, schedule idle)
+  dbt/profiles.yml                    +prod Neon target (env driven, no secrets)
+  sql/indexes/dashboard_gold_indexes.sql   NEW (5 hot path indexes, applied)
+  sql/security/dashboard_readonly_role.sql NEW (DBA run file, placeholder secret)
+
+Live ground truth re verified during the build: 30,021 fact rows, revenue
+17,033,719, statuses Cancelled 2,587 / Returned 2,530 / Completed 2,447 /
+Pending 2,436, 25 stores in 22 provinces, 377 products, 1,986 customers.
+Pareto: 261 of 377 products drive 80 percent of revenue. Repeat rate reads
+high (1,899 of 1,986) which fits generated demo data.
+
+Held out of the build on purpose (dashboard/AGENTS.md section 9): dbt model
+changes (store_geo seed join, agg_daily_store_category), Airflow DAG edits,
+Neon migration, Cloud deploy. The Geo page therefore maps static province
+points documented in dashboard/lib/geo.py instead of a dbt seed join.
+================================================================================

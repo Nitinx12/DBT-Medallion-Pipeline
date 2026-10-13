@@ -43,16 +43,20 @@ Deployed demo: Streamlit Community Cloud reads secrets from `st.secrets` (no `.e
 | File | Responsibility |
 |---|---|
 | `home.py` | Landing page — KPIs + gold meta, entry point (`streamlit run dashboard/home.py`) |
-| `pages/1_Sales.py` | Revenue trend + store/payment mix |
-| `pages/2_Products.py` | Top products, brands, category→brand treemap |
-| `pages/3_Customers.py` | Top customers + searchable recent orders |
-| `pages/4_Categories.py` | Category donut + order-status breakdown |
+| `pages/1_Sales.py` | Revenue trend + store/payment mix + buying hour heatmap + category waterfall |
+| `pages/2_Products.py` | Top products, brands, category→brand treemap, Pareto, portfolio bubble |
+| `pages/3_Customers.py` | RFM segments, cohort retention, top customers, searchable recent orders |
+| `pages/4_Categories.py` | Sunburst, status funnel, category donut, share over time |
+| `pages/5_Geo.py` | Store map with click to filter + region leaderboard |
+| `pages/6_Data_Health.py` | Freshness badge, gold row counts, pipeline run history |
 | `helpers/queries.py` | All SQL — parameterized via `text()` + `bindparam(expanding=True)`, aggregated in Postgres |
-| `helpers/theme.py` | Palette (`PALETTE`, `SEMANTIC`), `style(fig)`, `inject_css()` |
+| `helpers/theme.py` | Palette (`PALETTE`, `SEMANTIC`), `style(fig)`, `inject_css()`, light/dark themes |
+| `helpers/plotly_template.py` | Shared `walmart` / `walmart_dark` Plotly templates |
 | `helpers/components.py` | KPI grid, chips, card helpers, dataframe+download, empty/footer |
 | `lib/db.py` | Secrets→env + shared Postgres engine |
 | `lib/filters.py` | Shared sidebar (presets + multiselects → `Filters`) |
 | `lib/charts.py` | Shared Plotly builders (`revenue_trend_chart`, `bar_by`, `donut`) |
+| `lib/geo.py` | Static store coordinates for the map (demo geography, see below) |
 | `lib/queries.py` | Stable re-export layer for pages |
 | `.streamlit/config.toml` | Streamlit chrome theme |
 
@@ -70,3 +74,53 @@ Deployed demo: Streamlit Community Cloud reads secrets from `st.secrets` (no `.e
 - Add a breakdown dimension: one line in `_DIMENSION_COLUMNS` in `helpers/queries.py` (whitelist-guarded, no raw SQL).
 - Add a `dim_date` table (fiscal periods, holiday flags) to enrich `get_revenue_trend` beyond `date_trunc`.
 - Swap `PALETTE`/`SEMANTIC` in `helpers/theme.py` to rebrand without touching pages.
+
+## Upgrade pass (2026-10)
+
+What the stakeholder upgrade added on top of the professional pass:
+
+- **Theme system**: shared `walmart` / `walmart_dark` Plotly templates
+  (`helpers/plotly_template.py`), matching palette in `theme.py`, and a
+  sidebar dark mode toggle that re skins CSS and charts together.
+- **Shared filters**: one filter state on every page (persists across
+  navigation), shareable `?from=&to=` URLs, reset button, prior period /
+  last year comparison toggle, and new province, brand, payment, customer
+  search, and min order value filters. Active filters render as chips on
+  every page.
+- **KPIs**: second Quality and growth row (units, basket depth, revenue
+  per customer, repeat rate, cancel/return rate, MoM growth, top 10
+  share) plus daily sparklines on the performance row. Gold has no cost
+  column, so a margin KPI stays out until the model gains one.
+- **New charts**: buying hour heatmap and category waterfall (Sales),
+  treemap upgrade plus Pareto and portfolio bubble (Products), sunburst,
+  status funnel, and share over time (Categories), store map with click
+  to filter (Geo), RFM segments and cohort retention (Customers).
+- **Live behavior**: 60s cache on live queries (filter options stay at
+  1h, RFM/cohort at 5min), Home Live mode fragment that refreshes KPIs
+  every 30s, freshness badge on Home and Data Health.
+- **Operations**: Data Health page (gold row counts, extract history
+  from `etl_logs`/`etl_watermarks`), five dashboard indexes in
+  `sql/indexes/`, least privilege role script in `sql/security/`,
+  `prod` dbt target plus idle `refresh-gold` Actions workflow for the
+  Neon move, demo order simulator in `scripts/simulate_orders.py`.
+
+Honest limits worth knowing:
+
+- Store map positions are province representative points, not real
+  addresses: the source cities are generated placeholders that cannot be
+  geocoded. The Geo page labels this on screen.
+- The dashboard is batch fresh: it shows the last pipeline run, and the
+  badge always states the lag. Local `EXPLAIN` still picks sequential
+  scans at 30k fact rows; the indexes pay off as volume grows.
+- `refresh.yml` stays manual until Neon secrets exist; the simulator
+  writes local bronze only and a full refresh extract wipes its rows.
+
+## Next steps
+
+- Point the `prod` target at Neon, enable the `refresh.yml` schedule,
+  and deploy to Community Cloud per `docs` in the upgrade guide.
+- Add `agg_daily_store_category` as a dbt model so trend and share
+  queries hit thousands of rows instead of the fact table (needs owner
+  sign off: it changes the pipeline surface).
+- Label simulated rows in app once the simulator feeds the demo on a
+  schedule.
