@@ -79,7 +79,7 @@ jobs:
       - name: dbt parse (no DB needed)
         working-directory: dbt
         env:
-          DBT_PROFILES_DIR: ${{ github.workspace }}/docker/dbt
+          DBT_PROFILES_DIR: ${{ github.workspace }}/dbt
         run: |
           uv run dbt deps
           uv run dbt parse --target ci

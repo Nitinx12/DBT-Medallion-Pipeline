@@ -38,7 +38,7 @@ concurrency:
 
 env:
   PYTHON_VERSION: "3.11"
-  DBT_PROFILES_DIR: ${{ github.workspace }}/docker/dbt
+  DBT_PROFILES_DIR: ${{ github.workspace }}/dbt
   PYTHONPATH: ${{ github.workspace }}
 
 jobs:
