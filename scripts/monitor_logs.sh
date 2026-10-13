@@ -36,7 +36,7 @@ set -uo pipefail
 # loop and prints a summary at the end; one bad/unreadable file should not
 # silently kill the whole run before the summary is printed.
 
-PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG_DIR="${PROJECT_ROOT}/logs"
 MAX_AGE_DAYS="${MAX_AGE_DAYS:-7}"   # override with: MAX_AGE_DAYS=14 ./monitor_logs.sh ...
 MAX_SIZE_MB="${MAX_SIZE_MB:-5}"     # override with: MAX_SIZE_MB=10 ./monitor_logs.sh ...

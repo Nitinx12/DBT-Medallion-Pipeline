@@ -84,6 +84,7 @@ dist/
 output/
 exports/
 artifacts/
+backups/
 
 # Generated datasets
 processed_data/

@@ -3,7 +3,7 @@
 # Fails fast before any data moves. Mirrors pipeline/run_pipeline.ps1 Stage 0 and Makefile preflight.
 set -euo pipefail
 
-PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJECT_ROOT"
 
 # Colors (safe if tput missing)

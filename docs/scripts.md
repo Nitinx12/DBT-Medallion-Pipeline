@@ -1,29 +1,18 @@
 # Scripts
 
 ```
-src/jobs/                   # pipeline runtime (moved out of scripts/python/)
+src/jobs/                   # pipeline runtime
 ├── extract.py              # Mongo → bronze (incremental, watermark, upsert)
+├── run_dbt_models.py       # dbt deps → silver/gold run+test
 ├── sql_test.py             # runs tests/data-quality/<layer>/*.sql
 └── ci_seed_bronze.py       # CI fixture loader
 
-scripts/
-├── python/                 # ops/dev utilities
-│   ├── health_check.py
-│   ├── security_check.py
-│   ├── inspect_gold_schema.py
-│   ├── seed_demo_db.py
-│   └── sync_gold_to_databricks.py
-└── bash/                   # bash — detailed helpers
-    ├── preflight.sh         # env & deps check
-    ├── extract.sh           # wrapper for python extract
-    ├── run_tests.sh         # bronze/silver/gold
-    ├── run_dbt.sh           # dbt deps → silver run/test → gold run/test
-    ├── run_pipeline.sh      # full 8 stages (Linux)
-    ├── health_check.sh
-    ├── security_check.sh
-    ├── setup_env.sh
-    ├── clean.sh
-    └── monitor_logs.sh
+scripts/                    # flat ops/dev scripts (Python + bash side by side)
+├── run_tests.py / run_gx.py       # layer test wrappers
+├── run_health_check.py / run_security_check.py
+├── inspect_gold_schema.py / seed_demo_db.py / sync_gold_to_databricks.py
+├── preflight.sh / clean.sh / setup_env.sh / monitor_logs.sh
+└── backup.sh / ci_local.sh / db_shell.sh
 ```
 
 ## Python — `extract.py`
@@ -46,9 +35,12 @@ See `testing.md` for conventions.
 
 ## Bash
 
-Stage wrappers in `scripts/` (preflight, extract, tests, dbt, health, security, clean, setup, monitor).
+Ops helpers in `scripts/`: `preflight` (env/deps), `backup` (pg_dump/restore),
+`ci_local` (local CI gates), `db_shell` (psql via `.env`), plus
+`clean`/`setup_env`/`monitor_logs`.
 
 ```bash
 bash scripts/preflight.sh --strict
+bash scripts/ci_local.sh
 uv run python scripts/run_tests.py all
 ```

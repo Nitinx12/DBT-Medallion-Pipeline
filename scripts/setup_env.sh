@@ -2,7 +2,7 @@
 # scripts/setup_env.sh — one-shot dev setup for Linux/macOS (and Git Bash on Windows)
 # Idempotent: safe to run multiple times.
 set -euo pipefail
-PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJECT_ROOT"
 
 BOLD="$(tput bold 2>/dev/null || true)"

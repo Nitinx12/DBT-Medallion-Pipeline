@@ -61,7 +61,7 @@ docker/         # Dockerfile, Dockerfile.airflow, docker-compose.yaml, entrypoin
 docs/           # deep-dive docs: airflow.md, dbt.md, docker.md, pipeline.md, scripts.md, tests.md, src-utils.md
 jars/           # Mongo Spark connector + Postgres JDBC, checked in for offline Spark startup
 pipeline/       # run_pipeline.ps1 — Windows entry point
-scripts/        # flat ops/dev scripts + bash/ (preflight/run_pipeline/run_tests/health/security/clean/setup_env/monitor_logs.sh)
+scripts/        # flat ops/dev scripts: preflight/clean/setup_env/monitor_logs/backup/ci_local/db_shell + run_*.py wrappers
 src/jobs/       # pipeline runtime: extract.py, sql_test.py, ci_seed_bronze.py
 sql/            # hand-written functions/triggers/reports
 tests/          # standalone SQL data-quality suite, one folder per layer
