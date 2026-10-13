@@ -1,158 +1,116 @@
 # AGENTS.md
 
-Guide for AI agents and humans working on this repo. For the full system
-design, read `architecture.md` first — this file only covers day-to-day
-conventions: setup, coding style, and git workflow.
+Day-to-day conventions for this repo. For system design, read `docs/architecture.md` first.
 
-## Project Overview
-- medallion-architecture ETL pipeline: MongoDB (source) → Postgres
-  bronze → silver → gold, validated by dbt tests + raw SQL checks
-- one logical pipeline, three runners: `pipeline/run_pipeline.ps1`
-  (Windows host), standalone Docker image (`main.py`), Airflow DAG
-- package manager: uv (see `pyproject.toml` / `uv.lock`)
+## Overview
+- Medallion ETL: MongoDB → Postgres bronze → silver → gold
+- Quality gates: dbt tests, raw SQL checks, Great Expectations
+- Three runners, one pipeline: `pipeline/run_pipeline.ps1`, Docker image (`main.py`), Airflow DAG
+- Data contracts live in `contracts/<layer>/<table>.yml`
+- Package manager: `uv`
 
-## Environment Setup — uv
+## Setup
 ```bash
-# create virtual environment
 uv venv
-
-# activate (Windows)
-.venv\Scripts\activate
-# activate (linux/mac/devcontainer)
-source .venv/bin/activate
-
-# install locked dependencies
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
 uv sync
-
-# add a runtime dependency
-uv add package_name
-
-# add a dev-only dependency
-uv add --dev pytest ruff
-
-# run any script through uv instead of the bare interpreter
-uv run python src/jobs/extract.py
-uv run python src/jobs/sql_test.py tests/data-quality/bronze
 ```
-`uv.lock` is the source of truth — never hand-edit dependency versions
-in `pyproject.toml` without running `uv lock` afterward.
+- Add deps with `uv add <pkg>` (`--dev` for dev-only)
+- Run everything through `uv run`, never bare `python` or `pip`
+- `uv.lock` is the source of truth; run `uv lock` after editing `pyproject.toml`
 
 ## Dev Container
-```
-.devcontainer/devcontainer.json
-```
-- open in VS Code → "Reopen in Container" (or GitHub Codespaces)
-- image mirrors `docker/Dockerfile`: JDK 17 + `uv` preinstalled, so
-  PySpark works out of the box — no local Java setup needed
-- on first attach, run `uv sync` to materialize `.venv` inside the
-  container from `uv.lock`
-- postgres/mongo are reached via `host.docker.internal`, same
-  correction every other container needs (see `architecture.md` §7,
-  the "localhost problem") — never edit `.env` itself for this
-- always run project commands as `uv run <cmd>` inside the container
-  terminal; don't `pip install` directly, it won't update `uv.lock`
-- code is bind-mounted, so edits on the host show up in the container
-  immediately — no rebuild needed for Python changes
+- Open in VS Code → "Reopen in Container", then run `uv sync`
+- Image mirrors `docker/Dockerfile` (JDK 17 + `uv`)
+- Postgres and Mongo are reached via `host.docker.internal`; never edit `.env` for this
 
-## Repository Structure
+## Structure
 ```
-airflow/        # dags/walmart_pipeline_dag.py + bind-mounted logs/plugins
-docker/         # Dockerfile, Dockerfile.airflow, docker-compose.yaml, entrypoint.sh
-docs/           # deep-dive docs: airflow.md, dbt.md, docker.md, pipeline.md, scripts.md, tests.md, src-utils.md
-jars/           # Mongo Spark connector + Postgres JDBC, checked in for offline Spark startup
-pipeline/       # run_pipeline.ps1 — Windows entry point
-scripts/        # flat ops/dev scripts: preflight/clean/setup_env/monitor_logs/backup/ci_local/db_shell + run_*.py wrappers
-src/jobs/       # pipeline runtime: extract.py, sql_test.py, ci_seed_bronze.py
-sql/            # hand-written functions/triggers/reports
-tests/          # standalone SQL data-quality suite, one folder per layer
-src/utils/      # engine.py, connection.py, logger.py — shared infra
-dbt/             # dbt project: silver + gold models, schema tests
-reports/        # generated markdown reports + chart PNGs
-main.py         # entry point for the standalone Docker image
+airflow/     DAGs, logs, plugins
+contracts/   per-table data contracts
+docker/      Dockerfiles, compose, entrypoint
+docs/        deep-dive docs
+gx/          Great Expectations suites + runner
+jars/        Spark connectors (offline startup)
+pipeline/    Windows entry point
+scripts/     ops and dev scripts
+src/jobs/    pipeline runtime
+src/utils/   engine, connection, logger
+sql/         functions, triggers, reports
+tests/       SQL data-quality suite per layer
+dbt/         silver + gold models
+reports/     generated reports and charts
+main.py      Docker entry point
 ```
 
-## Coding Conventions
-- snake_case for variables, functions, filenames, dbt model names
-- comments short and meaningful — explain *why*, not *what*
-- type hints on every function signature; docstring on every public one
-- one function = one responsibility (see `extract.py`'s stage split as
-  the reference pattern)
-- run `uv run ruff format .` and `uv run ruff check .` before committing
+## Coding Style
+- `snake_case` for variables, functions, files, dbt models
+- Type hints on every signature; docstring on every public function
+- One function, one job
+- Run `uv run ruff format .` and `uv run ruff check .` before committing
 
-Example:
+### Comments
+- One short line above the function or block, explaining *why*
+- No comments between lines of code
+- Use an inline comment only when a line is not obvious
+- Keep them plain and brief; no paragraphs
+
 ```python
+# Postgres has no ObjectId type, so cast _id to string
 def sanitize_for_postgres(doc: dict) -> dict:
-    # Postgres has no BSON ObjectId type, so cast _id to string early
     doc["_id"] = str(doc["_id"])
     return doc
 ```
 
-## Pipeline Stage Rule
-The pipeline has 7 fixed stages (preflight → extract → bronze tests →
-dbt silver → silver tests → dbt gold → gold tests), run identically by
-all three runners. **If you change the stage order, add a stage, or
-redefine "success," update `run_pipeline.ps1` AND the Airflow DAG in the
-same change** — nothing enforces this automatically, it's a convention.
+## Pipeline Stages
+Eight fixed stages: preflight → extract → bronze tests → dbt silver → silver tests → dbt gold → gold tests → Great Expectations.
+
+If you change the order, add a stage, or redefine success, update `run_pipeline.ps1` and the Airflow DAG in the same change.
+
+## Data Contracts
+- One YAML per table, never one per layer
+- Edit only human fields (`description`, `transformation`, `tests`)
+- Never hand-edit machine fields (`row_count`, `observed_*`, `sync_status`, `last_observed_at`)
+- Re-sync after any schema change:
+```bash
+uv run python scripts/run_update_contract.py --check-only   # drift gate, writes nothing
+uv run python scripts/run_update_contract.py                # sync counts, types, stats
+uv run python scripts/run_update_contract.py --fix-types    # adopt observed DB types
+```
 
 ## Testing
-Two independent, non-overlapping test systems — don't conflate them:
 ```bash
-# dbt-native tests (schema.yml column/table checks)
-uv run dbt test --select silver
-uv run dbt test --select gold
-
-# standalone SQL data-quality suite (schema-driven PL/pgSQL checks)
-uv run python src/jobs/sql_test.py tests/data-quality/silver
+uv run dbt test --select silver          # dbt tests (also: gold)
+uv run python src/jobs/sql_test.py tests/data-quality/silver   # SQL suite
+uv run python -m gx.run --layer all      # Great Expectations
+uv run pytest                            # unit + smoke
 ```
-- every new dbt model needs schema.yml tests
-- every new extract/transform function needs at least one unit test
-- use small fixture data, never real Mongo/Postgres data, in tests
+- Every new dbt model needs `schema.yml` tests
+- Every new extract/transform function needs a unit test
+- Use small fixtures, never real data
 
-## Git Workflow
-Work on one file or one logical change at a time.
+## Git
+- Pull first: `git pull --rebase`
+- One logical change per commit; stage files explicitly with `git add <file>`
+- Conventional Commits, enforced by the local hook: `type(scope): summary`
+- Types: `feat|fix|docs|chore|refactor|test|ci|build|perf|style|revert`
+- Present tense, subject under 72 chars (aim for 50)
+- Bare `area:` prefixes fail the hook; always use `type(scope):`
+- Add a body line only when the *why* isn't obvious
+
 ```bash
-# stage only the file you edited
-git add src/jobs/extract.py
-
-# commit with a clear, meaningful message
-git commit -m "extract: fall back to append-only when no unique index"
+git commit -m "fix(docker): pin JDK to 17" -m "Mongo connector is untested on JDK 21"
 ```
-Commit message rules:
-- present tense, short summary (<= 50 chars)
-- prefix by area: `extract:`, `dbt:`, `airflow:`, `docker:`, `tests:`,
-  `src:`, `docs:`
-- add a body line for *why*, if not obvious:
-```bash
-git commit -m "docker: pin JDK to 17" \
-  -m "PySpark 3.5.x mongo connector is untested on JDK 21"
-```
-- one commit = one file/change, unless files are inseparable (a model
-  and its schema.yml test, a function and its test)
-- pull before starting new work: `git pull --rebase`
 
-## Do / Don't for Agents
-- do keep `.env` untouched — container-specific host corrections belong
-  in the consuming layer (DAG `_PREAMBLE`, `docker run` flags), never in
-  `.env` itself
-- do auto-discover Mongo collections; never hardcode a collection list
-- do run `uv run pytest` and the SQL suite before committing pipeline
-  changes
-- don't commit `.venv`, `__pycache__`, `.env`, or anything under
-  `data/raw` or `data/processed`
-- don't bundle unrelated changes (e.g. a dbt model fix + a Dockerfile
-  bump) into one commit
-- don't rewrite working stage logic without being asked
+## Rules for Agents
+**Do**
+- Keep `.env` untouched; host fixes go in the DAG `_PREAMBLE` or `docker run` flags
+- Read schema names from `.env` via `src/utils/engine.py`
+- Auto-discover Mongo collections
+- Run `uv run pytest` and the SQL suite before committing pipeline changes
 
-## Quick Reference
-| Task | Command |
-|---|---|
-| create env | `uv venv` |
-| install deps | `uv sync` |
-| add dependency | `uv add <pkg>` |
-| run extract | `uv run python src/jobs/extract.py` |
-| run dbt tests | `uv run dbt test --select silver` |
-| run SQL suite | `uv run python src/jobs/sql_test.py tests/data-quality/<layer>` |
-| format code | `uv run ruff format .` |
-| lint code | `uv run ruff check .` |
-| stage one file | `git add <file>` |
-| commit | `git commit -m "<area>: <summary>"` |
+**Don't**
+- Commit `.venv`, `__pycache__`, `.env`, `data/raw`, or `data/processed`
+- Mix unrelated changes in one commit
+- Rewrite working stage logic unless asked
+- Hardcode schema names or collection lists
