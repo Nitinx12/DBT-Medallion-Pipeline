@@ -1,0 +1,319 @@
+apiVersion: 1.0.0
+kind: DataContract
+metadata:
+  name: bronze.etl_logs
+  layer: bronze
+  version: 1.0.0
+  status: active
+  owner: data-engineering
+  domain: retail-ingestion
+  description: Auto-created from live bronze.etl_logs. Review types, keys, grain.
+dataset:
+  server: postgres-prod
+  database: walmart_db
+  schema: bronze
+  table: etl_logs
+  grain: unknown -- set the business grain after review
+  upstream: bronze (auto-discovered)
+  row_count: 689
+  column_count_contract: 22
+  column_count_observed: 22
+  table_exists: true
+  last_observed_at: '2026-10-13T14:51:42+00:00'
+columns:
+- name: id
+  data_type: BIGINT
+  nullable: false
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: BIGINT
+  observed_nullable: false
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 689
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: run_id
+  data_type: TEXT
+  nullable: false
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: TEXT
+  observed_nullable: false
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 117
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: table_name
+  data_type: TEXT
+  nullable: false
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: TEXT
+  observed_nullable: false
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 6
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: mode
+  data_type: TEXT
+  nullable: true
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: TEXT
+  observed_nullable: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 2
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: status
+  data_type: TEXT
+  nullable: false
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: TEXT
+  observed_nullable: false
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 3
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: mongo_rows
+  data_type: BIGINT
+  nullable: true
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: BIGINT
+  observed_nullable: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 7
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: postgres_rows_before
+  data_type: BIGINT
+  nullable: true
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: BIGINT
+  observed_nullable: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 8
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: new_rows
+  data_type: BIGINT
+  nullable: true
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: BIGINT
+  observed_nullable: true
+  null_count: 687
+  null_fraction: 0.9971
+  distinct_count: 1
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: skipped_rows
+  data_type: BIGINT
+  nullable: true
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: BIGINT
+  observed_nullable: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 15
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: postgres_rows_after
+  data_type: BIGINT
+  nullable: true
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: BIGINT
+  observed_nullable: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 8
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: columns_count
+  data_type: INTEGER
+  nullable: true
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: INTEGER
+  observed_nullable: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 5
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: validation_status
+  data_type: TEXT
+  nullable: true
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: TEXT
+  observed_nullable: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 2
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: validation_detail
+  data_type: TEXT
+  nullable: true
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: TEXT
+  observed_nullable: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 9
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: error
+  data_type: TEXT
+  nullable: true
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: TEXT
+  observed_nullable: true
+  null_count: 667
+  null_fraction: 0.9681
+  distinct_count: 14
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: started_at
+  data_type: TIMESTAMPTZ
+  nullable: true
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: TIMESTAMPTZ
+  observed_nullable: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 689
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: finished_at
+  data_type: TIMESTAMPTZ
+  nullable: true
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: TIMESTAMPTZ
+  observed_nullable: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 689
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: duration_seconds
+  data_type: FLOAT8
+  nullable: true
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: FLOAT8
+  observed_nullable: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 678
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: logged_at
+  data_type: TIMESTAMPTZ
+  nullable: false
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: TIMESTAMPTZ
+  observed_nullable: false
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 689
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: incremental_column
+  data_type: TEXT
+  nullable: true
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: TEXT
+  observed_nullable: true
+  null_count: 14
+  null_fraction: 0.0203
+  distinct_count: 1
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: batch_rows
+  data_type: BIGINT
+  nullable: true
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: BIGINT
+  observed_nullable: true
+  null_count: 2
+  null_fraction: 0.0029
+  distinct_count: 11
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: rows_inserted
+  data_type: BIGINT
+  nullable: true
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: BIGINT
+  observed_nullable: true
+  null_count: 2
+  null_fraction: 0.0029
+  distinct_count: 8
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: rows_updated
+  data_type: BIGINT
+  nullable: true
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: BIGINT
+  observed_nullable: true
+  null_count: 2
+  null_fraction: 0.0029
+  distinct_count: 5
+  description: 'Auto-created by sync: present in DB, needs human review.'
+observation:
+  observed_at: '2026-10-13T14:51:42+00:00'
+  database: walmart_db
+  schema: bronze
+  table: etl_logs
+  row_count: 689
+  drifts: []
+terms:
+  breakingChange: auto-created contract -- confirm grain, keys, and types before relying
+    on it.

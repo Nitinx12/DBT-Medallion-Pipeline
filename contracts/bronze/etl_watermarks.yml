@@ -1,0 +1,163 @@
+apiVersion: 1.0.0
+kind: DataContract
+metadata:
+  name: bronze.etl_watermarks
+  layer: bronze
+  version: 1.0.0
+  status: active
+  owner: data-engineering
+  domain: retail-ingestion
+  description: Auto-created from live bronze.etl_watermarks. Review types, keys, grain.
+dataset:
+  server: postgres-prod
+  database: walmart_db
+  schema: bronze
+  table: etl_watermarks
+  grain: unknown -- set the business grain after review
+  upstream: bronze (auto-discovered)
+  row_count: 6
+  column_count_contract: 10
+  column_count_observed: 10
+  table_exists: true
+  last_observed_at: '2026-10-13T14:51:42+00:00'
+columns:
+- name: table_name
+  data_type: TEXT
+  nullable: false
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: TEXT
+  observed_nullable: false
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 6
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: last_created_at
+  data_type: TIMESTAMPTZ
+  nullable: true
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: TIMESTAMPTZ
+  observed_nullable: true
+  null_count: 6
+  null_fraction: 1.0
+  distinct_count: 0
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: last_run_at
+  data_type: TIMESTAMPTZ
+  nullable: false
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: TIMESTAMPTZ
+  observed_nullable: false
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 6
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: last_run_mode
+  data_type: TEXT
+  nullable: true
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: TEXT
+  observed_nullable: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: last_run_new_rows
+  data_type: BIGINT
+  nullable: false
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: BIGINT
+  observed_nullable: false
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: updated_at
+  data_type: TIMESTAMPTZ
+  nullable: false
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: TIMESTAMPTZ
+  observed_nullable: false
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 6
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: incremental_column
+  data_type: TEXT
+  nullable: true
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: TEXT
+  observed_nullable: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: last_watermark_value
+  data_type: TIMESTAMPTZ
+  nullable: true
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: TIMESTAMPTZ
+  observed_nullable: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 2
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: last_run_rows_inserted
+  data_type: BIGINT
+  nullable: false
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: BIGINT
+  observed_nullable: false
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1
+  description: 'Auto-created by sync: present in DB, needs human review.'
+- name: last_run_rows_updated
+  data_type: BIGINT
+  nullable: false
+  unique: false
+  in_contract: true
+  auto_generated: true
+  sync_status: ok
+  observed_data_type: BIGINT
+  observed_nullable: false
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1
+  description: 'Auto-created by sync: present in DB, needs human review.'
+observation:
+  observed_at: '2026-10-13T14:51:42+00:00'
+  database: walmart_db
+  schema: bronze
+  table: etl_watermarks
+  row_count: 6
+  drifts: []
+terms:
+  breakingChange: auto-created contract -- confirm grain, keys, and types before relying
+    on it.

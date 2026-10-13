@@ -1,0 +1,195 @@
+apiVersion: 1.0.0
+kind: DataContract
+metadata:
+  name: bronze.employees
+  layer: bronze
+  version: 1.0.0
+  status: active
+  owner: data-engineering
+  domain: retail-ingestion
+  description: Raw 1:1 mirror of MongoDB walmart.employees into Postgres bronze.employees.
+dataset:
+  server: postgres-prod
+  database: walmart_db
+  schema: bronze
+  table: employees
+  grain: one row per Mongo document (_id unique)
+  upstream: mongodb.walmart.employees
+  loadStrategy: incremental watermark pushdown + INSERT ... ON CONFLICT (_id) upsert
+  watermarkColumn: updated_timestamp (fallback updated_at > created_timestamp > created_at)
+  row_count: 1
+  column_count_contract: 11
+  column_count_observed: 11
+  table_exists: true
+  last_observed_at: '2026-10-13T14:51:42+00:00'
+sla:
+  freshness: incremental each pipeline run
+  availability: table must be non-empty after extract
+columns:
+- name: _id
+  data_type: TEXT
+  nullable: false
+  unique: true
+  primary_key: true
+  description: Mongo ObjectId serialized to string. Merge key + lineage only.
+  tests:
+  - not_null
+  - unique
+  observed_data_type: TEXT
+  observed_nullable: false
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1
+  sync_status: ok
+- name: employee_id
+  data_type: BIGINT
+  nullable: true
+  unique: true
+  description: Business key, raw as stored in Mongo (cast to INT only in silver).
+  tests:
+  - not_null
+  - unique
+  observed_data_type: BIGINT
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1
+  sync_status: ok
+- name: store_id
+  data_type: BIGINT
+  nullable: true
+  unique: false
+  description: Logical FK to stores.store_id, raw string. Enforced only in silver.
+  tests:
+  - not_null
+  observed_data_type: BIGINT
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1
+  sync_status: ok
+- name: first_name
+  data_type: TEXT
+  nullable: true
+  unique: false
+  description: Raw first name.
+  observed_data_type: TEXT
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1
+  sync_status: ok
+- name: last_name
+  data_type: TEXT
+  nullable: true
+  unique: false
+  description: Raw last name.
+  observed_data_type: TEXT
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1
+  sync_status: ok
+- name: email
+  data_type: TEXT
+  nullable: true
+  unique: false
+  description: Raw email string.
+  observed_data_type: TEXT
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1
+  sync_status: ok
+- name: job_title
+  data_type: TEXT
+  nullable: true
+  unique: false
+  description: Raw job title.
+  tests:
+  - not_null
+  observed_data_type: TEXT
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1
+  sync_status: ok
+- name: salary
+  data_type: BIGINT
+  nullable: true
+  unique: false
+  description: Raw as inferred by Spark; range-checked (>= 0) from silver on.
+  observed_data_type: BIGINT
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1
+  sync_status: ok
+- name: is_active
+  data_type: TEXT
+  nullable: true
+  unique: false
+  allowed_values:
+  - Y
+  - N
+  description: Source flag Y/N. Converted to BOOLEAN only in silver.
+  tests:
+  - not_null
+  - accepted_values_Y_N
+  observed_data_type: TEXT
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1
+  sync_status: ok
+- name: created_timestamp
+  data_type: TEXT
+  nullable: true
+  unique: false
+  description: Stored as 'YYYY-MM-DD HH:MM:SS' string in Mongo.
+  tests:
+  - not_null
+  observed_data_type: TEXT
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1
+  sync_status: ok
+- name: updated_timestamp
+  data_type: TEXT
+  nullable: true
+  unique: false
+  description: Watermark column, same string format.
+  tests:
+  - not_null
+  observed_data_type: TEXT
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1
+  sync_status: ok
+quality:
+  enforcedBy:
+  - tests/data-quality/bronze/01_lp_check_bronze_tables.sql (non-empty)
+  - tests/data-quality/bronze/03_lp_check_metadata_columns.sql
+  - gx/suites/bronze_suites.py::employees_validation
+terms:
+  breakingChange: renaming, dropping, or changing the meaning of any column is breaking.
+observation:
+  observed_at: '2026-10-13T14:51:42+00:00'
+  database: walmart_db
+  schema: bronze
+  table: employees
+  row_count: 1
+  drifts: []
