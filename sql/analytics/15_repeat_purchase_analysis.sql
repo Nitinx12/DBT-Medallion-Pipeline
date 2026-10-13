@@ -27,7 +27,7 @@ WITH customer_orders AS (
         o.customer_id,
         o.order_id,
         o.order_timestamp::DATE AS order_date,
-        c.first_name || ' ' || c.last_name AS customer_name,
+        c.customer_name AS customer_name,
         SUM(oi.line_amount) AS order_amount
     FROM gold.dim_orders AS o
     INNER JOIN gold.fact_order_items AS oi
