@@ -246,6 +246,89 @@ def get_kpis(filters: Filters) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Extended KPIs — volume, loyalty, and operational leak in one pass
+# ---------------------------------------------------------------------------
+@st.cache_data(ttl=600)
+def get_kpis_extended(filters: Filters) -> dict:
+    """Units, repeat customers, and cancelled/returned orders.
+
+    Totals always return exactly one row (COALESCE, no GROUP BY); the
+    repeat count is 0 when the per customer CTE is empty. Ratios are
+    derived in Python with zero guards (see safe_div in callers).
+    """
+    where, params = _where(filters)
+    sql = f"""
+        WITH per_customer AS (
+            SELECT cu.customer_id, COUNT(DISTINCT o.order_id) AS n_orders
+            {BASE_FROM}
+            WHERE {where} AND cu.customer_id IS NOT NULL
+            GROUP BY cu.customer_id
+        ),
+        totals AS (
+            SELECT
+                COALESCE(SUM(foi.line_amount), 0) AS revenue,
+                COALESCE(SUM(foi.quantity), 0)    AS units,
+                COUNT(DISTINCT o.order_id)        AS orders,
+                COUNT(DISTINCT cu.customer_id)    AS customers,
+                COUNT(DISTINCT o.order_id) FILTER (
+                    WHERE LOWER(o.order_status) IN ('cancelled', 'returned')
+                ) AS cancelled
+            {BASE_FROM}
+            WHERE {where}
+        )
+        SELECT t.*,
+               (SELECT COUNT(*) FROM per_customer WHERE n_orders >= 2)
+                   AS repeat_customers
+        FROM totals t
+    """
+    row = _run(sql, params).iloc[0]
+    return {
+        "revenue": float(row["revenue"]),
+        "units": int(row["units"]),
+        "orders": int(row["orders"]),
+        "customers": int(row["customers"]),
+        "cancelled": int(row["cancelled"]),
+        "repeat_customers": int(row["repeat_customers"]),
+    }
+
+
+@st.cache_data(ttl=600)
+def get_daily_kpis(filters: Filters) -> pd.DataFrame:
+    """One row per day: revenue, distinct orders, distinct customers.
+
+    Feeds the KPI sparklines. Bounded by the window length (a full year
+    is ~366 rows), so it stays cheap.
+    """
+    where, params = _where(filters)
+    sql = f"""
+        SELECT o.order_timestamp::date AS day,
+               SUM(foi.line_amount) AS revenue,
+               COUNT(DISTINCT foi.order_id) AS orders,
+               COUNT(DISTINCT o.customer_id) AS customers
+        {BASE_FROM}
+        WHERE {where}
+        GROUP BY 1
+        ORDER BY 1
+    """
+    return _run(sql, params)
+
+
+@st.cache_data(ttl=600)
+def get_monthly_revenue(filters: Filters) -> pd.DataFrame:
+    """Revenue per calendar month in the window (month-over-month growth)."""
+    where, params = _where(filters)
+    sql = f"""
+        SELECT date_trunc('month', o.order_timestamp) AS month,
+               SUM(foi.line_amount) AS revenue
+        {BASE_FROM}
+        WHERE {where}
+        GROUP BY 1
+        ORDER BY 1
+    """
+    return _run(sql, params)
+
+
+# ---------------------------------------------------------------------------
 # Revenue trend — aggregated in SQL at the requested granularity
 # ---------------------------------------------------------------------------
 @st.cache_data(ttl=600)

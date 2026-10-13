@@ -45,53 +45,33 @@ def _delta_state(pct: float | None) -> str:
     return "flat"
 
 
-def kpi_cards(
-    revenue: float,
-    orders: int,
-    customers: int,
-    aov: float,
-    deltas: dict[str, float | None],
-    delta_label: str = "vs prior",
-) -> None:
-    """Render the 4-card KPI row as a single HTML grid (one st.markdown call)."""
-    items = [
-        {
-            "label": "Total Revenue",
-            "icon": "💰",
-            "value": f"${revenue:,.0f}",
-            "delta": deltas.get("revenue"),
-            "foot": "Gross merchandise value",
-            "accent": WALMART_BLUE,
-        },
-        {
-            "label": "Orders",
-            "icon": "📦",
-            "value": f"{orders:,}",
-            "delta": deltas.get("orders"),
-            "foot": "Distinct order_id",
-            "accent": "#0E9F6E",
-        },
-        {
-            "label": "Customers",
-            "icon": "👥",
-            "value": f"{customers:,}",
-            "delta": deltas.get("customers"),
-            "foot": "Unique shoppers",
-            "accent": "#7B5CFF",
-        },
-        {
-            "label": "Avg Order Value",
-            "icon": "🧾",
-            "value": f"${aov:,.2f}",
-            "delta": deltas.get("aov"),
-            "foot": "Revenue / orders",
-            "accent": WALMART_YELLOW,
-        },
-    ]
+def sparkline_svg(values: list[float], color: str = "#0071CE") -> str:
+    """Tiny inline SVG trend line for KPI cards (no extra dependency).
 
+    Returns "" for fewer than 2 points so empty windows degrade to no
+    sparkline instead of a broken image.
+    """
+    clean = [float(v) for v in values or []]
+    if len(clean) < 2:
+        return ""
+    w, h = 120.0, 32.0
+    lo, hi = min(clean), max(clean)
+    span = (hi - lo) or 1.0
+    pts = " ".join(
+        f"{i * w / (len(clean) - 1):.1f},{h - (v - lo) / span * (h - 4) - 2:.1f}"
+        for i, v in enumerate(clean)
+    )
+    return (
+        f'<svg width="{w:.0f}" height="{h:.0f}" viewBox="0 0 {w:.0f} {h:.0f}">'
+        f'<polyline fill="none" stroke="{color}" stroke-width="2" points="{pts}"/></svg>'
+    )
+
+
+def _render_kpi_grid(items: list[dict], delta_label: str) -> None:
+    """Render any list of card dicts as one HTML grid (one st.markdown)."""
     cards_html = ""
     for item in items:
-        pct = item["delta"]
+        pct = item.get("delta")
         state = _delta_state(pct)
         icon = _DELTA_ICON[state]
         label_e = html_lib.escape(delta_label)
@@ -110,10 +90,14 @@ def kpi_cards(
         label = html_lib.escape(item["label"])
         value = html_lib.escape(item["value"])
         foot = html_lib.escape(item["foot"])
+        spark = sparkline_svg(
+            item.get("sparkline") or [], item.get("accent", "#0071CE")
+        )
         cards_html += f"""
         <div class="kpi-card" style="--kpi-accent:{item["accent"]};">
             <div class="kpi-card__label">{item["icon"]} {label}</div>
             <div class="kpi-card__value">{value}</div>
+            {spark}
             {delta_html}
             <div class="kpi-card__foot">{foot}</div>
         </div>
@@ -122,6 +106,68 @@ def kpi_cards(
     st.markdown(
         _safe_html(f'<div class="kpi-grid">{cards_html}</div>'), unsafe_allow_html=True
     )
+
+
+def kpi_cards(
+    revenue: float,
+    orders: int,
+    customers: int,
+    aov: float,
+    deltas: dict[str, float | None],
+    delta_label: str = "vs prior",
+    sparklines: dict[str, list[float]] | None = None,
+) -> None:
+    """Render the 4-card performance KPI row (revenue, orders, customers, AOV)."""
+    sparks = sparklines or {}
+    items = [
+        {
+            "label": "Total Revenue",
+            "icon": "💰",
+            "value": f"${revenue:,.0f}",
+            "delta": deltas.get("revenue"),
+            "foot": "Gross merchandise value",
+            "accent": WALMART_BLUE,
+            "sparkline": sparks.get("revenue", []),
+        },
+        {
+            "label": "Orders",
+            "icon": "📦",
+            "value": f"{orders:,}",
+            "delta": deltas.get("orders"),
+            "foot": "Distinct order_id",
+            "accent": "#0E9F6E",
+            "sparkline": sparks.get("orders", []),
+        },
+        {
+            "label": "Customers",
+            "icon": "👥",
+            "value": f"{customers:,}",
+            "delta": deltas.get("customers"),
+            "foot": "Unique shoppers",
+            "accent": "#7B5CFF",
+            "sparkline": sparks.get("customers", []),
+        },
+        {
+            "label": "Avg Order Value",
+            "icon": "🧾",
+            "value": f"${aov:,.2f}",
+            "delta": deltas.get("aov"),
+            "foot": "Revenue / orders",
+            "accent": WALMART_YELLOW,
+            "sparkline": sparks.get("aov", []),
+        },
+    ]
+    _render_kpi_grid(items, delta_label)
+
+
+def kpi_quality_cards(items: list[dict], delta_label: str = "vs prior") -> None:
+    """Render the quality and growth KPI row.
+
+    Each item: label, icon, value (preformatted str), delta (pct or None),
+    foot, accent, optional sparkline list. Values arrive formatted so this
+    stays a pure renderer with no business logic.
+    """
+    _render_kpi_grid(items, delta_label)
 
 
 # ---------------------------------------------------------------------------
