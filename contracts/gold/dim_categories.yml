@@ -1,0 +1,86 @@
+apiVersion: 1.0.0
+kind: DataContract
+metadata:
+  name: gold.dim_categories
+  layer: gold
+  version: 1.0.0
+  status: active
+  owner: analytics-engineering
+  domain: retail-analytics
+  consumers:
+  - dashboard
+  - reports
+  description: Category dimension. Append-only, mirrors silver.categories 1:1 plus
+    gold_loaded_at.
+dataset:
+  server: postgres-prod
+  database: walmart_db
+  schema: gold
+  table: dim_categories
+  grain: category_id unique, NOT NULL
+  upstream: silver.categories
+  dbtModel: dbt/models/gold/dim_categories.sql
+  loadStrategy: incremental append on category_id
+  row_count: 7
+  column_count_contract: 3
+  column_count_observed: 3
+  table_exists: true
+  last_observed_at: '2026-10-13T14:51:42+00:00'
+columns:
+- name: category_id
+  data_type: BIGINT
+  nullable: false
+  unique: true
+  primary_key: true
+  tests:
+  - not_null
+  - unique
+  observed_data_type: BIGINT
+  observed_nullable: false
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 7
+  sync_status: ok
+- name: category_name
+  data_type: TEXT
+  nullable: true
+  unique: true
+  tests:
+  - not_null
+  - unique
+  observed_data_type: TEXT
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 7
+  sync_status: ok
+- name: gold_loaded_at
+  data_type: TIMESTAMPTZ
+  nullable: true
+  unique: false
+  description: Pipeline load timestamp (CURRENT_TIMESTAMP at dbt run).
+  tests:
+  - not_null
+  observed_data_type: TIMESTAMPTZ
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 2
+  sync_status: ok
+quality:
+  enforcedBy:
+  - dbt/models/gold/schema.yml
+  - tests/data-quality/gold/03_lp_check_duplicates.sql
+terms:
+  breakingChange: reassigning a category_id or renaming a column consumed by dashboard/reports
+    is breaking.
+observation:
+  observed_at: '2026-10-13T14:51:42+00:00'
+  database: walmart_db
+  schema: gold
+  table: dim_categories
+  row_count: 7
+  drifts: []

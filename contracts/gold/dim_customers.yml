@@ -1,0 +1,202 @@
+apiVersion: 1.0.0
+kind: DataContract
+metadata:
+  name: gold.dim_customers
+  layer: gold
+  version: 1.0.0
+  status: active
+  owner: analytics-engineering
+  domain: retail-analytics
+  consumers:
+  - dashboard
+  - reports
+  description: Customer dimension, Type 1 (latest version wins). One row per customer_id.
+dataset:
+  server: postgres-prod
+  database: walmart_db
+  schema: gold
+  table: dim_customers
+  grain: customer_id unique, NOT NULL
+  upstream: silver.customers
+  dbtModel: dbt/models/gold/dim_customers.sql
+  loadStrategy: incremental merge on customer_id with 3-day lookback on updated_timestamp
+  row_count: 2000
+  column_count_contract: 12
+  column_count_observed: 12
+  table_exists: true
+  last_observed_at: '2026-10-13T14:51:42+00:00'
+columns:
+- name: customer_id
+  data_type: INTEGER
+  nullable: false
+  unique: true
+  primary_key: true
+  tests:
+  - not_null
+  - unique
+  observed_data_type: INTEGER
+  observed_nullable: false
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 2000
+  sync_status: ok
+- name: customer_name
+  data_type: VARCHAR
+  nullable: true
+  unique: false
+  tests:
+  - not_null
+  observed_data_type: VARCHAR
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1966
+  sync_status: ok
+- name: phone
+  data_type: TEXT
+  nullable: true
+  unique: false
+  description: Normalized +1-XXX-XXX-XXXX from silver; NULL when invalid. (Present
+    in dim_customers.sql; missing from schema.yml.)
+  observed_data_type: TEXT
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 2000
+  sync_status: ok
+- name: phone_extension
+  data_type: TEXT
+  nullable: true
+  unique: false
+  description: Extension digits from silver; NULL when none. (Present in dim_customers.sql;
+    missing from schema.yml.)
+  observed_data_type: TEXT
+  observed_nullable: true
+  in_contract: true
+  null_count: 816
+  null_fraction: 0.408
+  distinct_count: 1133
+  sync_status: ok
+- name: email
+  data_type: VARCHAR
+  nullable: true
+  unique: false
+  format: email
+  tests:
+  - not_null
+  observed_data_type: VARCHAR
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1994
+  sync_status: ok
+- name: is_active
+  data_type: BOOLEAN
+  nullable: true
+  unique: false
+  tests:
+  - accepted_values_true_false
+  observed_data_type: BOOLEAN
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 2
+  sync_status: ok
+- name: city
+  data_type: VARCHAR
+  nullable: true
+  unique: false
+  tests:
+  - not_null
+  observed_data_type: VARCHAR
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1878
+  sync_status: ok
+- name: province
+  data_type: VARCHAR
+  nullable: true
+  unique: false
+  tests:
+  - not_null
+  observed_data_type: VARCHAR
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 50
+  sync_status: ok
+- name: country
+  data_type: VARCHAR
+  nullable: true
+  unique: false
+  tests:
+  - not_null
+  observed_data_type: VARCHAR
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 2
+  sync_status: ok
+- name: created_timestamp
+  data_type: TIMESTAMP
+  nullable: true
+  unique: false
+  tests:
+  - not_null
+  observed_data_type: TIMESTAMP
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 2000
+  sync_status: ok
+- name: updated_timestamp
+  data_type: TIMESTAMP
+  nullable: true
+  unique: false
+  tests:
+  - not_null
+  observed_data_type: TIMESTAMP
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1998
+  sync_status: ok
+- name: gold_loaded_at
+  data_type: TIMESTAMPTZ
+  nullable: true
+  unique: false
+  tests:
+  - not_null
+  observed_data_type: TIMESTAMPTZ
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 3
+  sync_status: ok
+quality:
+  enforcedBy:
+  - dbt/models/gold/schema.yml
+  - tests/data-quality/gold/03_lp_check_duplicates.sql
+  - tests/data-quality/gold/07_row_count_validation.sql
+terms:
+  breakingChange: changing grain, dropping a column, or removing phone/phone_extension
+    (used downstream) is breaking.
+observation:
+  observed_at: '2026-10-13T14:51:42+00:00'
+  database: walmart_db
+  schema: gold
+  table: dim_customers
+  row_count: 2000
+  drifts: []
