@@ -135,6 +135,8 @@ dags/__pycache__/
 target/
 dbt_packages/
 logs/
+# VS Code dbt Power User telemetry id (machine-specific, not a secret)
+dbt/.user.yml
 
 # ==========================
 # Terraform (if used)
@@ -160,10 +162,10 @@ logs/
 # on editable installs — re-allow those specific paths.
 __init__.py
 !scripts/__init__.py
-!scripts/python/__init__.py
 !src/__init__.py
 !src/utils/__init__.py
 !src/jobs/__init__.py
+!tests/smoke/__init__.py
 !dashboard/__init__.py
 !dashboard/lib/__init__.py
 !dashboard/helpers/__init__.py

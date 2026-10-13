@@ -83,6 +83,9 @@ static-checks: lint format-check ## Run all static checks (no tests, no data mov
 unit-test: ## Run fast unit tests (no live DB/Spark required)
 	$(UV) run pytest $(UNIT_DIR) -v
 
+smoke-test: ## Run smoke tests (imports, layout, CLIs, DAGs, live pings)
+	$(UV) run pytest tests/smoke -v
+
 # ---- CI entrypoint -----------------------------------------------------
 ci: static-checks unit-test ## CI entrypoint: static checks + unit tests (safe to run without live infra)
 

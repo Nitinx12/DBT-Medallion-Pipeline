@@ -45,8 +45,11 @@ dev = [
 # DAGs must never fail on import (broad timetable fallback) and build bash
 # via .format() so ${...} is not doubled as f-strings would require.
 "airflow/dags/*.py" = ["BLE001", "UP030", "UP032"]
+# Smoke tests intentionally swallow connection errors into pytest.skip,
+# and check subprocess return codes manually.
+"tests/smoke/*.py" = ["BLE001", "PLW1510"]
 [tool.pytest.ini_options]
-testpaths = ["tests/unit"]
+testpaths = ["tests/unit", "tests/smoke"]
 addopts = "-v --cov=src --cov=scripts --cov-report=term-missing"
 
 [tool.coverage.run]
