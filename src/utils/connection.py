@@ -5,7 +5,7 @@ Central place for opening/reusing database connections.
 
 Config comes from engine.py (already validated at import time, so if this
 module loads without raising, every required env var is present and correct).
-Logging goes through utils/logger.py so connection events show up in the
+Logging goes through src/utils/logger.py so connection events show up in the
 same log files as everything else.
 
 Usage:
@@ -34,8 +34,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine import URL
 from sqlalchemy.exc import SQLAlchemyError
 
-from . import engine as config
-from .logger import get_logger
+from src.utils import engine as config
+from src.utils.logger import get_logger
 
 # console_level=WARNING keeps "Opening MongoDB/Postgres connection..."
 # out of the terminal -- those still get written at INFO level to the daily

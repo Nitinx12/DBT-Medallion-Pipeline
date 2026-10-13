@@ -1,5 +1,5 @@
 """
-utils/logger.py
+src/utils/logger.py
 ================
 Central logging setup, shared by any script in this project.
 
@@ -12,7 +12,7 @@ Central logging setup, shared by any script in this project.
   while the file still captures full detail for later debugging.
 
 Usage:
-    from utils.logger import get_logger
+    from src.utils.logger import get_logger
     log = get_logger("incremental_loader")
 
     # Quiet terminal, full detail in the log file:

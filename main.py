@@ -184,7 +184,15 @@ def main() -> int:
         Stage(
             "Bronze Tests",
             "BRONZE SQL TESTS (tests/data-quality/bronze)",
-            [["uv", "run", "python", "scripts/python/sql_test.py", "tests/data-quality/bronze"]],
+            [
+                [
+                    "uv",
+                    "run",
+                    "python",
+                    "scripts/python/sql_test.py",
+                    "tests/data-quality/bronze",
+                ]
+            ],
         ),
         Stage(
             "Silver dbt",
@@ -198,7 +206,15 @@ def main() -> int:
         Stage(
             "Silver Tests",
             "SILVER SQL TESTS (tests/data-quality/silver)",
-            [["uv", "run", "python", "scripts/python/sql_test.py", "tests/data-quality/silver"]],
+            [
+                [
+                    "uv",
+                    "run",
+                    "python",
+                    "scripts/python/sql_test.py",
+                    "tests/data-quality/silver",
+                ]
+            ],
         ),
         Stage(
             "Gold dbt",
@@ -212,7 +228,15 @@ def main() -> int:
         Stage(
             "Gold Tests",
             "GOLD SQL TESTS (tests/data-quality/gold)",
-            [["uv", "run", "python", "scripts/python/sql_test.py", "tests/data-quality/gold"]],
+            [
+                [
+                    "uv",
+                    "run",
+                    "python",
+                    "scripts/python/sql_test.py",
+                    "tests/data-quality/gold",
+                ]
+            ],
         ),
         Stage(
             "Great Expectations",

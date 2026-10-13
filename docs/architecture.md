@@ -27,12 +27,12 @@ flowchart LR
 
 - **Docker**: `docker/Dockerfile` (standalone) + `docker/Dockerfile.airflow` (Compose stack). See `docker.md`.
 - **Localhost fix**: `.env` stays `localhost`; containers rewrite to `host.docker.internal` in DAG `_PREAMBLE`/`docker run`.
-- **Shared**: `utils/engine.py` (env validation at import), `utils/connection.py` (cached), `utils/logger.py` (console+file).
+- **Shared**: `src/utils/engine.py` (env validation at import), `src/utils/connection.py` (cached), `src/utils/logger.py` (console+file).
 
 ## Layout
 ```
-airflow/  docker/  docs/  jars/  pipeline/  scripts/python|bash/  sql/  tests/  utils/  dbt/
+airflow/  docker/  docs/  jars/  pipeline/  scripts/python|bash/  sql/  tests/  src/utils/  dbt/
 ```
 
 ## Next
-`pipeline.md` · `airflow.md` · `docker.md` · `dbt.md` · `scripts.md` · `tests.md` · `utils.md` · `health.md`
+`pipeline.md` · `airflow.md` · `docker.md` · `dbt.md` · `scripts.md` · `tests.md` · `src-utils.md` · `health.md`

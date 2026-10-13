@@ -22,8 +22,8 @@ import pandas as pd
 import streamlit as st
 from sqlalchemy import bindparam, text
 
-from utils import engine as config
-from utils.connection import get_postgres_engine
+from src.utils import engine as config
+from src.utils.connection import get_postgres_engine
 
 GOLD = config.POSTGRES_SCHEMA_GOLD
 

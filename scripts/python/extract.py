@@ -46,7 +46,7 @@ WHAT IT DOES
 8. Prints a clean Rich report at the end: per-collection row counts,
    rows skipped / inserted / updated, validation result, current
    watermark state, and a run summary -- plus full detail in the daily
-   log file via utils/logger.py and in `public.etl_logs`.
+   log file via src/utils/logger.py and in `public.etl_logs`.
 
 USAGE
 -----
@@ -94,7 +94,7 @@ console = Console()
 
 
 def _rich_showwarning(message, category, filename, lineno, file=None, line=None):
-    """Route Python's stdlib `warnings` (e.g. the UserWarning utils/engine.py
+    """Route Python's stdlib `warnings` (e.g. the UserWarning src/utils/engine.py
     raises for unset optional env vars) through Rich instead of the default
     raw two-line stderr dump, so *every* line printed by this script goes
     through the same console."""
@@ -117,9 +117,9 @@ from pyspark.sql.types import ArrayType, MapType, StructType
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 
-from utils import engine as config
-from utils.connection import get_mongo_db
-from utils.logger import get_logger
+from src.utils import engine as config
+from src.utils.connection import get_mongo_db
+from src.utils.logger import get_logger
 
 log = get_logger("extract")
 

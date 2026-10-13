@@ -1,10 +1,10 @@
 """
 Quick one-off: list every table + column in the Postgres `gold` schema,
-using this project's own utils/connection.py so it respects .env exactly
+using this project's own src/utils/connection.py so it respects .env exactly
 the way extract.py and everything else does.
 
 Lives in scripts/python/, so the repo root is added to sys.path below —
-that's what makes `from utils.connection import ...` resolve regardless of
+that's what makes `from src.utils.connection import ...` resolve regardless of
 your current directory.
 
 Run from the repo root:
@@ -18,7 +18,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from utils.connection import get_postgres_engine
+from src.utils.connection import get_postgres_engine
 
 engine = get_postgres_engine()
 

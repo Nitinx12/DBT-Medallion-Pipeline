@@ -58,7 +58,7 @@ import logging
 import great_expectations as gx
 
 from gx.context import get_context, get_gold_asset
-from utils.logger import get_logger
+from src.utils.logger import get_logger
 
 log = get_logger("gx.suites.gold", console_level=logging.WARNING)
 

@@ -23,6 +23,6 @@ def apply_secrets() -> None:
 
 def get_engine():
     apply_secrets()
-    from utils.connection import get_postgres_engine
+    from src.utils.connection import get_postgres_engine
 
     return get_postgres_engine()

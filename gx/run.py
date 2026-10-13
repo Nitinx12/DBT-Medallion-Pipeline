@@ -43,7 +43,7 @@ from gx.context import get_context
 from gx.suites.bronze_suites import ALL_BRONZE_VALIDATIONS
 from gx.suites.gold_suites import ALL_GOLD_VALIDATIONS
 from gx.suites.silver_suites import ALL_SILVER_VALIDATIONS
-from utils.logger import get_logger
+from src.utils.logger import get_logger
 
 # CLI entry point (unlike the suite modules, which log at WARNING as
 # importable libraries) -- show progress on the console by default.

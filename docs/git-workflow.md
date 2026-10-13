@@ -2,7 +2,7 @@
 
 > One logical pipeline, three runners. One branching model. No direct pushes to `main`.
 
-This document defines the **production git workflow** before the first release. It does not change pipeline logic (`pipeline/run_pipeline.ps1`, Airflow DAG, `scripts/*`, `utils/*`).
+This document defines the **production git workflow** before the first release. It does not change pipeline logic (`pipeline/run_pipeline.ps1`, Airflow DAG, `scripts/*`, `src/utils/*`).
 
 ---
 

@@ -25,10 +25,10 @@ Exit code: 0 if all tests pass, 1 if any test fails.
 
 Console output stays minimal (one line per test). Full detail — including
 failing rows or exception messages — goes to the rotating log file under
-logs/, via utils/logger.py.
+logs/, via src/utils/logger.py.
 
-Postgres connection comes from utils.connection.get_postgres_engine(), which
-loads .env via utils/engine.py the same way every other script in this
+Postgres connection comes from src.utils.connection.get_postgres_engine(), which
+loads .env via src/utils/engine.py the same way every other script in this
 project does. No orchestrator needed to run this standalone.
 """
 
@@ -38,8 +38,8 @@ from pathlib import Path
 from sqlalchemy import text
 from sqlalchemy.exc import ResourceClosedError, SQLAlchemyError
 
-from utils.connection import get_postgres_engine
-from utils.logger import get_logger
+from src.utils.connection import get_postgres_engine
+from src.utils.logger import get_logger
 
 PREVIEW_ROWS = 5
 

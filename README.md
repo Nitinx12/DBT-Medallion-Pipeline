@@ -193,7 +193,7 @@ This README is the pitch. Everything below is the engineering detail:
 | [`docs/scripts.md`](docs/scripts.md) | `extract.py`'s incremental vs. full-reload logic |
 | [`docs/tests.md`](docs/tests.md) | What the raw SQL checks actually check |
 | [`docs/great-expectations.md`](docs/great-expectations.md) | Great Expectations suites, commands, artifacts, and troubleshooting |
-| [`docs/utils.md`](docs/utils.md) | Shared config/connection/logging |
+| [`docs/src-utils.md`](docs/src-utils.md) | Shared config/connection/logging |
 | [`docs/ci-cd.md`](docs/ci-cd.md) | See how CI/CD works |
 | [`docs/health.md`](docs/health.md) | Local health and security checks |
 | [`dashboard/README.md`](dashboard/README.md) | Dashboard design: schema, caching, chart choices |

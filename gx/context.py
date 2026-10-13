@@ -5,22 +5,21 @@ Builds (or reuses) a file-backed GX context, registers the Postgres
 datasource, and registers one table asset per bronze table. Suite files
 in `suites/` import `get_bronze_asset()` to attach expectations.
 
-Connection details come from `utils.engine` (already validated at import
+Connection details come from `src.utils.engine` (already validated at import
 time -- see that module for the full list of required env vars) instead
 of being re-read/guessed here. Previously this file built its own
 Postgres connection string from `os.environ` directly, which (a) assumed
 env var names that engine.py might not actually use, (b) silently
 defaulted POSTGRES_PORT to "5432" instead of failing loudly like the
 rest of the pipeline does, and (c) dropped the sslmode/channel_binding
-query params that `utils.connection.get_postgres_engine()` adds for
+query params that `src.utils.connection.get_postgres_engine()` adds for
 managed providers like Neon -- so GX could end up talking to Postgres
 differently than the rest of the pipeline. Building the connection
 string the same way connection.py does removes that whole class of bug.
 
-NOTE: this assumes `utils` is importable as a top-level package (i.e.
-connection.py/engine.py/logger.py live in a `utils/` folder at the repo
-root, per logger.py's own docstring). Adjust the `from utils import ...`
-lines below if your actual package name/path differs.
+NOTE: this assumes `src.utils` is importable as a top-level package (i.e.
+connection.py/engine.py/logger.py live in a `src/utils/` folder with the
+repo root on sys.path, per logger.py's own docstring).
 """
 
 import logging
@@ -30,8 +29,8 @@ import great_expectations as gx
 from great_expectations.data_context import AbstractDataContext
 from sqlalchemy.engine import URL
 
-from utils import engine as config
-from utils.logger import get_logger
+from src.utils import engine as config
+from src.utils.logger import get_logger
 
 log = get_logger("gx.context", console_level=logging.WARNING)
 
@@ -107,7 +106,7 @@ GOLD_TABLES = [
 
 def _connection_string() -> str:
     """Build the Postgres connection string the same way
-    utils.connection.get_postgres_engine() does, so GX and the rest of
+    src.utils.connection.get_postgres_engine() does, so GX and the rest of
     the pipeline never disagree about how to reach the database."""
     query = {
         k: v

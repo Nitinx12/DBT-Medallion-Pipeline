@@ -42,13 +42,16 @@ dev = [
 "scripts/python/inspect_gold_schema.py" = ["E402"]
 "scripts/python/seed_demo_db.py" = ["E402"]
 "scripts/python/sync_gold_to_databricks.py" = ["E402"]
+# DAGs must never fail on import (broad timetable fallback) and build bash
+# via .format() so ${...} is not doubled as f-strings would require.
+"airflow/dags/*.py" = ["BLE001", "UP030", "UP032"]
 [tool.pytest.ini_options]
 testpaths = ["tests/unit"]
-addopts = "-v --cov=utils --cov=scripts --cov-report=term-missing"
+addopts = "-v --cov=src.utils --cov=scripts --cov-report=term-missing"
 
 [tool.coverage.run]
-source = ["utils", "scripts"]
-omit = ["utils/__pycache__/*", "scripts/__pycache__/*"]
+source = ["src/utils", "scripts"]
+omit = ["src/utils/__pycache__/*", "scripts/__pycache__/*"]
 
 # Scripts layout (organized 2026-09): python helpers in scripts/python/, bash helpers in scripts/bash/
 # Clean structure — no shims; old scripts/*.py paths removed (use scripts/python/*.py).

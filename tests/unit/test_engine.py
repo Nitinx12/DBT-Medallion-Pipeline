@@ -7,10 +7,10 @@ from unittest.mock import patch
 def _reload_engine(env_overrides: dict):
     """Helper: patch os.environ, remove cached module, reimport."""
     with patch.dict(os.environ, env_overrides, clear=False):
-        if "utils.engine" in __import__("sys").modules:
-            del __import__("sys").modules["utils.engine"]
+        if "src.utils.engine" in __import__("sys").modules:
+            del __import__("sys").modules["src.utils.engine"]
         # Also need to clear dotenv cache? load_dotenv only warns, safe to reimport
-        import utils.engine as eng
+        import src.utils.engine as eng
 
         importlib.reload(eng)
         return eng
@@ -35,8 +35,8 @@ def test_postgres_port_invalid_raises_oserror():
         assert "POSTGRES_PORT must be an integer" in str(exc)
     finally:
         # Restore sane state for subsequent tests
-        if "utils.engine" in sys.modules:
-            del sys.modules["utils.engine"]
+        if "src.utils.engine" in sys.modules:
+            del sys.modules["src.utils.engine"]
         os.environ["POSTGRES_PORT"] = "5432"
 
 
@@ -54,10 +54,10 @@ def test_missing_required_env_raises():
             # Force empty
             os.environ["POSTGRES_HOST"] = ""
             os.environ["MONGO_URI"] = ""
-            if "utils.engine" in sys.modules:
-                del sys.modules["utils.engine"]
+            if "src.utils.engine" in sys.modules:
+                del sys.modules["src.utils.engine"]
             try:
-                import utils.engine as eng
+                import src.utils.engine as eng
 
                 importlib.reload(eng)
                 assert False, "should have raised"
@@ -67,11 +67,11 @@ def test_missing_required_env_raises():
                 assert "POSTGRES_HOST" in msg
                 assert "MONGO_URI" in msg
     finally:
-        if "utils.engine" in sys.modules:
-            del sys.modules["utils.engine"]
+        if "src.utils.engine" in sys.modules:
+            del sys.modules["src.utils.engine"]
         os.environ["POSTGRES_HOST"] = "localhost"
         os.environ["MONGO_URI"] = "mongodb://localhost:27017"
-        import utils.engine as _eng
+        import src.utils.engine as _eng
 
         importlib.reload(_eng)
 
@@ -88,21 +88,21 @@ def test_optional_schema_warning():
     # Reload already happened — capture future reload warning
     import sys
 
-    if "utils.engine" in sys.modules:
-        del sys.modules["utils.engine"]
+    if "src.utils.engine" in sys.modules:
+        del sys.modules["src.utils.engine"]
     os.environ["POSTGRES_SCHEMA_BRONZE"] = ""
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
-        import utils.engine as eng2
+        import src.utils.engine as eng2
 
         importlib.reload(eng2)
         assert any("bronze/silver/gold" in str(x.message) for x in w)
     # Restore
-    if "utils.engine" in sys.modules:
-        del sys.modules["utils.engine"]
+    if "src.utils.engine" in sys.modules:
+        del sys.modules["src.utils.engine"]
     os.environ["POSTGRES_SCHEMA_BRONZE"] = "bronze"
     os.environ["POSTGRES_SCHEMA_SILVER"] = "silver"
     os.environ["POSTGRES_SCHEMA_GOLD"] = "gold"
-    import utils.engine as _eng
+    import src.utils.engine as _eng
 
     importlib.reload(_eng)

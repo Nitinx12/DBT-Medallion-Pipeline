@@ -1,8 +1,11 @@
 # Walmart hourly health check: postgres + mongo with failure mail
 from __future__ import annotations
+
 import os
+
 import pendulum
 from airflow.sdk import dag, task
+
 try:
     from airflow.task.trigger_rule import TriggerRule
 except ImportError:
@@ -13,6 +16,7 @@ except ImportError:
     from airflow.operators.email import EmailOperator
 try:
     from airflow.timetables.trigger import CronTriggerTimetable
+
     _SCHEDULE = CronTriggerTimetable("0 * * * *", timezone="Asia/Kolkata")
 except Exception:
     _SCHEDULE = "0 * * * *"
@@ -29,11 +33,13 @@ _PREAMBLE = (
     'if [ -f "{0}/.env" ]; then set -a; '.format(PROJECT_ROOT)
     + 'while IFS= read -r line || [ -n "$line" ]; do '
     'case "$line" in ""|"#"*) continue;; *=*) export "$line" || true;; esac; '
-    + "done < <(tr -d '\\r' < \"{0}/.env\"); set +a; fi; ".format(PROJECT_ROOT)
+    + f"done < <(tr -d '\\r' < \"{PROJECT_ROOT}/.env\"); set +a; fi; "
     + 'export POSTGRES_HOST="${POSTGRES_HOST/localhost/host.docker.internal}"; '
     'export MONGO_URI="${MONGO_URI//localhost/host.docker.internal}"; '
     f"export PYTHONPATH={PROJECT_ROOT}; "
 )
+
+
 @dag(
     dag_id="walmart_hourly_health_check",
     schedule=_SCHEDULE,
@@ -48,21 +54,23 @@ def walmart_hourly_health_check():
     def postgres_check() -> str:
         return _PREAMBLE + (
             "uv run python -c "
-            "\"from utils.connection import get_postgres_engine; "
+            '"from src.utils.connection import get_postgres_engine; '
             "from sqlalchemy import text; "
             "e=get_postgres_engine(); "
             "with e.connect() as c: c.execute(text('SELECT 1')); "
             "print('postgres OK')\""
         )
+
     @task.bash(task_id="mongo_check")
     def mongo_check() -> str:
         return _PREAMBLE + (
             "uv run python -c "
-            "\"from utils.connection import get_mongo_db; "
+            '"from src.utils.connection import get_mongo_db; '
             "db=get_mongo_db(); "
             "db.command('ping'); "
             "print('mongo OK')\""
         )
+
     email_failure = EmailOperator(
         task_id="email_failure",
         to=EMAIL_RECIPIENTS,
@@ -75,4 +83,6 @@ def walmart_hourly_health_check():
         trigger_rule=TriggerRule.ONE_FAILED,
     )
     [postgres_check(), mongo_check()] >> email_failure
+
+
 walmart_hourly_health_check()

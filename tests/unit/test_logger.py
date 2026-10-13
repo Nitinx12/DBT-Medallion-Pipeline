@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 
 def test_get_logger_creates_handlers(tmp_path):
-    """utils.logger.get_logger creates console + file handlers."""
-    import utils.logger as logger_mod
+    """src.utils.logger.get_logger creates console + file handlers."""
+    import src.utils.logger as logger_mod
 
     fake_log_dir = tmp_path / "logs"
     # patch LOG_DIR to isolated temp dir so we don't pollute real logs/
@@ -38,7 +38,7 @@ def test_get_logger_creates_handlers(tmp_path):
 
 def test_get_logger_propagate_false_and_levels():
     """Console level override is respected."""
-    import utils.logger as logger_mod
+    import src.utils.logger as logger_mod
 
     name = "test_logger_levels"
     # Clear previous

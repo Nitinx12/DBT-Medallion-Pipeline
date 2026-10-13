@@ -17,7 +17,7 @@ uv run streamlit run dashboard/home.py
 
 Requires the same `.env` as the rest of the project (`POSTGRES_HOST`, `POSTGRES_PORT`,
 `POSTGRES_DATABASE`, `POSTGRES_USERNAME`, `POSTGRES_PASSWORD`, `POSTGRES_SCHEMA_GOLD`) —
-it reuses `utils/engine.py` + `utils/connection.py`, so nothing new to configure.
+it reuses `src/utils/engine.py` + `src/utils/connection.py`, so nothing new to configure.
 
 Deployed demo: Streamlit Community Cloud reads secrets from `st.secrets` (no `.env` needed).
 

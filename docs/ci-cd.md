@@ -39,7 +39,7 @@ flowchart TD
 | Job | What it checks, in plain terms |
 |---|---|
 | **lint** | Is the code and SQL formatted consistently? Runs first — no point running slow tests on messy code. |
-| **unit-tests** | Do the small, isolated pieces of Python code (`utils/`, `extract.py` logic) work correctly? |
+| **unit-tests** | Do the small, isolated pieces of Python code (`src/utils/`, `extract.py` logic) work correctly? |
 | **dag-integrity** | Does the Airflow pipeline definition actually load without errors or circular dependencies? |
 | **docker-build** | Do both Docker images actually build? This job never pushes anything — it just proves the `Dockerfile`s aren't broken. |
 | **integration** | The real test: spin up a throwaway Postgres, load fake sample data, and run the **entire** bronze → silver → gold pipeline exactly like it would run for real. |

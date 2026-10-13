@@ -58,13 +58,13 @@ in `pyproject.toml` without running `uv lock` afterward.
 ```
 airflow/        # dags/walmart_pipeline_dag.py + bind-mounted logs/plugins
 docker/         # Dockerfile, Dockerfile.airflow, docker-compose.yaml, entrypoint.sh
-docs/           # deep-dive docs: airflow.md, dbt.md, docker.md, pipeline.md, scripts.md, tests.md, utils.md
+docs/           # deep-dive docs: airflow.md, dbt.md, docker.md, pipeline.md, scripts.md, tests.md, src-utils.md
 jars/           # Mongo Spark connector + Postgres JDBC, checked in for offline Spark startup
 pipeline/       # run_pipeline.ps1 — Windows entry point
 scripts/        # python/ (extract.py, sql_test.py, ci_seed_bronze.py, ...) + bash/ (preflight/run_pipeline/run_tests/health/security/clean/setup_env/monitor_logs.sh)
 sql/            # hand-written functions/triggers/reports
 tests/          # standalone SQL data-quality suite, one folder per layer
-utils/          # engine.py, connection.py, logger.py — shared infra
+src/utils/      # engine.py, connection.py, logger.py — shared infra
 dbt/             # dbt project: silver + gold models, schema tests
 reports/        # generated markdown reports + chart PNGs
 main.py         # entry point for the standalone Docker image
@@ -119,7 +119,7 @@ git commit -m "extract: fall back to append-only when no unique index"
 Commit message rules:
 - present tense, short summary (<= 50 chars)
 - prefix by area: `extract:`, `dbt:`, `airflow:`, `docker:`, `tests:`,
-  `utils:`, `docs:`
+  `src:`, `docs:`
 - add a body line for *why*, if not obvious:
 ```bash
 git commit -m "docker: pin JDK to 17" \

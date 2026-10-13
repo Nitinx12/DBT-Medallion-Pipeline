@@ -160,7 +160,8 @@ logs/
 __init__.py
 !scripts/__init__.py
 !scripts/python/__init__.py
-!utils/__init__.py
+!src/__init__.py
+!src/utils/__init__.py
 !dashboard/__init__.py
 !dashboard/lib/__init__.py
 !dashboard/helpers/__init__.py

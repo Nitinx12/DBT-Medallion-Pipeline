@@ -98,7 +98,7 @@ def test_check_connector_compatibility_passes_on_spark3():
 
 
 def test_postgres_jdbc_url_and_properties():
-    import utils.engine as cfg
+    import src.utils.engine as cfg
 
     url = ex.postgres_jdbc_url()
     assert cfg.POSTGRES_HOST in url

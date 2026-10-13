@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-# Guarantee required env vars for utils.engine import — CI sets these explicitly,
+# Guarantee required env vars for src.utils.engine import — CI sets these explicitly,
 # local runs rely on .env (already present). Redundantly set here so tests
 # never fail due to missing .env in a clean runner.
 os.environ.setdefault("POSTGRES_HOST", "localhost")

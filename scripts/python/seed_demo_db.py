@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 
 # scripts/python/seed_demo_db.py -> repo root is two levels up. Put it on
-# sys.path so `from utils....` resolves when this is run directly
+# sys.path so `from src.utils....` resolves when this is run directly
 # (`python scripts/python/seed_demo_db.py`), which only puts `scripts/python/`
 # itself on sys.path, not the repo root — same fix as dashboard/home.py.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -32,9 +32,9 @@ if str(PROJECT_ROOT) not in sys.path:
 import pandas as pd
 from sqlalchemy import create_engine, text
 
-from utils import engine as config
-from utils.connection import get_postgres_engine
-from utils.logger import get_logger
+from src.utils import engine as config
+from src.utils.connection import get_postgres_engine
+from src.utils.logger import get_logger
 
 log = get_logger("seed_demo_db")
 

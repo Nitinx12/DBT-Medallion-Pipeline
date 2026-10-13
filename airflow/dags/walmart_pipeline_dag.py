@@ -1,8 +1,11 @@
 # Walmart medallion pipeline: MWF 11am, rest 11pm mail alerts
 from __future__ import annotations
+
 import os
+
 import pendulum
 from airflow.sdk import dag, task
+
 try:
     from airflow.task.trigger_rule import TriggerRule
 except ImportError:
@@ -13,6 +16,7 @@ except ImportError:
     from airflow.operators.email import EmailOperator
 try:
     from airflow.timetables.trigger import CronTriggerTimetable
+
     _MWF_SCHEDULE = CronTriggerTimetable("0 11 * * 1,3,5", timezone="Asia/Kolkata")
     _REST_SCHEDULE = CronTriggerTimetable("0 23 * * 0,2,4,6", timezone="Asia/Kolkata")
 except Exception:
@@ -45,7 +49,7 @@ _PREAMBLE = (
     'if [ -f "{0}/.env" ]; then set -a; '.format(PROJECT_ROOT)
     + 'while IFS= read -r line || [ -n "$line" ]; do '
     'case "$line" in ""|"#"*) continue;; *=*) export "$line" || true;; esac; '
-    + "done < <(tr -d '\\r' < \"{0}/.env\"); set +a; fi; ".format(PROJECT_ROOT)
+    + f"done < <(tr -d '\\r' < \"{PROJECT_ROOT}/.env\"); set +a; fi; "
     + 'export POSTGRES_HOST="${POSTGRES_HOST/localhost/host.docker.internal}"; '
     'export MONGO_URI="${MONGO_URI//localhost/host.docker.internal}"; '
     f"export PYTHONPATH={PROJECT_ROOT}; "
@@ -53,6 +57,8 @@ _PREAMBLE = (
     "export PYSPARK_DRIVER_PYTHON=/app/.venv/bin/python; "
     f"export DBT_PROFILES_DIR={PROJECT_ROOT}/dbt; "
 )
+
+
 def _register(dag_id, schedule):
     @dag(
         dag_id=dag_id,
@@ -71,42 +77,69 @@ def _register(dag_id, schedule):
                 'installed="$(/app/.venv/bin/python -c '
                 "'import pyspark; print(pyspark.__version__)' 2>/dev/null || true)\"; "
                 f'if [[ "$installed" != {REQUIRED_PYSPARK_PREFIX}* ]]; then '
-                "echo \"pyspark incompatible\"; exit 1; "
+                'echo "pyspark incompatible"; exit 1; '
                 'else echo "pyspark $installed OK"; fi'
             )
+
         @task.bash(task_id="extract")
         def extract() -> str:
             return _PREAMBLE + "uv run python scripts/python/extract.py"
+
         @task.bash(task_id="bronze_sql_tests")
         def bronze_sql_tests() -> str:
-            return _PREAMBLE + "uv run python scripts/python/sql_test.py tests/data-quality/bronze"
+            return (
+                _PREAMBLE
+                + "uv run python scripts/python/sql_test.py tests/data-quality/bronze"
+            )
+
         @task.bash(task_id="dbt_silver_run")
         def dbt_silver_run() -> str:
             return _PREAMBLE + f"cd {DBT_PROJECT_DIR} && uv run dbt run --select silver"
+
         @task.bash(task_id="dbt_silver_test")
         def dbt_silver_test() -> str:
-            return _PREAMBLE + f"cd {DBT_PROJECT_DIR} && uv run dbt test --select silver"
+            return (
+                _PREAMBLE + f"cd {DBT_PROJECT_DIR} && uv run dbt test --select silver"
+            )
+
         @task.bash(task_id="silver_sql_tests")
         def silver_sql_tests() -> str:
-            return _PREAMBLE + "uv run python scripts/python/sql_test.py tests/data-quality/silver"
+            return (
+                _PREAMBLE
+                + "uv run python scripts/python/sql_test.py tests/data-quality/silver"
+            )
+
         @task.bash(task_id="dbt_gold_run")
         def dbt_gold_run() -> str:
             return _PREAMBLE + f"cd {DBT_PROJECT_DIR} && uv run dbt run --select gold"
+
         @task.bash(task_id="dbt_gold_test")
         def dbt_gold_test() -> str:
             return _PREAMBLE + f"cd {DBT_PROJECT_DIR} && uv run dbt test --select gold"
+
         @task.bash(task_id="gold_sql_tests")
         def gold_sql_tests() -> str:
-            return _PREAMBLE + "uv run python scripts/python/sql_test.py tests/data-quality/gold"
+            return (
+                _PREAMBLE
+                + "uv run python scripts/python/sql_test.py tests/data-quality/gold"
+            )
+
         @task.bash(task_id="great_expectations_tests")
         def great_expectations_tests() -> str:
             return _PREAMBLE + "uv run python -m gx.run --layer all"
+
         @task(task_id="collect_results", trigger_rule=TriggerRule.ALL_DONE)
         def collect_results(**context) -> dict:
             dag_run = context["dag_run"]
             run_id = dag_run.run_id
-            logical_date = context.get("logical_date", None) or getattr(dag_run, "logical_date", None)
-            execution_date = logical_date.date().isoformat() if logical_date is not None else "unknown"
+            logical_date = context.get("logical_date", None) or getattr(
+                dag_run, "logical_date", None
+            )
+            execution_date = (
+                logical_date.date().isoformat()
+                if logical_date is not None
+                else "unknown"
+            )
             ti = context["ti"]
             stage_statuses: dict[str, str] = {}
             for stage_id in STAGE_TASK_IDS:
@@ -116,8 +149,18 @@ def _register(dag_id, schedule):
                     print(f"collect_results: xcom_pull failed for {stage_id} ({exc})")
                     value = None
                 stage_statuses[stage_id] = "success" if value is not None else "failed"
-            overall_status = "SUCCESS" if all(state == "success" for state in stage_statuses.values()) else "FAILURE"
-            return {"status": overall_status, "run_id": run_id, "date": execution_date, "stages": stage_statuses}
+            overall_status = (
+                "SUCCESS"
+                if all(state == "success" for state in stage_statuses.values())
+                else "FAILURE"
+            )
+            return {
+                "status": overall_status,
+                "run_id": run_id,
+                "date": execution_date,
+                "stages": stage_statuses,
+            }
+
         @task.branch(task_id="choose_email")
         def choose_email(**context) -> str:
             ti = context["ti"]
@@ -125,6 +168,7 @@ def _register(dag_id, schedule):
             if result.get("status") == "SUCCESS":
                 return "email_success"
             return "email_failure"
+
         email_success = EmailOperator(
             task_id="email_success",
             to=EMAIL_RECIPIENTS,
@@ -178,6 +222,9 @@ def _register(dag_id, schedule):
         results = collect_results()
         choice = choose_email()
         chain >> results >> choice >> [email_success, email_failure]
+
     return _pipeline()
+
+
 walmart_mwf_morning = _register("walmart_mwf_morning", _MWF_SCHEDULE)
 walmart_rest_night = _register("walmart_rest_night", _REST_SCHEDULE)

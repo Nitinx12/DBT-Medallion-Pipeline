@@ -48,8 +48,8 @@ from pathlib import Path
 import pandas as pd
 from sqlalchemy import text
 
-from utils.connection import get_postgres_engine
-from utils.logger import get_logger
+from src.utils.connection import get_postgres_engine
+from src.utils.logger import get_logger
 
 log = get_logger("ci_seed_bronze")
 

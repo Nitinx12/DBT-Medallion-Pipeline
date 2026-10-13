@@ -451,7 +451,7 @@ def build():
     )
     story.append(
         p(
-            "All runners set <b>PYTHONPATH</b> to the project root so <b>utils.*</b> resolves identically. The “localhost problem” is handled by rewriting localhost &rarr; host.docker.internal only in consuming layers (DAG _PREAMBLE, docker run), never by editing .env.",
+            "All runners set <b>PYTHONPATH</b> to the project root so <b>src.utils.*</b> resolves identically. The “localhost problem” is handled by rewriting localhost &rarr; host.docker.internal only in consuming layers (DAG _PREAMBLE, docker run), never by editing .env.",
             sBody,
         )
     )
@@ -532,7 +532,7 @@ def build():
     story.append(hr())
     story.append(
         p(
-            "airflow/dags/walmart_pipeline_dag.py &nbsp;|&nbsp; docker/Dockerfile, Dockerfile.airflow, compose.yml &nbsp;|&nbsp; docs/*.md &nbsp;|&nbsp; jars/*.jar &nbsp;|&nbsp; pipeline/run_pipeline.ps1 + data_quality/ &nbsp;|&nbsp; scripts/python/ (extract.py, sql_test.py, ci_seed_bronze.py, …) &nbsp;|&nbsp; sql/ (21 files) &nbsp;|&nbsp; tests/data-quality/bronze (3), silver (9), gold (7) &nbsp;|&nbsp; utils/ (engine.py, connection.py, logger.py) &nbsp;|&nbsp; dbt/models/{silver,gold} &nbsp;|&nbsp; dashboard/ (app.py, queries.py, theme.py) &nbsp;|&nbsp; reports/ &nbsp;|&nbsp; main.py",
+            "airflow/dags/walmart_pipeline_dag.py &nbsp;|&nbsp; docker/Dockerfile, Dockerfile.airflow, compose.yml &nbsp;|&nbsp; docs/*.md &nbsp;|&nbsp; jars/*.jar &nbsp;|&nbsp; pipeline/run_pipeline.ps1 + data_quality/ &nbsp;|&nbsp; scripts/python/ (extract.py, sql_test.py, ci_seed_bronze.py, …) &nbsp;|&nbsp; sql/ (21 files) &nbsp;|&nbsp; tests/data-quality/bronze (3), silver (9), gold (7) &nbsp;|&nbsp; src/utils/ (engine.py, connection.py, logger.py) &nbsp;|&nbsp; dbt/models/{silver,gold} &nbsp;|&nbsp; dashboard/ (app.py, queries.py, theme.py) &nbsp;|&nbsp; reports/ &nbsp;|&nbsp; main.py",
             ParagraphStyle(
                 "mono", parent=sCode, fontSize=7, leading=10, alignment=TA_LEFT
             ),
@@ -582,14 +582,24 @@ def build():
                     "cd dbt && dbt run --select silver; dbt test --select silver",
                     "schema.yml tests; failure stops stage",
                 ],
-                ["4", "Silver SQL tests", "…/sql_test.py tests/data-quality/silver", "9 checks"],
+                [
+                    "4",
+                    "Silver SQL tests",
+                    "…/sql_test.py tests/data-quality/silver",
+                    "9 checks",
+                ],
                 [
                     "5",
                     "dbt gold",
                     "dbt run --select gold + test",
                     "8 models (7 dims + 1 fact)",
                 ],
-                ["6", "Gold SQL tests", "…/sql_test.py tests/data-quality/gold", "7 checks"],
+                [
+                    "6",
+                    "Gold SQL tests",
+                    "…/sql_test.py tests/data-quality/gold",
+                    "7 checks",
+                ],
                 [
                     "7",
                     "Great Expectations",
@@ -603,7 +613,7 @@ def build():
     story.append(Spacer(1, 2 * mm))
     story.append(
         p(
-            "Stop-on-first-failure: <b>run_pipeline.ps1:99</b> (Stop-Pipeline) and <b>main.py:244</b> (raise) halt immediately; Airflow’s default <b>all_success</b> trigger does the same — downstream tasks go to <b>upstream_failed</b>. Logs go to <b>logs/pipeline_YYYY-MM-DD.log</b> (utils/logger.py) plus <b>{schema}.etl_logs</b> audit rows. Header “STEP n / 7” plus stage 0 = 8 stages stays honest via <b>main.py:37 TOTAL_STEPS = 7</b> assert.",
+            "Stop-on-first-failure: <b>run_pipeline.ps1:99</b> (Stop-Pipeline) and <b>main.py:244</b> (raise) halt immediately; Airflow’s default <b>all_success</b> trigger does the same — downstream tasks go to <b>upstream_failed</b>. Logs go to <b>logs/pipeline_YYYY-MM-DD.log</b> (src/utils/logger.py) plus <b>{schema}.etl_logs</b> audit rows. Header “STEP n / 7” plus stage 0 = 8 stages stays honest via <b>main.py:37 TOTAL_STEPS = 7</b> assert.",
             sBody,
         )
     )
@@ -855,7 +865,7 @@ def build():
         [
             "<b>lint</b> — <b>ruff check</b>, <b>ruff format --check</b>, <b>sqlfluff lint dbt/models sql/ tests/ --dialect postgres</b>",
             "<b>dashboard-smoke</b> — installs <i>only</i> <b>dashboard/requirements.txt</b> (no databricks-sql-connector), asserts databricks not importable, then imports <b>dashboard.queries</b> with dummy env — catches the unconditional-databricks regression that broke Streamlit Cloud.",
-            "<b>unit-tests</b> — <b>pytest tests/unit -v --cov=utils --cov=scripts</b> (28 tests, mocked, no live DB)",
+            "<b>unit-tests</b> — <b>pytest tests/unit -v --cov=src.utils --cov=scripts</b> (28 tests, mocked, no live DB)",
             "<b>dag-integrity</b> — installs Airflow via constraints file and asserts <b>DagBag</b> loads <b>walmart_medallion_pipeline</b> with no import errors or cycles.",
             "<b>docker-build</b> — builds both <b>docker/Dockerfile</b> and <b>docker/Dockerfile.airflow</b> with Buildx cache, <b>lfs: true</b> so <b>jars/*.jar</b> are real files.",
             "<b>integration</b> — live Postgres 16 service; <b>ci_seed_bronze.py</b> seeds bronze from fixtures, then the exact gate sequence: bronze SQL → <b>dbt run/test silver</b> → silver SQL → <b>dbt run/test gold</b> → gold SQL → GX <b>--layer all</b>. Uses absolute <b>DBT_PROFILES_DIR</b> and <b>PYTHONPATH</b> fixes documented inline.",
@@ -900,15 +910,15 @@ def build():
     story.append(hr())
     for title, desc in [
         (
-            "utils/engine.py",
+            "src/utils/engine.py",
             "Loads <b>.env</b> at import, validates required vars (<b>POSTGRES_*, MONGO_*</b>) with <b>OSError</b> on missing, warns on optional <b>POSTGRES_SCHEMA_*</b> and Databricks vars, casts <b>POSTGRES_PORT</b> to int. Hard-fails fast so every script gets a clear error.",
         ),
         (
-            "utils/connection.py",
+            "src/utils/connection.py",
             "Cached factories: <b>get_postgres_engine()</b> (SQLAlchemy, SSL params), <b>get_mongo_db()</b> (pymongo with ping), <b>get_databricks_connection()</b> (lazy databricks_sql_connector, <b>ModuleNotFoundError</b> if extra not installed — dashboard-safe).",
         ),
         (
-            "utils/logger.py",
+            "src/utils/logger.py",
             "<b>get_logger(name)</b> returns a logger with console + daily file handlers (<b>logs/pipeline_YYYY-MM-DD.log</b>), <b>propagate=False</b>, configurable levels. Used by extract, dashboard, and GX runner.",
         ),
     ]:
@@ -926,7 +936,7 @@ def build():
     story.append(p("Local (Windows) — mirrors README “Run it”:", sH3))
     story.append(
         p(
-            'uv venv<br/> .venv\\Scripts\\activate &nbsp; <font color="#64748B"># Windows; source .venv/bin/activate on Linux/Mac</font><br/> uv sync &nbsp; <font color="#64748B"># from uv.lock</font><br/> cp .env.example .env &nbsp; <font color="#64748B"># fill POSTGRES_*, MONGO_*, optional DATABRICKS_*</font><br/><br/> ./pipeline/run_pipeline.ps1 &nbsp; <font color="#64748B"># 8 stages</font><br/> # or: uv run python main.py<br/> # or: uv run python scripts/python/extract.py --dry-run --tables orders,customers<br/><br/> uv run python scripts/python/sql_test.py tests/data-quality/bronze<br/> uv run dbt run --select silver --project-dir dbt &amp;&amp; uv run dbt test --select silver --project-dir dbt<br/> uv run python -m gx.run --layer all<br/><br/> uv run streamlit run dashboard/home.py<br/><br/> uv run ruff format . &amp;&amp; uv run ruff check . &amp;&amp; uv run sqlfluff lint dbt/models --dialect postgres<br/> uv run pre-commit run --all-files<br/> uv run pytest tests/unit -v --cov=utils --cov=scripts',
+            'uv venv<br/> .venv\\Scripts\\activate &nbsp; <font color="#64748B"># Windows; source .venv/bin/activate on Linux/Mac</font><br/> uv sync &nbsp; <font color="#64748B"># from uv.lock</font><br/> cp .env.example .env &nbsp; <font color="#64748B"># fill POSTGRES_*, MONGO_*, optional DATABRICKS_*</font><br/><br/> ./pipeline/run_pipeline.ps1 &nbsp; <font color="#64748B"># 8 stages</font><br/> # or: uv run python main.py<br/> # or: uv run python scripts/python/extract.py --dry-run --tables orders,customers<br/><br/> uv run python scripts/python/sql_test.py tests/data-quality/bronze<br/> uv run dbt run --select silver --project-dir dbt &amp;&amp; uv run dbt test --select silver --project-dir dbt<br/> uv run python -m gx.run --layer all<br/><br/> uv run streamlit run dashboard/home.py<br/><br/> uv run ruff format . &amp;&amp; uv run ruff check . &amp;&amp; uv run sqlfluff lint dbt/models --dialect postgres<br/> uv run pre-commit run --all-files<br/> uv run pytest tests/unit -v --cov=src.utils --cov=scripts',
             sCode,
         )
     )
@@ -948,7 +958,7 @@ def build():
     story.append(p("16 &nbsp; Observability, Security &amp; Conventions", sH1))
     story.append(hr())
     for b in [
-        "Git workflow: one file/logical change per commit, <b>git add &lt;file&gt;</b> + prefix <b>extract: / dbt: / airflow: / docker: / tests: / utils: / docs:</b> (AGENTS.md, docs/git-workflow.md), rebase before push, no <b>.venv / __pycache__ / .env / data/raw|processed</b> committed.",
+        "Git workflow: one file/logical change per commit, <b>git add &lt;file&gt;</b> + prefix <b>extract: / dbt: / airflow: / docker: / tests: / src: / docs:</b> (AGENTS.md, docs/git-workflow.md), rebase before push, no <b>.venv / __pycache__ / .env / data/raw|processed</b> committed.",
         "Secrets: <b>.env</b> is git-ignored; <b>.env.example</b> is the template; <b>detect-private-key</b> pre-commit hook; Databricks token never baked into images.",
         "Logging: Rich console + structured file logs + <b>etl_logs</b> table — three places to diagnose a failed collection without re-running.",
         "Idempotency: control tables and watermark upserts are <b>CREATE IF NOT EXISTS / ON CONFLICT</b> — re-running never duplicates state.",

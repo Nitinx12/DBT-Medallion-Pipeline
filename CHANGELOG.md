@@ -23,7 +23,7 @@ Version bumps happen on `release/vX.Y.Z` branches; the `vX.Y.Z` tag triggers
 - **Hourly health-check DAG.** Added
   `airflow/dags/walmart_health_dag.py` (`walmart_hourly_health_check`,
   hourly Asia/Kolkata): parallel Postgres + Mongo pings via
-  `utils/connection.py`, failure-only mail (`ONE_FAILED`) to avoid hourly
+  `src/utils/connection.py`, failure-only mail (`ONE_FAILED`) to avoid hourly
   spam.
 - **Dashboard multipage restructure.** Added `dashboard/home.py` landing
   (KPIs + gold meta), `dashboard/pages/` (`1_Sales`, `2_Products`,
