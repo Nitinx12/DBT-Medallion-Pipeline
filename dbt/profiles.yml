@@ -18,4 +18,18 @@ walmart_dbt:
       dbname: "{{ env_var('POSTGRES_DATABASE', 'walmart_db') }}"
       schema: "{{ env_var('POSTGRES_SCHEMA_BRONZE', 'bronze') }}"
       threads: 4
+    # Neon target for the dashboard refresh workflow
+    # (.github/workflows/refresh.yml). Values come from GitHub secrets,
+    # never committed. Use the DIRECT host for dbt (DDL and long
+    # transactions dislike poolers); the dashboard uses the pooled host.
+    prod:
+      type: postgres
+      host: "{{ env_var('NEON_HOST') }}"
+      port: 5432
+      user: "{{ env_var('NEON_USER') }}"
+      pass: "{{ env_var('NEON_PASSWORD') }}"
+      dbname: "{{ env_var('NEON_DB') }}"
+      schema: "{{ env_var('POSTGRES_SCHEMA_BRONZE', 'bronze') }}"
+      sslmode: require
+      threads: 2
   target: dev

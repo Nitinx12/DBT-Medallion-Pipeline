@@ -1,0 +1,49 @@
+name: refresh-gold
+
+# Scheduled gold refresh for the dashboard backend (Neon).
+#
+# Status: ARMED but IDLE. The cron below stays commented until the Neon
+# migration is done (NEON_HOST/USER/PASSWORD/DB secrets set + `prod`
+# target in dbt/profiles.yml pointed at Neon). Until then, run it by
+# hand from the Actions tab (workflow_dispatch) after setting secrets.
+#
+# To enable the schedule, uncomment the `schedule:` block. GitHub cron
+# is best effort: expect several minutes of delay past the quarter hour.
+
+on:
+  # schedule:
+  #   - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: refresh-gold
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    env:
+      DBT_PROFILES_DIR: ${{ github.workspace }}/dbt
+      PYTHONPATH: ${{ github.workspace }}
+      NEON_HOST: ${{ secrets.NEON_HOST }}
+      NEON_USER: ${{ secrets.NEON_USER }}
+      NEON_PASSWORD: ${{ secrets.NEON_PASSWORD }}
+      NEON_DB: ${{ secrets.NEON_DB }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - run: uv python install 3.11
+      - run: uv sync --frozen
+      - run: uv run dbt deps --target prod
+        working-directory: dbt
+
+      # Incremental models only: new/changed rows merge, history is kept.
+      - run: uv run dbt build --target prod --select gold+
+        working-directory: dbt
