@@ -1,0 +1,208 @@
+apiVersion: 1.0.0
+kind: DataContract
+metadata:
+  name: silver.orders
+  layer: silver
+  version: 1.0.0
+  status: active
+  owner: analytics-engineering
+  domain: retail-warehouse
+  description: Deduped orders, one row per order_id. Payment_method normalized to
+    FK.
+dataset:
+  server: postgres-prod
+  database: walmart_db
+  schema: silver
+  table: orders
+  grain: order_id unique, NOT NULL
+  upstream:
+  - bronze.orders
+  - silver.stores
+  - silver.customers
+  - silver.payment_methods
+  dbtModel: dbt/models/silver/orders.sql
+  loadStrategy: incremental merge on order_id with 3-day lookback
+  row_count: 10000
+  column_count_contract: 11
+  column_count_observed: 11
+  table_exists: true
+  last_observed_at: '2026-10-13T14:51:42+00:00'
+columns:
+- name: order_id
+  data_type: INTEGER
+  nullable: true
+  unique: true
+  primary_key: true
+  transformation: TRIM(order_id::VARCHAR)::INT
+  tests:
+  - not_null
+  - unique
+  observed_data_type: INTEGER
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 10000
+  sync_status: ok
+- name: store_id
+  data_type: INTEGER
+  nullable: true
+  unique: false
+  foreign_key: silver.stores.store_id
+  transformation: TRIM(store_id::VARCHAR)::INT
+  tests:
+  - not_null
+  - relationships_stores
+  observed_data_type: INTEGER
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 25
+  sync_status: ok
+- name: customer_id
+  data_type: INTEGER
+  nullable: true
+  unique: false
+  foreign_key: silver.customers.customer_id
+  transformation: TRIM(customer_id::VARCHAR)::INT
+  tests:
+  - not_null
+  - relationships_customers
+  observed_data_type: INTEGER
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1991
+  sync_status: ok
+- name: order_status
+  data_type: VARCHAR
+  nullable: true
+  unique: false
+  transformation: TRIM(order_status::VARCHAR)::VARCHAR
+  tests:
+  - not_null
+  observed_data_type: VARCHAR
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 4
+  sync_status: ok
+- name: is_active
+  data_type: BOOLEAN
+  nullable: true
+  unique: false
+  transformation: Y -> TRUE ELSE FALSE
+  tests:
+  - accepted_values_true_false
+  observed_data_type: BOOLEAN
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 2
+  sync_status: ok
+- name: payment_method_id
+  data_type: BIGINT
+  nullable: true
+  unique: false
+  foreign_key: silver.payment_methods.payment_method_id
+  description: NULL when source payment_method was blank/null.
+  transformation: LEFT JOIN payment_methods ON UPPER(TRIM(payment_method)) = payment_method_name
+  tests:
+  - relationships_payment_methods_where_not_null
+  observed_data_type: BIGINT
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 5
+  sync_status: ok
+- name: total_amount
+  data_type: NUMERIC
+  nullable: true
+  unique: false
+  range:
+    min: 0
+  transformation: TRIM(total_amount::VARCHAR)::NUMERIC
+  tests:
+  - not_null
+  - accepted_range_min_0
+  observed_data_type: NUMERIC
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 9863
+  sync_status: ok
+- name: order_timestamp
+  data_type: TIMESTAMP
+  nullable: true
+  unique: false
+  transformation: order_timestamp::TIMESTAMP
+  tests:
+  - not_null
+  observed_data_type: TIMESTAMP
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 9998
+  sync_status: ok
+- name: created_timestamp
+  data_type: TIMESTAMP
+  nullable: true
+  unique: false
+  transformation: created_timestamp::TIMESTAMP
+  tests:
+  - not_null
+  observed_data_type: TIMESTAMP
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 9996
+  sync_status: ok
+- name: updated_timestamp
+  data_type: TIMESTAMP
+  nullable: true
+  unique: false
+  transformation: updated_timestamp::TIMESTAMP
+  tests:
+  - not_null
+  observed_data_type: TIMESTAMP
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 9997
+  sync_status: ok
+- name: silver_loaded_at
+  data_type: TIMESTAMPTZ
+  nullable: true
+  unique: false
+  tests:
+  - not_null
+  observed_data_type: TIMESTAMPTZ
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 2
+  sync_status: ok
+quality:
+  enforcedBy:
+  - dbt/models/silver/schema.yml
+  - tests/data-quality/silver/05_lp_check_foreign_keys.sql
+terms:
+  breakingChange: changing a type, dropping a column, or changing FK normalization
+    is breaking.
+observation:
+  observed_at: '2026-10-13T14:51:42+00:00'
+  database: walmart_db
+  schema: silver
+  table: orders
+  row_count: 10000
+  drifts: []

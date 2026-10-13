@@ -1,0 +1,213 @@
+apiVersion: 1.0.0
+kind: DataContract
+metadata:
+  name: silver.customers
+  layer: silver
+  version: 1.0.0
+  status: active
+  owner: analytics-engineering
+  domain: retail-warehouse
+  description: Deduped, type-cleaned customers. One row per customer_id, latest version
+    wins by updated_timestamp.
+dataset:
+  server: postgres-prod
+  database: walmart_db
+  schema: silver
+  table: customers
+  grain: customer_id unique, NOT NULL
+  upstream: bronze.customers
+  dbtModel: dbt/models/silver/customers.sql
+  loadStrategy: incremental merge on customer_id with 3-day lookback on updated_timestamp
+  row_count: 2000
+  column_count_contract: 12
+  column_count_observed: 12
+  table_exists: true
+  last_observed_at: '2026-10-13T14:51:42+00:00'
+columns:
+- name: customer_id
+  data_type: INTEGER
+  nullable: true
+  unique: true
+  primary_key: true
+  transformation: TRIM(customer_id::VARCHAR)::INT
+  tests:
+  - not_null
+  - unique
+  observed_data_type: INTEGER
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 2000
+  sync_status: ok
+- name: customer_name
+  data_type: VARCHAR
+  nullable: true
+  unique: false
+  transformation: TRIM(CONCAT(first_name, ' ', last_name))::VARCHAR
+  tests:
+  - not_null
+  observed_data_type: VARCHAR
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1966
+  sync_status: ok
+- name: phone
+  data_type: TEXT
+  nullable: true
+  unique: false
+  description: Normalized to +1-XXX-XXX-XXXX from rightmost 10 NANP digits; NULL when
+    fewer than 10 digits.
+  transformation: REGEXP_REPLACE + RIGHT(phone_digits, 10) formatting
+  observed_data_type: TEXT
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 2000
+  sync_status: ok
+- name: phone_extension
+  data_type: TEXT
+  nullable: true
+  unique: false
+  description: Digits after 'x' in source phone, NULLIF when empty.
+  transformation: SPLIT_PART(LOWER(TRIM(phone)), 'x', 2)_digits
+  observed_data_type: TEXT
+  observed_nullable: true
+  in_contract: true
+  null_count: 816
+  null_fraction: 0.408
+  distinct_count: 1133
+  sync_status: ok
+- name: email
+  data_type: VARCHAR
+  nullable: true
+  unique: false
+  format: email
+  transformation: TRIM(email::VARCHAR)::VARCHAR
+  tests:
+  - not_null
+  - expression_email_regex_warn
+  observed_data_type: VARCHAR
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1994
+  sync_status: ok
+- name: is_active
+  data_type: BOOLEAN
+  nullable: true
+  unique: false
+  description: Y -> TRUE, anything else -> FALSE, NULL stays NULL.
+  transformation: CASE WHEN UPPER(TRIM(is_active)) = 'Y' THEN TRUE ELSE FALSE END
+  tests:
+  - accepted_values_true_false
+  observed_data_type: BOOLEAN
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 2
+  sync_status: ok
+- name: city
+  data_type: VARCHAR
+  nullable: true
+  unique: false
+  transformation: TRIM(city::VARCHAR)::VARCHAR
+  tests:
+  - not_null
+  observed_data_type: VARCHAR
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1878
+  sync_status: ok
+- name: province
+  data_type: VARCHAR
+  nullable: true
+  unique: false
+  transformation: TRIM(province::VARCHAR)::VARCHAR
+  tests:
+  - not_null
+  observed_data_type: VARCHAR
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 50
+  sync_status: ok
+- name: country
+  data_type: VARCHAR
+  nullable: true
+  unique: false
+  transformation: TRIM(country::VARCHAR)::VARCHAR
+  tests:
+  - not_null
+  observed_data_type: VARCHAR
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 2
+  sync_status: ok
+- name: created_timestamp
+  data_type: TIMESTAMP
+  nullable: true
+  unique: false
+  transformation: created_timestamp::TIMESTAMP
+  tests:
+  - not_null
+  observed_data_type: TIMESTAMP
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 2000
+  sync_status: ok
+- name: updated_timestamp
+  data_type: TIMESTAMP
+  nullable: true
+  unique: false
+  transformation: updated_timestamp::TIMESTAMP
+  tests:
+  - not_null
+  observed_data_type: TIMESTAMP
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1998
+  sync_status: ok
+- name: silver_loaded_at
+  data_type: TIMESTAMPTZ
+  nullable: true
+  unique: false
+  description: Pipeline load timestamp (CURRENT_TIMESTAMP at dbt run).
+  tests:
+  - not_null
+  observed_data_type: TIMESTAMPTZ
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 3
+  sync_status: ok
+quality:
+  enforcedBy:
+  - dbt/models/silver/schema.yml (unique, not_null, email regex, accepted_values)
+  - tests/data-quality/silver/01_lp_check_duplicates.sql
+  - tests/data-quality/silver/02_lp_check_nulls.sql
+  - gx/suites/silver_suites.py
+terms:
+  breakingChange: changing a type, dropping a column, or changing dedup logic is breaking.
+observation:
+  observed_at: '2026-10-13T14:51:42+00:00'
+  database: walmart_db
+  schema: silver
+  table: customers
+  row_count: 2000
+  drifts: []

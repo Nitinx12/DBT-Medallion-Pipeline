@@ -1,0 +1,166 @@
+apiVersion: 1.0.0
+kind: DataContract
+metadata:
+  name: silver.stores
+  layer: silver
+  version: 1.0.0
+  status: active
+  owner: analytics-engineering
+  domain: retail-warehouse
+  description: Deduped, type-cleaned stores. One row per store_id, latest version
+    wins.
+dataset:
+  server: postgres-prod
+  database: walmart_db
+  schema: silver
+  table: stores
+  grain: store_id unique, NOT NULL
+  upstream: bronze.stores
+  dbtModel: dbt/models/silver/stores.sql
+  loadStrategy: incremental merge on store_id with 3-day lookback
+  row_count: 25
+  column_count_contract: 9
+  column_count_observed: 9
+  table_exists: true
+  last_observed_at: '2026-10-13T14:51:42+00:00'
+columns:
+- name: store_id
+  data_type: INTEGER
+  nullable: true
+  unique: true
+  primary_key: true
+  transformation: TRIM(store_id::VARCHAR)::INT
+  tests:
+  - not_null
+  - unique
+  observed_data_type: INTEGER
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 25
+  sync_status: ok
+- name: store_name
+  data_type: VARCHAR
+  nullable: true
+  unique: false
+  transformation: TRIM(store_name::VARCHAR)::VARCHAR
+  tests:
+  - not_null
+  observed_data_type: VARCHAR
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 25
+  sync_status: ok
+- name: city
+  data_type: VARCHAR
+  nullable: true
+  unique: false
+  transformation: TRIM(city::VARCHAR)::VARCHAR
+  tests:
+  - not_null
+  observed_data_type: VARCHAR
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 25
+  sync_status: ok
+- name: province
+  data_type: VARCHAR
+  nullable: true
+  unique: false
+  transformation: TRIM(province::VARCHAR)::VARCHAR
+  tests:
+  - not_null
+  observed_data_type: VARCHAR
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 22
+  sync_status: ok
+- name: country
+  data_type: VARCHAR
+  nullable: true
+  unique: false
+  transformation: TRIM(country::VARCHAR)::VARCHAR
+  tests:
+  - not_null
+  observed_data_type: VARCHAR
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1
+  sync_status: ok
+- name: is_active
+  data_type: BOOLEAN
+  nullable: true
+  unique: false
+  transformation: Y -> TRUE ELSE FALSE
+  tests:
+  - accepted_values_true_false
+  observed_data_type: BOOLEAN
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 1
+  sync_status: ok
+- name: created_timestamp
+  data_type: TIMESTAMP
+  nullable: true
+  unique: false
+  transformation: created_timestamp::TIMESTAMP
+  tests:
+  - not_null
+  observed_data_type: TIMESTAMP
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 25
+  sync_status: ok
+- name: updated_timestamp
+  data_type: TIMESTAMP
+  nullable: true
+  unique: false
+  transformation: updated_timestamp::TIMESTAMP
+  tests:
+  - not_null
+  observed_data_type: TIMESTAMP
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 25
+  sync_status: ok
+- name: silver_loaded_at
+  data_type: TIMESTAMPTZ
+  nullable: true
+  unique: false
+  tests:
+  - not_null
+  observed_data_type: TIMESTAMPTZ
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 2
+  sync_status: ok
+quality:
+  enforcedBy:
+  - dbt/models/silver/schema.yml
+  - tests/data-quality/silver/
+terms:
+  breakingChange: changing a type, dropping a column, or changing dedup logic is breaking.
+observation:
+  observed_at: '2026-10-13T14:51:42+00:00'
+  database: walmart_db
+  schema: silver
+  table: stores
+  row_count: 25
+  drifts: []

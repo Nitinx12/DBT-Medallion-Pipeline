@@ -1,0 +1,82 @@
+apiVersion: 1.0.0
+kind: DataContract
+metadata:
+  name: silver.categories
+  layer: silver
+  version: 1.0.0
+  status: active
+  owner: analytics-engineering
+  domain: retail-warehouse
+  description: Append-only category dimension. Surrogate category_id via ROW_NUMBER
+    ordered by name.
+dataset:
+  server: postgres-prod
+  database: walmart_db
+  schema: silver
+  table: categories
+  grain: category_id unique; category_name unique
+  upstream: bronze.products.category
+  dbtModel: dbt/models/silver/categories.sql
+  loadStrategy: incremental append (only new names)
+  row_count: 7
+  column_count_contract: 3
+  column_count_observed: 3
+  table_exists: true
+  last_observed_at: '2026-10-13T14:51:42+00:00'
+columns:
+- name: category_id
+  data_type: BIGINT
+  nullable: true
+  unique: true
+  primary_key: true
+  transformation: MAX(category_id) + ROW_NUMBER() OVER (ORDER BY category_name)
+  tests:
+  - not_null
+  - unique
+  observed_data_type: BIGINT
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 7
+  sync_status: ok
+- name: category_name
+  data_type: TEXT
+  nullable: true
+  unique: true
+  transformation: DISTINCT INITCAP(TRIM(category::VARCHAR)) WHERE NOT NULL/blank
+  tests:
+  - not_null
+  - unique
+  observed_data_type: TEXT
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 7
+  sync_status: ok
+- name: silver_loaded_at
+  data_type: TIMESTAMPTZ
+  nullable: true
+  unique: false
+  tests:
+  - not_null
+  observed_data_type: TIMESTAMPTZ
+  observed_nullable: true
+  in_contract: true
+  null_count: 0
+  null_fraction: 0.0
+  distinct_count: 2
+  sync_status: ok
+quality:
+  enforcedBy:
+  - dbt/models/silver/schema.yml
+terms:
+  breakingChange: reassigning an existing category_id is breaking.
+observation:
+  observed_at: '2026-10-13T14:51:42+00:00'
+  database: walmart_db
+  schema: silver
+  table: categories
+  row_count: 7
+  drifts: []
