@@ -5,53 +5,64 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+
+# Python testing and type checking
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.pyre/
+.tox/
+.nox/
 .coverage
 .coverage.*
 htmlcov/
-.pyre/
 
 # ==========================
 # Virtual Environments
 # ==========================
 .venv/
+.venv_old/
 venv/
 env/
 ENV/
-.venv_old
 
 # ==========================
-# Environment Variables
+# Environment Variables & Secrets
 # ==========================
 .env
 .env.*
 !.env.example
 
-# ==========================
-# Streamlit secrets (real values never committed)
-# ==========================
+# Streamlit secrets
 **/secrets.toml
 !**/secrets.toml.example
 
+# Local Claude configuration
+.claude/settings.local.json
+
 # ==========================
-# IDE / Editors
+# IDEs & Editors
 # ==========================
 .vscode/
 .idea/
 *.code-workspace
 
+# Qwen
+.qwen/
+
 # ==========================
-# Jupyter Notebook
+# Jupyter Notebooks
 # ==========================
 .ipynb_checkpoints/
 
 # ==========================
-# Logs
+# Logs & Runtime Files
 # ==========================
 logs/
 *.log
+*.pid
+airflow.db
+airflow-webserver.pid
 
 # ==========================
 # Temporary Files
@@ -63,7 +74,7 @@ temp/
 *.swp
 
 # ==========================
-# Build / Distribution
+# Build & Distribution
 # ==========================
 build/
 dist/
@@ -71,7 +82,7 @@ dist/
 .eggs/
 
 # ==========================
-# Database Files
+# Databases
 # ==========================
 *.db
 *.sqlite
@@ -79,22 +90,17 @@ dist/
 *.duckdb
 
 # ==========================
-# ETL Outputs
+# Data Pipeline Outputs
 # ==========================
 output/
 exports/
 artifacts/
 backups/
-
-# Generated datasets
 processed_data/
 cleaned_data/
 intermediate/
 
-# ==========================
-# Data Files (Optional)
-# Uncomment if data is too large
-# ==========================
+# Generated data (enable if files are too large)
 # data/raw/
 # data/processed/
 # *.csv
@@ -103,18 +109,17 @@ intermediate/
 # *.xlsx
 
 # ==========================
-# OS Files
+# Generated Reports & Charts
+# ==========================
+reports/asset/pipeline.mp4
+reports/charts/
+
+# ==========================
+# Operating System Files
 # ==========================
 .DS_Store
 Thumbs.db
 desktop.ini
-
-# ==========================
-# Testing
-# ==========================
-.pytest_cache/
-.tox/
-.nox/
 
 # ==========================
 # uv
@@ -122,11 +127,8 @@ desktop.ini
 .python-version
 
 # ==========================
-# Airflow
+# Apache Airflow
 # ==========================
-airflow.db
-airflow-webserver.pid
-logs/
 dags/__pycache__/
 
 # ==========================
@@ -134,21 +136,28 @@ dags/__pycache__/
 # ==========================
 target/
 dbt_packages/
-logs/
-# VS Code dbt Power User telemetry id (machine-specific, not a secret)
 dbt/.user.yml
 
 # ==========================
-# Terraform (if used)
+# Terraform
 # ==========================
 .terraform/
 *.tfstate
 *.tfstate.*
 
 # ==========================
-# Docker
+# Great Expectations
 # ==========================
-*.pid
+gx/uncommitted/
+gx/expectations/
+gx/checkpoints/
+gx/validation_definitions/
+
+# ==========================
+# Miscellaneous
+# ==========================
+link/
+file.txt
 
 # ==========================
 # Keep Empty Directories
@@ -156,10 +165,12 @@ dbt/.user.yml
 !logs/.gitkeep
 !output/.gitkeep
 !exports/.gitkeep
-# NOTE: bare __init__.py is ignored to keep namespace packages lean,
-# but explicit package __init__.py under scripts/python and utils are
-# required for `import scripts.python.*` and `import utils.*` to work
-# on editable installs — re-allow those specific paths.
+
+# ==========================
+# Python Package Initializers
+# Ignore bare __init__.py files by default,
+# but allow required package initializers.
+# ==========================
 __init__.py
 !scripts/__init__.py
 !src/__init__.py
@@ -171,23 +182,3 @@ __init__.py
 !dashboard/helpers/__init__.py
 !gx/__init__.py
 !gx/suites/__init__.py
-.qwen/
-# ==========================
-# Generated Reports / Assets (do not version generated charts)
-# ==========================
-reports/asset/pipeline.mp4
-reports/charts/
-
-gx/uncommitted/
-gx/expectations/
-
-link/
-
-.claude/settings.local.json
-
-# Great Expectations generated files
-/gx/checkpoints/
-/gx/validation_definitions/
-
-
-file.txt
