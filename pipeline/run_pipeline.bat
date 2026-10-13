@@ -7,11 +7,11 @@ REM Runs the fixed 8-stage pipeline in strict order, stopping immediately
 REM when any command fails:
 REM   0. Preflight            (pyspark 3.5.x version check)
 REM   1. Extract              (MongoDB -> bronze  via scripts/python/extract.py)
-REM   2. Bronze SQL tests     (tests/bronze)
+REM   2. Bronze SQL tests     (tests/data-quality/bronze)
 REM   3. dbt Silver           (dbt run + test --select silver)
-REM   4. Silver SQL tests     (tests/silver)
+REM   4. Silver SQL tests     (tests/data-quality/silver)
 REM   5. dbt Gold             (dbt run + test --select gold)
-REM   6. Gold SQL tests       (tests/gold)
+REM   6. Gold SQL tests       (tests/data-quality/gold)
 REM   7. Great Expectations   (Bronze/Silver/Gold)
 REM
 REM Usage:
@@ -270,7 +270,7 @@ REM =========================================================================
 REM STAGE 2 — BRONZE SQL TESTS
 REM =========================================================================
 call :stage_header "2" "BRONZE SQL TESTS"
-uv run python scripts/python/sql_test.py tests/bronze
+uv run python scripts/python/sql_test.py tests/data-quality/bronze
 if errorlevel 1 (
     call :stage_fail "Bronze Tests failed. Stopping pipeline." "Bronze Tests"
     call :print_summary
@@ -307,7 +307,7 @@ REM =========================================================================
 REM STAGE 4 — SILVER SQL TESTS
 REM =========================================================================
 call :stage_header "4" "SILVER SQL TESTS"
-uv run python scripts/python/sql_test.py tests/silver
+uv run python scripts/python/sql_test.py tests/data-quality/silver
 if errorlevel 1 (
     call :stage_fail "Silver Tests failed. Stopping pipeline." "Silver Tests"
     call :print_summary
@@ -344,7 +344,7 @@ REM =========================================================================
 REM STAGE 6 — GOLD SQL TESTS
 REM =========================================================================
 call :stage_header "6" "GOLD SQL TESTS"
-uv run python scripts/python/sql_test.py tests/gold
+uv run python scripts/python/sql_test.py tests/data-quality/gold
 if errorlevel 1 (
     call :stage_fail "Gold Tests failed. Stopping pipeline." "Gold Tests"
     call :print_summary
@@ -357,7 +357,7 @@ REM =========================================================================
 REM STAGE 7 — GREAT EXPECTATIONS
 REM =========================================================================
 call :stage_header "7" "GREAT EXPECTATIONS TESTS (Bronze, Silver, Gold)"
-uv run python -m pipeline.data_quality.run --layer all
+uv run python -m gx.run --layer all
 if errorlevel 1 (
     call :stage_fail "Great Expectations failed. Stopping pipeline." "Great Expectations"
     call :print_summary

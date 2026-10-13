@@ -43,7 +43,7 @@ in a Checkpoint that blocks downstream loads:
     duplicate labels with different IDs.
 
 Same import caveat as bronze_suites.py: run via `python -m
-pipeline.data_quality.run` from the repo root, not by executing this file
+gx.run` from the repo root, not by executing this file
 directly from inside `suites/`.
 """
 
@@ -51,10 +51,10 @@ import logging
 
 import great_expectations as gx
 
-from pipeline.data_quality.context import get_context, get_silver_asset
+from gx.context import get_context, get_silver_asset
 from utils.logger import get_logger
 
-log = get_logger("data_quality.silver_suites", console_level=logging.WARNING)
+log = get_logger("gx.suites.silver", console_level=logging.WARNING)
 
 
 def _build(

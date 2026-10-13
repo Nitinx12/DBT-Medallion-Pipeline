@@ -7,11 +7,11 @@ does not re-implement any extract/transform logic itself.
 Stage structure intentionally mirrors run_pipeline.ps1 exactly:
     0. Preflight        (pyspark <-> mongo-spark-connector version check)
     1. Extract          (scripts/python/extract.py)
-    2. Bronze SQL tests (tests/bronze/*.sql)
+    2. Bronze SQL tests (tests/data-quality/bronze/*.sql)
     3. dbt silver build + test (dbt, models/silver)  -- one stage
-    4. Silver SQL tests (tests/silver/*.sql)
+    4. Silver SQL tests (tests/data-quality/silver/*.sql)
     5. dbt gold build + test (dbt, models/gold)      -- one stage
-    6. Gold SQL tests (tests/gold/*.sql)
+    6. Gold SQL tests (tests/data-quality/gold/*.sql)
     7. Great Expectations tests (Bronze, Silver, Gold)
 Stops immediately on the first failed stage.
 """
@@ -183,8 +183,8 @@ def main() -> int:
         ),
         Stage(
             "Bronze Tests",
-            "BRONZE SQL TESTS (tests/bronze)",
-            [["uv", "run", "python", "scripts/python/sql_test.py", "tests/bronze"]],
+            "BRONZE SQL TESTS (tests/data-quality/bronze)",
+            [["uv", "run", "python", "scripts/python/sql_test.py", "tests/data-quality/bronze"]],
         ),
         Stage(
             "Silver dbt",
@@ -197,8 +197,8 @@ def main() -> int:
         ),
         Stage(
             "Silver Tests",
-            "SILVER SQL TESTS (tests/silver)",
-            [["uv", "run", "python", "scripts/python/sql_test.py", "tests/silver"]],
+            "SILVER SQL TESTS (tests/data-quality/silver)",
+            [["uv", "run", "python", "scripts/python/sql_test.py", "tests/data-quality/silver"]],
         ),
         Stage(
             "Gold dbt",
@@ -211,8 +211,8 @@ def main() -> int:
         ),
         Stage(
             "Gold Tests",
-            "GOLD SQL TESTS (tests/gold)",
-            [["uv", "run", "python", "scripts/python/sql_test.py", "tests/gold"]],
+            "GOLD SQL TESTS (tests/data-quality/gold)",
+            [["uv", "run", "python", "scripts/python/sql_test.py", "tests/data-quality/gold"]],
         ),
         Stage(
             "Great Expectations",
@@ -223,7 +223,7 @@ def main() -> int:
                     "run",
                     "python",
                     "-m",
-                    "pipeline.data_quality.run",
+                    "gx.run",
                     "--layer",
                     "all",
                 ]

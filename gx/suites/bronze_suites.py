@@ -18,13 +18,13 @@ Notes on the schema as provided:
     flags. The expectations below preserve that representation in Bronze;
     Silver and Gold convert it to native booleans.
 
-NOTE on the import below: `from pipeline.data_quality.context import ...`
-only resolves if `pipeline` is importable as a top-level package, which
-means (a) the repo root is on sys.path and (b) `pipeline/__init__.py`
+NOTE on the import below: `from gx.context import ...`
+only resolves if `gx` is importable as a top-level package, which
+means (a) the repo root is on sys.path and (b) `gx/__init__.py`
 exists. Run these modules from the repo root, e.g.:
-    python -m pipeline.data_quality.run
+    python -m gx.run
 not by `cd`-ing into this folder and running the file directly — that's
-almost certainly the "ModuleNotFoundError: No module named 'pipeline'"
+almost certainly the "ModuleNotFoundError: No module named 'gx'"
 you're hitting from the `suites/` directory in your terminal session.
 """
 
@@ -32,10 +32,10 @@ import logging
 
 import great_expectations as gx
 
-from pipeline.data_quality.context import get_bronze_asset, get_context
+from gx.context import get_bronze_asset, get_context
 from utils.logger import get_logger
 
-log = get_logger("data_quality.bronze_suites", console_level=logging.WARNING)
+log = get_logger("gx.suites.bronze", console_level=logging.WARNING)
 
 
 def _build(

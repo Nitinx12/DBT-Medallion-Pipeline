@@ -49,7 +49,7 @@ in a Checkpoint that blocks downstream loads/BI consumption:
     separately if you want that enforced.
 
 Same import caveat as bronze_suites.py / silver_suites.py: run via
-`python -m pipeline.data_quality.run` from the repo root, not by
+`python -m gx.run` from the repo root, not by
 executing this file directly from inside `suites/`.
 """
 
@@ -57,10 +57,10 @@ import logging
 
 import great_expectations as gx
 
-from pipeline.data_quality.context import get_context, get_gold_asset
+from gx.context import get_context, get_gold_asset
 from utils.logger import get_logger
 
-log = get_logger("data_quality.gold_suites", console_level=logging.WARNING)
+log = get_logger("gx.suites.gold", console_level=logging.WARNING)
 
 
 def _build(

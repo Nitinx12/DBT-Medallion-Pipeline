@@ -33,7 +33,7 @@ from sqlalchemy.engine import URL
 from utils import engine as config
 from utils.logger import get_logger
 
-log = get_logger("data_quality.context", console_level=logging.WARNING)
+log = get_logger("gx.context", console_level=logging.WARNING)
 
 # engine.py only warns (doesn't raise) if POSTGRES_SCHEMA_BRONZE is unset,
 # since it's meant to be optional -- so fall back to "bronze" here rather

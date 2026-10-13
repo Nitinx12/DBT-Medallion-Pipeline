@@ -15,7 +15,7 @@ usage() {
   cat <<'EOF'
 Usage: scripts/bash/run_tests.sh [bronze|silver|gold|all]
 
-Runs: uv run python scripts/python/sql_test.py tests/<layer>
+Runs: uv run python scripts/python/sql_test.py tests/data-quality/<layer>
 Exit 1 if any layer fails. With 'all', runs bronze → silver → gold sequentially.
 EOF
 }
@@ -27,7 +27,7 @@ export PYTHONPATH="${PROJECT_ROOT}:${PYTHONPATH:-}"
 run_one() {
   local layer="$1"
   echo "${BOLD}── SQL tests: $layer ──${RESET}"
-  if uv run python scripts/python/sql_test.py "tests/$layer"; then
+  if uv run python scripts/python/sql_test.py "tests/data-quality/$layer"; then
     echo "${GREEN}✔ $layer passed${RESET}"
     return 0
   else

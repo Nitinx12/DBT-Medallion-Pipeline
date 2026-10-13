@@ -2,10 +2,10 @@
 Builds and runs the Great Expectations suites for all three pipeline
 layers (bronze / silver / gold).
 
-Layout: `pipeline/data_quality/` holds this file + `context.py`;
-`pipeline/data_quality/suites/` holds `bronze_suites.py` / `silver_suites.py`
+Layout: `gx/` holds this file + `context.py`;
+`gx/suites/` holds `bronze_suites.py` / `silver_suites.py`
 / `gold_suites.py` as a subpackage. Run from the repo root:
-    python -m pipeline.data_quality.run [--layer {bronze,silver,gold,all}]
+    python -m gx.run [--layer {bronze,silver,gold,all}]
 
 Per requested layer, this:
   1. Calls every `*_validation()` fn in that layer's `ALL_*_VALIDATIONS`
@@ -39,15 +39,15 @@ from dataclasses import dataclass, field
 
 import great_expectations as gx
 
-from pipeline.data_quality.context import get_context
-from pipeline.data_quality.suites.bronze_suites import ALL_BRONZE_VALIDATIONS
-from pipeline.data_quality.suites.gold_suites import ALL_GOLD_VALIDATIONS
-from pipeline.data_quality.suites.silver_suites import ALL_SILVER_VALIDATIONS
+from gx.context import get_context
+from gx.suites.bronze_suites import ALL_BRONZE_VALIDATIONS
+from gx.suites.gold_suites import ALL_GOLD_VALIDATIONS
+from gx.suites.silver_suites import ALL_SILVER_VALIDATIONS
 from utils.logger import get_logger
 
 # CLI entry point (unlike the suite modules, which log at WARNING as
 # importable libraries) -- show progress on the console by default.
-log = get_logger("data_quality.run", console_level=logging.INFO)
+log = get_logger("gx.run", console_level=logging.INFO)
 
 # Bronze -> silver -> gold order, also the --fail-fast order.
 LAYERS = {

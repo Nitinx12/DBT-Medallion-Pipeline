@@ -103,7 +103,7 @@ test-bronze: ## [2/7] Run Bronze-layer SQL tests
 	@echo "------------------------------------------------------------"
 	@echo " STEP 2 / 7  -  BRONZE SQL TESTS"
 	@echo "------------------------------------------------------------"
-	$(PYTHON) scripts/python/sql_test.py tests/bronze
+	$(PYTHON) scripts/python/sql_test.py tests/data-quality/bronze
 
 dbt-silver: ## [3/7] Build + test Silver dbt models
 	@echo "------------------------------------------------------------"
@@ -115,7 +115,7 @@ test-silver: ## [4/7] Run Silver-layer SQL tests
 	@echo "------------------------------------------------------------"
 	@echo " STEP 4 / 7  -  SILVER SQL TESTS"
 	@echo "------------------------------------------------------------"
-	$(PYTHON) scripts/python/sql_test.py tests/silver
+	$(PYTHON) scripts/python/sql_test.py tests/data-quality/silver
 
 dbt-gold: ## [5/7] Build + test Gold dbt models
 	@echo "------------------------------------------------------------"
@@ -127,13 +127,13 @@ test-gold: ## [6/7] Run Gold-layer SQL tests
 	@echo "------------------------------------------------------------"
 	@echo " STEP 6 / 7  -  GOLD SQL TESTS"
 	@echo "------------------------------------------------------------"
-	$(PYTHON) scripts/python/sql_test.py tests/gold
+	$(PYTHON) scripts/python/sql_test.py tests/data-quality/gold
 
 gx-tests: ## [7/7] Run Great Expectations across Bronze/Silver/Gold
 	@echo "------------------------------------------------------------"
 	@echo " STEP 7 / 7  -  GREAT EXPECTATIONS TESTS (Bronze, Silver, Gold)"
 	@echo "------------------------------------------------------------"
-	$(PYTHON) -m pipeline.data_quality.run --layer all
+	$(PYTHON) -m gx.run --layer all
 
 data-pipeline: preflight extract test-bronze dbt-silver test-silver dbt-gold test-gold gx-tests ## Run the full 8-stage data pipeline in strict order
 	@echo ""
