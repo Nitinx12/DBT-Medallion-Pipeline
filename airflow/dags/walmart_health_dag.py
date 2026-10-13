@@ -34,6 +34,7 @@ _PREAMBLE = (
     + 'while IFS= read -r line || [ -n "$line" ]; do '
     'case "$line" in ""|"#"*) continue;; *=*) export "$line" || true;; esac; '
     + f"done < <(tr -d '\\r' < \"{PROJECT_ROOT}/.env\"); set +a; fi; "
+    + "if [ ! -x /app/.venv/bin/python ]; then uv sync --frozen; fi; "
     + 'export POSTGRES_HOST="${POSTGRES_HOST:-}"; '
     + 'export POSTGRES_HOST="${POSTGRES_HOST/localhost/host.docker.internal}"; '
     + 'export MONGO_URI="${MONGO_URI:-}"; '
@@ -55,18 +56,20 @@ def walmart_hourly_health_check():
     @task.bash(task_id="postgres_check")
     def postgres_check() -> str:
         return _PREAMBLE + (
-            "uv run python -c "
+            "/app/.venv/bin/python -c "
             '"from src.utils.connection import get_postgres_engine; '
             "from sqlalchemy import text; "
-            "e=get_postgres_engine(); "
-            "with e.connect() as c: c.execute(text('SELECT 1')); "
+            "e = get_postgres_engine(); "
+            "c = e.connect(); "
+            "c.execute(text('SELECT 1')); "
+            "c.close(); "
             "print('postgres OK')\""
         )
 
     @task.bash(task_id="mongo_check")
     def mongo_check() -> str:
         return _PREAMBLE + (
-            "uv run python -c "
+            "/app/.venv/bin/python -c "
             '"from src.utils.connection import get_mongo_db; '
             "db=get_mongo_db(); "
             "db.command('ping'); "
@@ -76,10 +79,10 @@ def walmart_hourly_health_check():
     email_failure = EmailOperator(
         task_id="email_failure",
         to=EMAIL_RECIPIENTS,
-        subject="Walmart Health Check FAILED - {{ ds }}",
+        subject="Walmart Health Check FAILED - {{ run_id }}",
         html_content="""
 <h2>Walmart Hourly Health Check - FAILURE</h2>
-<p><strong>Date:</strong> {{ ds }} {{ data_interval_start }}</p>
+<p><strong>Run:</strong> {{ run_id }}</p>
 <p><em>Postgres or Mongo ping failed. Check task logs.</em></p>
 """,
         trigger_rule=TriggerRule.ONE_FAILED,
