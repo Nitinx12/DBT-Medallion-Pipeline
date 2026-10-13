@@ -414,6 +414,20 @@ def get_top_products(filters: Filters, limit: int = 10) -> pd.DataFrame:
 
 
 @st.cache_data(ttl=600)
+def get_product_revenue(filters: Filters) -> pd.DataFrame:
+    """Revenue per product, full list ordered desc (Pareto analysis)."""
+    where, params = _where(filters)
+    sql = f"""
+        SELECT p.product_name, SUM(foi.line_amount) AS revenue
+        {BASE_FROM}
+        WHERE {where}
+        GROUP BY p.product_name
+        ORDER BY revenue DESC
+    """
+    return _run(sql, params)
+
+
+@st.cache_data(ttl=600)
 def get_top_customers(filters: Filters, limit: int = 10) -> pd.DataFrame:
     where, params = _where(filters)
     sql = f"""

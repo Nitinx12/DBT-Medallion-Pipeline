@@ -12,17 +12,14 @@ if str(PROJECT_ROOT) not in sys.path:
 import plotly.express as px
 import streamlit as st
 
-from dashboard.lib.db import apply_secrets
-
-# Secrets first: pages after this read config at import time.
-apply_secrets()
-
 from dashboard.helpers import plotly_template
 from dashboard.helpers.components import dataframe_with_download, filter_chips
 from dashboard.helpers.theme import WALMART_BLUE, get_theme, inject_css, style
+from dashboard.lib.charts import bubble, pareto, treemap
 from dashboard.lib.filters import sidebar_filters
 from dashboard.lib.queries import (
     get_category_brand_treemap,
+    get_product_revenue,
     get_revenue_by,
     get_top_products,
 )
@@ -39,7 +36,25 @@ by_brand = get_revenue_by(filters, "brand", limit=10)
 treemap_data = get_category_brand_treemap(filters)
 
 st.subheader("Top 10 Products")
-dataframe_with_download(top_products, "top_products.csv", key="dl_prod_top")
+bars = None
+if not top_products.empty:
+    bars = {
+        "revenue": st.column_config.ProgressColumn(
+            "Revenue",
+            format="$%d",
+            min_value=0,
+            max_value=int(top_products["revenue"].max()),
+        ),
+        "units_sold": st.column_config.ProgressColumn(
+            "Units",
+            format="%d",
+            min_value=0,
+            max_value=int(top_products["units_sold"].max()),
+        ),
+    }
+dataframe_with_download(
+    top_products, "top_products.csv", key="dl_prod_top", column_config=bars
+)
 
 c1, c2 = st.columns(2)
 with c1:
@@ -64,11 +79,24 @@ with c1:
 with c2:
     st.subheader("Category → Brand")
     if not treemap_data.empty:
-        fig = px.treemap(
-            treemap_data, path=["category_name", "brand_name"], values="revenue"
-        )
         st.plotly_chart(
-            style(fig, currency=False, legend=False, height=420),
+            treemap(treemap_data),
             use_container_width=True,
             config={"displayModeBar": False},
         )
+
+st.subheader("Pareto: revenue concentration")
+product_revenue = get_product_revenue(filters)
+if not product_revenue.empty:
+    pareto_fig, n80 = pareto(product_revenue)
+    st.plotly_chart(
+        pareto_fig, use_container_width=True, config={"displayModeBar": False}
+    )
+    st.caption(f"{n80} of {len(product_revenue)} products drive 80% of revenue.")
+
+st.subheader("Portfolio: volume vs value")
+portfolio = get_top_products(filters, limit=30)
+if not portfolio.empty:
+    st.plotly_chart(
+        bubble(portfolio), use_container_width=True, config={"displayModeBar": False}
+    )
