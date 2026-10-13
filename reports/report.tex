@@ -16,6 +16,7 @@
 \usepackage{xcolor}
 \usepackage{listings}
 \usepackage{hyperref}
+\usepackage{xurl}   % allow line breaks anywhere inside \url (long paths/identifiers)
 \usepackage{amsmath,amssymb}
 \usepackage{tikz}
 \usepackage{fancyhdr}
@@ -110,7 +111,7 @@
   \vspace{0.35cm}
   {\Large MongoDB $\rightarrow$ PostgreSQL $\rightarrow$ dbt \quad (Bronze $\rightarrow$ Silver $\rightarrow$ Gold)\par}
   \vspace{0.45cm}
-  {\large Incremental PySpark Extraction \,|\, 17 dbt Models \,|\, 3 Runners \,|\, 8 Quality Gates\par}
+  {\large Incremental PySpark Extraction \,|\, 17 dbt Models \,|\, 3 Runners \,|\, 8 Strict Stages\par}
 }
 \author{
   Nitin \quad\textcolor{muted}{— Walmart\_DBT}
@@ -126,8 +127,8 @@
 \thispagestyle{empty}
 \begin{center}
   \begin{tikzpicture}[node distance=1.2cm]
-    \node[draw=walmartBlue,fill=walmartBlue!7,rounded corners=8pt,inner sep=8pt,minimum width=13cm,align=center] (box) {
-      \small\textcolor{muted}{One pipeline, three runners — } \textbf{PowerShell}, \textbf{Airflow DAG}, \textbf{Docker image}
+    \node[draw=walmartBlue,fill=walmartBlue!7,rounded corners=8pt,inner sep=8pt,text width=12.6cm,align=center] (box) {
+      \small\textcolor{muted}{One pipeline, three runners — } \textbf{PowerShell}, \textbf{Airflow DAGs}, \textbf{Docker image}
       \quad\textcolor{muted}{\textbar}\quad
       \textcolor{muted}{One warehouse — } \textbf{walmart\_db} \textcolor{muted}{with schemas} \textbf{bronze / silver / gold}
     };
@@ -136,7 +137,7 @@
 \vspace{0.6cm}
 \begin{abstract}
 \noindent
-This report documents the production-style medallion ETL that mirrors MongoDB operational data into a PostgreSQL warehouse and curates it through \texttt{bronze} (raw, 1:1), \texttt{silver} (deduped, typed, SCD2) and \texttt{gold} (dimensional star/snowflake) layers. The pipeline is implemented once and executed identically by three runners — \texttt{pipeline/run\_pipeline.ps1} (Windows host), a standalone Docker image (\texttt{main.py}), and an Airflow DAG (\texttt{airflow/dags/walmart\_pipeline\_dag.py}) — over eight strict stages gated by two independent test systems plus Great Expectations. It covers 9 silver and 8 gold dbt models, watermark-based incremental extraction with true upserts, containerisation with two images, CI with a live Postgres integration job, and a Streamlit+Plotly gold dashboard. All commands use \texttt{uv} and \texttt{uv.lock} is the source of truth.
+This report documents the production-style medallion ETL that mirrors MongoDB operational data into a PostgreSQL warehouse and curates it through \texttt{bronze} (raw, 1:1), \texttt{silver} (deduped, typed, SCD2) and \texttt{gold} (dimensional star/snowflake) layers. The pipeline is implemented once and executed identically by three runners — \url{pipeline/run_pipeline.ps1} (Windows host), a standalone Docker image (\texttt{main.py}), and Airflow DAGs (\url{airflow/dags/walmart_pipeline_dag.py}, \url{walmart_health_dag.py}) — over eight strict stages gated by two independent test systems plus Great Expectations. It covers 9 silver and 8 gold dbt models, watermark-based incremental extraction with true upserts, containerisation with two images, CI with a live Postgres integration job, and a Streamlit+Plotly gold dashboard. All commands use \texttt{uv} and \texttt{uv.lock} is the source of truth.
 \end{abstract}
 \vspace{0.3cm}
 \begin{center}
@@ -156,8 +157,8 @@ Operational MongoDB must stay write-optimised; analytics needs a typed, historic
 \begin{enumerate}[leftmargin=1.4em,itemsep=2pt]
   \item Replicate \emph{every} user collection from MongoDB to Postgres automatically (no hard-coded list) and keep it incrementally fresh without re-copying unchanged data.
   \item Cure source issues once (typing, deduplication, SCD2) so gold consumers never re-implement cleaning.
-  \item Publish a dimensional star (\texttt{fact\_order\_items} + 7 dims) that powers both SQL reports (\texttt{sql/*.sql}) and an interactive dashboard.
-  \item Gate quality twice at each hand-off: dbt built-ins (\texttt{schema.yml}) \emph{and} a standalone SQL suite (\texttt{tests/bronze|silver|gold}), plus a final cross-layer Great Expectations checkpoint.
+  \item Publish a dimensional star (\url{fact_order_items} + 7 dims) that powers both SQL reports (\url{sql/*.sql}) and an interactive dashboard.
+  \item Gate quality twice at each hand-off: dbt built-ins (\texttt{schema.yml}) \emph{and} a standalone SQL suite (\url{tests/data-quality/} (bronze, silver, gold)), plus a final cross-layer Great Expectations checkpoint.
   \item Run the \emph{same} logic three ways — local Windows, Airflow schedule, standalone container — without forking code.
   \item Ship like a team would: \texttt{uv} lockfile, Ruff + SQLFluff + pre-commit, GitHub Actions CI with a live Postgres integration job, Docker images published to GHCR.
 \end{enumerate}
@@ -170,6 +171,7 @@ Real-time streaming (this is batch incremental), cross-warehouse federation, and
 
 \begin{center}
 \begin{tikzpicture}[
+  scale=0.75, transform shape,
   box/.style={draw,rounded corners=6pt,inner sep=7pt,minimum width=3.2cm,minimum height=1.35cm,align=center,font=\small,drop shadow={shadow xshift=0.6pt,shadow yshift=-0.6pt,opacity=0.12}},
   arr/.style={-Latex,thick,color=ink!75},
   lbl/.style={font=\scriptsize\itshape,color=muted,align=center}
@@ -194,7 +196,7 @@ Postgres database is \texttt{walmart\_db}. Medallion schemas default to \texttt{
 % ================================================================= 3
 \section{Technology Stack}
 
-\begin{longtable}{>{\bfseries}l l l}
+\begin{longtable}{>{\bfseries}l >{\raggedright\arraybackslash}p{3.4cm} >{\raggedright\arraybackslash}p{9.0cm}}
 \toprule
 Layer & Technology & Version / Notes \\
 \midrule
@@ -205,78 +207,79 @@ Compute & PySpark & 3.5.5 (pinned) — required by \texttt{mongo-spark-connector
 Source & MongoDB & Operational DB, auto-discovered collections \\
 Warehouse & PostgreSQL & 16 — \texttt{walmart\_db}, JDBC via \texttt{jars/postgresql.jar} \\
 Transform & dbt Core + dbt-postgres & 1.12.0 / 1.11.0 — 17 models, 100+ tests \\
-Orchestration & Apache Airflow & 3.3.x, CeleryExecutor (scheduler, worker, triggerer, Redis, Postgres meta DB) \\
-Quality & Great Expectations & 1.21.0 — suites per layer in \texttt{pipeline/data\_quality/suites/} \\
+Orchestration & Apache Airflow & 3.3.0, LocalExecutor (apiserver, scheduler, metadata DB; tasks run in the scheduler container) \\
+Quality & Great Expectations & 1.21.0 — suites per layer in \texttt{gx/suites/}, run via \texttt{python -m gx.run} \\
 BI & Streamlit 1.62 + Plotly 7.0 & Live gold dashboard at \texttt{dashboard/app.py} \\
 Lint / Format & Ruff 0.16 + SQLFluff 4.2 + pre-commit & \texttt{ruff check / format}, \texttt{sqlfluff lint --dialect postgres} \\
-Containers & Docker / Compose & \texttt{docker/Dockerfile} (standalone) + \texttt{docker/Dockerfile.airflow} \\
-CI & GitHub Actions & lint $\rightarrow$ dashboard-smoke $\rightarrow$ unit $\rightarrow$ DAG $\rightarrow$ Docker $\rightarrow$ integration (live Postgres) \\
+Containers & Docker / Compose & \texttt{docker/Dockerfile.pipeline} (standalone) + \texttt{docker/Dockerfile.airflow} \\
+CI & GitHub Actions & lint $\rightarrow$ smoke $\rightarrow$ unit $\rightarrow$ DAG $\rightarrow$ Docker $\rightarrow$ integration (live Postgres, 7 jobs) \\
 \bottomrule
 \end{longtable}
 
-JDK is 17 (\texttt{docker/Dockerfile} and dev container) — PySpark 3.5's Mongo connector is untested on JDK 21, so the pin is intentional (\texttt{AGENTS.md} convention).
+JDK is 17 (\texttt{docker/Dockerfile.pipeline} and dev container) — PySpark 3.5's Mongo connector is untested on JDK 21, so the pin is intentional (\texttt{AGENTS.md} convention).
 
 % ================================================================= 4
 \section{Repository Layout}
 
-\begin{lstlisting}[style=bash,caption={Top-level layout (trimmed). Mirrors \texttt{docs/architecture.md}.}]
-airflow/        dags/walmart_pipeline_dag.py + logs/plugins/config (bind-mounted)
-docker/         Dockerfile, Dockerfile.airflow, compose.yml, dbt/profiles.yml, entrypoint.sh
-docs/           architecture.md, airflow.md, dbt.md, docker.md, pipeline.md, scripts.md, ...
-jars/           mongo-spark-connector + deps (5 jars) + postgresql.jar (offline Spark startup)
-pipeline/       run_pipeline.ps1  (+ .bat shim), data_quality/{run.py, context.py, suites/}
-scripts/python/ extract.py, sql_test.py, ci_seed_bronze.py, health_check.py, seed_demo_db.py, ...
-scripts/bash/   preflight.sh, run_pipeline.sh, run_tests.sh, health.sh, security.sh, ...
-sql/            00_init_schema.sql .. 20_no_sales_date_analysis.sql (hand-written reports)
-tests/          bronze/ (3), silver/ (9), gold/ (7)  — standalone SQL suite
-utils/          engine.py (env validation), connection.py (cached), logger.py
-dbt/            dbt_project.yml, models/{silver,gold}, seeds, snapshots, macros
-dashboard/      app.py, queries.py, components.py, theme.py
+\begin{lstlisting}[style=bash,caption={Top-level layout (trimmed). Mirrors \texttt{AGENTS.md}.}]
+airflow/        dags/{walmart_pipeline_dag.py (mwf_morning, rest_night), walmart_health_dag.py} + logs/plugins (bind-mounted)
+docker/         Dockerfile.pipeline, Dockerfile.airflow, compose.yml, entrypoint.sh
+docs/           architecture.md, airflow.md, dbt.md, docker.md, pipeline.md, scripts.md, ... (14 files)
+jars/           mongo-spark-connector + postgresql.jar (offline Spark startup)
+pipeline/       run_pipeline.ps1 (+ .bat shim)
+scripts/        flat run_*.py wrappers (run_tests, run_gx, run_health_check, seed_demo_db, ...) + helpers
+src/jobs/       extract.py, sql_test.py, ci_seed_bronze.py (pipeline runtime)
+src/utils/      engine.py, connection.py, logger.py (shared infra)
+sql/            analytics/, functions/, triggers/, ... (25 hand-written files, organised by area)
+tests/          unit/ (28 tests) + data-quality/{bronze (3), silver (9), gold (7)} -- standalone SQL suite
+gx/             checkpoints, expectations, suites, validation_definitions
+dbt/            dbt_project.yml, models/{silver (9), gold (8)}, seeds, snapshots, macros
+dashboard/      home.py, pages/, lib/, helpers/ (multipage Streamlit + Plotly app)
 reports/        brand_report.md, category_report.md, report.tex (this file) -> report.pdf
 main.py         standalone Docker entry point (mirrors ps1 stage-for-stage)
 \end{lstlisting}
 
-Coding conventions: \texttt{snake\_case}, type hints on every signature, one function = one responsibility (see \texttt{scripts/python/extract.py} stage split), short \texttt{// why not what} comments, \texttt{uv run ruff format/check} before commit.
+Coding conventions: \texttt{snake\_case}, type hints on every signature, one function = one responsibility (see \texttt{src/jobs/extract.py} stage split), short \texttt{// why not what} comments, \texttt{uv run ruff format/check} before commit.
 
 % ================================================================= 5
 \section{Pipeline — Eight Strict Stages}
 
-The pipeline has a fixed order. If stage order or the definition of ``success'' changes, \texttt{pipeline/run\_pipeline.ps1} \emph{and} \texttt{airflow/dags/walmart\_pipeline\_dag.py} must change together (convention, not enforced — \texttt{AGENTS.md: Pipeline Stage Rule}).
+The pipeline has a fixed order. If stage order or the definition of ``success'' changes, \url{pipeline/run_pipeline.ps1} \emph{and} \url{airflow/dags/walmart_pipeline_dag.py} must change together (convention, not enforced — \texttt{AGENTS.md: Pipeline Stage Rule}).
 
 \begin{center}
-\begin{longtable}{cl l l}
+\begin{longtable}{c >{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}p{5.4cm} >{\raggedright\arraybackslash}p{4.8cm}}
 \toprule
 \# & Stage & Runner command & Gate \\
 \midrule
 \endhead
 0 & Preflight & \texttt{uv run python -c "import pyspark; print(...)"} + prefix check \texttt{3.5.x} & Version mismatch $\rightarrow$ fail fast (ps1) / install guard (container refuses to self-heal) \\
-1 & Extract & \texttt{uv run python scripts/python/extract.py} & Per-collection \texttt{VALIDATION FAILED} $\rightarrow$ non-zero exit \\
-2 & Bronze SQL tests & \texttt{uv run python scripts/python/sql\_test.py tests/bronze} & 3 checks; any violating rows $\rightarrow$ FAIL \\
-3 & dbt silver & \texttt{cd dbt \&\& uv run dbt run --select silver} \newline \texttt{uv run dbt test --select silver} & \texttt{schema.yml} tests; \texttt{dbt test} failure stops stage \\
-4 & Silver SQL tests & \texttt{.../sql\_test.py tests/silver} & 9 checks \\
+1 & Extract & \texttt{uv run python src/jobs/extract.py} & Per-collection \texttt{VALIDATION FAILED} $\rightarrow$ non-zero exit \\
+2 & Bronze SQL tests & \texttt{uv run python src/jobs/sql\_test.py tests/data-quality/bronze} & 3 checks; any violating rows $\rightarrow$ FAIL \\
+3 & dbt silver & \texttt{uv run dbt run --select silver} + \texttt{uv run dbt test --select silver} & \texttt{schema.yml} tests; \texttt{dbt test} failure stops stage \\
+4 & Silver SQL tests & \texttt{uv run python src/jobs/sql\_test.py tests/data-quality/silver} & 9 checks \\
 5 & dbt gold & \texttt{uv run dbt run --select gold} + \texttt{test} & 8 models, 7 dims + 1 fact \\
-6 & Gold SQL tests & \texttt{.../sql\_test.py tests/gold} & 7 checks \\
-7 & Great Expectations & \texttt{uv run python -m pipeline.data\_quality.run --layer all} & Bronz/Silver/Gold suites; exit 1 = data failure, 2 = build error \\
+6 & Gold SQL tests & \texttt{uv run python src/jobs/sql\_test.py tests/data-quality/gold} & 7 checks \\
+7 & Great Expectations & \texttt{uv run python -m gx.run --layer all} & Bronze/Silver/Gold suites; exit 1 = data failure, 2 = build error \\
 \bottomrule
 \end{longtable}
 \end{center}
 
-\textbf{Stop-on-first-failure:} \texttt{run\_pipeline.ps1:99} (\texttt{Stop-Pipeline}) and \texttt{main.py:244} (\texttt{raise}) halt immediately; Airflow's default \texttt{all\_success} trigger does the same — downstream tasks go to \texttt{upstream\_failed} with no extra guard.
+\textbf{Stop-on-first-failure:} \texttt{run\_pipeline.ps1} (\texttt{Stop-Pipeline}) and \texttt{main.py} (\texttt{raise}) halt immediately; the Airflow DAGs use the default \texttt{all\_success} trigger to do the same — downstream tasks go to \texttt{upstream\_failed} with no extra guard.
 
-PowerShell, Python, and Airflow share one mental model: the header ``\texttt{STEP n / 7}'' (\texttt{main.py:37 TOTAL\_STEPS = 7} plus stage 0 = 8 stages) stays honest via an assert. Logs go to \texttt{logs/pipeline\_YYYY-MM-DD.log} (\texttt{utils/logger.py}) plus \texttt{\{schema\}.etl\_logs} audit rows.
+PowerShell, Python, and Airflow share one mental model: the header ``\texttt{STEP n / 7}'' (\texttt{main.py TOTAL\_STEPS = 7} plus stage 0 = 8 stages) stays honest via an assert. Logs go to \url{logs/pipeline_YYYY-MM-DD.log} (\texttt{src/utils/logger.py}) plus \texttt{\{schema\}.etl\_logs} audit rows.
 
 % ================================================================= 6
 \section{Bronze Ingestion — Watermark Extraction in Detail}
 
-\texttt{scripts/python/extract.py} ($\approx$1230 lines) is the only place that touches MongoDB.
+\texttt{src/jobs/extract.py} is the only place that touches MongoDB.
 
 \subsection{Auto-discovery}
-\texttt{discover\_collections()} lists \texttt{mongo\_db.list\_collection\_names()} and drops any name starting with \texttt{system.} (\texttt{extract.py:127}). No collection list is ever hard-coded, and \texttt{--tables} is an optional filter for ad-hoc runs.
+\texttt{discover\_collections()} lists \texttt{mongo\_db.list\_collection\_names()} and drops any name starting with \texttt{system.}. No collection list is ever hard-coded, and \texttt{--tables} is an optional filter for ad-hoc runs.
 
 \subsection{Watermark column priority}
 Per collection, a single document sample is inspected and the first present candidate wins:
 \begin{center}
-\texttt{updated\_timestamp} $\succ$ \texttt{updated\_at} $\succ$ \texttt{created\_timestamp} $\succ$ \texttt{created\_at} \quad (\texttt{extract.py:151})
+\texttt{updated\_timestamp} $\succ$ \texttt{updated\_at} $\succ$ \texttt{created\_timestamp} $\succ$ \texttt{created\_at} \quad (watermark priority in \texttt{src/jobs/extract.py})
 \end{center}
 \texttt{updated\_*} is preferred because documents mutated after insert (e.g. order status $\rightarrow$ \texttt{Cancelled}) must be re-synced, not just newly-inserted rows. If none is present, the collection falls back to full reload every run with a warning.
 
@@ -285,12 +288,12 @@ When a watermark column and a prior \texttt{last\_watermark\_value} exist, the S
 \begin{lstlisting}[style=py,caption={Pushdown filter — string comparison is intentional}]
 watermark_str = since.strftime("%Y-%m-%d %H:%M:%S")
 pipeline = json.dumps([{"$match": {col: {"$gt": watermark_str}}}])
-reader.option("aggregation.pipeline", pipeline)  # extract.py:656
+reader.option("aggregation.pipeline", pipeline)  # src/jobs/extract.py
 \end{lstlisting}
 The comparison is string-to-string because the source stores these timestamps as \texttt{"YYYY-MM-DD HH:MM:SS"} strings, not BSON dates — MongoDB never matches across BSON types in \texttt{\$gt}.
 
 \subsection{Upsert, not append}
-\texttt{\_id} (cast to string, \texttt{sanitize\_for\_postgres:672}) is the merge key. Existing tables get a scratch staging table \texttt{\_stg\_\{collection\}} written with \texttt{mode("overwrite")}, then a single
+\texttt{\_id} (cast to string, \texttt{sanitize\_for\_postgres}) is the merge key. Existing tables get a scratch staging table \texttt{\_stg\_\{collection\}} written with \texttt{mode("overwrite")}, then a single
 \begin{lstlisting}[style=sql,caption={Merge — inserted vs updated via xmin}]
 WITH upsert AS (
   INSERT INTO "bronze"."orders" ("_id", ...) 
@@ -300,33 +303,33 @@ WITH upsert AS (
 )
 SELECT count(*) FILTER (WHERE inserted) AS rows_inserted,
        count(*) FILTER (WHERE NOT inserted) AS rows_updated
-FROM upsert;  -- extract.py:721
+FROM upsert;  -- src/jobs/extract.py
 \end{lstlisting}
-A unique index on \texttt{\_id} is ensured first (\texttt{ensure\_unique\_id\_index:409}); if creation fails (duplicate \_id from a prior append-only run), the run falls back to plain \texttt{append} and warns — never silently corrupts.
+A unique index on \texttt{\_id} is ensured first (\texttt{ensure\_unique\_id\_index}); if creation fails (duplicate \_id from a prior append-only run), the run falls back to plain \texttt{append} and warns — never silently corrupts.
 
 \subsection{Nested fields}
-\texttt{StructType / ArrayType / MapType} columns are serialised to JSON strings via \texttt{to\_json()} (\texttt{extract.py:680}) — the only ``lossy'' step, required because plain JDBC has no native struct type. Flattened field names are reported in the Rich final panel.
+\texttt{StructType / ArrayType / MapType} columns are serialised to JSON strings via \texttt{to\_json()} — the only ``lossy'' step, required because plain JDBC has no native struct type. Flattened field names are reported in the Rich final panel.
 
 \subsection{Control tables}
 Both live in the bronze schema:
 \begin{itemize}[leftmargin=1.4em]
-  \item \texttt{\{bronze\}.etl\_watermarks} — one row per collection: \texttt{incremental\_column, last\_watermark\_value, last\_run\_mode, rows\_inserted/updated, updated\_at}. Upserted via \texttt{ON CONFLICT (table\_name)} (\texttt{extract.py:528}).
+  \item \texttt{\{bronze\}.etl\_watermarks} — one row per collection: \url{incremental_column, last_watermark_value, last_run_mode, rows_inserted/updated, updated_at}. Upserted via \texttt{ON CONFLICT (table\_name)}.
   \item \texttt{\{bronze\}.etl\_logs} — one audit row per collection per run: mode, counts before/after, validation status, \texttt{error\_full} traceback, duration. Best-effort, never fails the run.
 \end{itemize}
-\texttt{ensure\_control\_tables:448} is idempotent and forward-migrates columns added in later versions.
+\texttt{ensure\_control\_tables} is idempotent and forward-migrates columns added in later versions.
 
 \subsection{Validation \& reporting}
-After each merge, \texttt{validate\_collection:619} recounts the target and expects \texttt{before + inserted}. A Rich report prints per-collection rows, watermark state, flattened fields, and failures (\texttt{render\_report:916}); the same data lands in both the daily log file and \texttt{etl\_logs}.
+After each merge, \texttt{validate\_collection} recounts the target and expects \texttt{before + inserted}. A Rich report prints per-collection rows, watermark state, flattened fields, and failures (\texttt{render\_report}); the same data lands in both the daily log file and \texttt{etl\_logs}.
 
-CLI: \texttt{--tables}, \texttt{--full-refresh} (truncates before load), \texttt{--dry-run}, \texttt{--watermark-column} override (\texttt{extract.py:1117}).
+CLI: \texttt{--tables}, \texttt{--full-refresh} (truncates before load), \texttt{--dry-run}, \texttt{--watermark-column} override.
 
 % ================================================================= 7
 \section{Silver Layer — Clean, Typed, Historical}
 
-\texttt{dbt/dbt\_project.yml:35} materialises all silver models as \texttt{table} in schema \texttt{silver}. Nine models mirror bronze tables 1:1 but add:
+\texttt{dbt/dbt\_project.yml} materialises all silver models as \texttt{table} in schema \texttt{silver}. Nine models mirror bronze tables 1:1 but add:
 
 \begin{center}
-\begin{longtable}{l l l}
+\begin{longtable}{>{\raggedright\arraybackslash}p{3.8cm} >{\raggedright\arraybackslash}p{4.6cm} >{\raggedright\arraybackslash}p{6.4cm}}
 \toprule
 Model & Key cleaning & Notable logic \\
 \midrule
@@ -337,7 +340,7 @@ Model & Key cleaning & Notable logic \\
 \texttt{silver.employees} & dedup, date parsing & Joins to stores \\
 \texttt{silver.orders} & timestamp parsing, status canonicalisation & \texttt{order\_timestamp} typed \\
 \texttt{silver.order\_items} & \texttt{line\_amount = qty * unit\_price} recomputed & FK to orders + products \\
-\texttt{silver.payment\_methods} & dedup, type normalisation & Lookup for gold dim \\
+\url{silver.payment_methods} & dedup, type normalisation & Lookup for gold dim \\
 \texttt{silver.products} & dedup, price typing, FK checks & Links brands + categories \\
 \texttt{silver.stores} & dedup, geo normalisation & Store master \\
 \bottomrule
@@ -346,15 +349,15 @@ Model & Key cleaning & Notable logic \\
 
 Each model has a \texttt{schema.yml} with \texttt{not\_null}, \texttt{unique}, \texttt{relationships} and \texttt{accepted\_values} tests. The silver grain is ``one row per source document'' — no aggregation yet.
 
-\texttt{tests/silver/} contributes 9 additional PL/pgSQL checks (row counts, orphan FKs, distinctness) executed by \texttt{scripts/python/sql\_test.py}.
+\texttt{tests/data-quality/silver/} contributes 9 additional PL/pgSQL checks (row counts, orphan FKs, distinctness) executed by \texttt{src/jobs/sql\_test.py}.
 
 % ================================================================= 8
 \section{Gold Layer — Dimensional Star / Snowflake}
 
-\texttt{dbt/dbt\_project.yml:39} materialises gold as \texttt{table} in schema \texttt{gold}. Eight models:
+\texttt{dbt/dbt\_project.yml} materialises gold as \texttt{table} in schema \texttt{gold}. Eight models:
 
 \begin{center}
-\begin{longtable}{l l p{7.2cm}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{4.4cm} >{\raggedright\arraybackslash}p{3.6cm} >{\raggedright\arraybackslash}p{6.8cm}}
 \toprule
 Model & Type & Grain \\
 \midrule
@@ -365,7 +368,7 @@ Model & Type & Grain \\
 \texttt{gold.dim\_brands} & Sub-dimension of products & One row per brand \\
 \texttt{gold.dim\_categories} & Sub-dimension of products & One row per category \\
 \texttt{gold.dim\_orders} & Dimension & One row per order header \\
-\texttt{gold.dim\_payment\_methods} & Dimension & One row per payment method \\
+\url{gold.dim_payment_methods} & Dimension & One row per payment method \\
 \texttt{gold.fact\_order\_items} & Fact (incremental merge) & One row per order line; FKs to \texttt{dim\_orders}, \texttt{dim\_products} \\
 \bottomrule
 \end{longtable}
@@ -373,31 +376,31 @@ Model & Type & Grain \\
 
 Key design points:
 \begin{itemize}[leftmargin=1.4em]
-  \item \texttt{fact\_order\_items.sql:1} is the only incremental gold model — \texttt{unique\_key=order\_item\_id}, \texttt{incremental\_strategy='merge'}, 3-day lookback window (\texttt{updated\_timestamp >= MAX(updated\_timestamp) - 3 days}) to catch late-arriving updates.
+  \item \url{fact_order_items.sql} is the only incremental gold model — \url{unique_key=order_item_id}, \url{incremental_strategy='merge'}, 3-day lookback window (\url{updated_timestamp >= MAX(updated_timestamp) - 3 days}) to catch late-arriving updates.
   \item Dimensions are full-refresh tables rebuilt from silver each run — cheap at this scale and avoids SCD bookkeeping where not needed.
   \item \texttt{gold\_loaded\_at = CURRENT\_TIMESTAMP} stamps lineage.
-  \item The star is snowflaked only at products $\rightarrow$ brands/categories — intentional, because brand/category reports (\texttt{reports/}) aggregate directly on those sub-dims.
+  \item The star is snowflaked only at products $\rightarrow$ brands and categories — intentional. Brand/category reports in \url{reports/} read straight from those sub-dims.
 \end{itemize}
 
-Gold is gated by \texttt{dbt test --select gold} plus 7 standalone checks under \texttt{tests/gold/}.
+Gold is gated by \texttt{dbt test --select gold} plus 7 standalone checks under \url{tests/data-quality/gold/}.
 
 % ================================================================= 9
 \section{Data Quality — Three Independent Systems}
 
 \begin{center}
-\begin{longtable}{l l l p{5.8cm}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{2.4cm} >{\raggedright\arraybackslash}p{3.4cm} >{\raggedright\arraybackslash}p{2.4cm} >{\raggedright\arraybackslash}p{5.8cm}}
 \toprule
 System & Location & Runner & Semantics \\
 \midrule
 \endhead
-dbt tests & \texttt{dbt/models/*/schema.yml} & \texttt{dbt test --select silver|gold} & Column/table contracts (null, unique, FK, accepted values) \\
-SQL suite & \texttt{tests/\{bronze,silver,gold\}/*.sql} & \texttt{sql\_test.py tests/<layer>} & \texttt{SELECT} returning violating rows = FAIL; \texttt{DO \$\$ RAISE EXCEPTION} = FAIL. One connection per layer, rollback on fail \\
-Great Expectations & \texttt{pipeline/data\_quality/suites/} & \texttt{python -m pipeline.data\_quality.run --layer all} & One checkpoint per layer (\texttt{\{layer\}\_checkpoint}), Fluent API 1.x; exit 1 = data failure, 2 = build error \\
+dbt tests & \url{dbt/models/*/schema.yml} & \url{dbt test --select silver|gold} & Column/table contracts (null, unique, FK, accepted values) \\
+SQL suite & \url{tests/data-quality/*/*.sql} & \url{src/jobs/sql_test.py} & \texttt{SELECT} returning violating rows = FAIL; \url{DO $$ RAISE EXCEPTION} = FAIL. One connection per layer, rollback on fail \\
+Great Expectations & \texttt{gx/suites/} & \texttt{python -m gx.run --layer all} & One checkpoint per layer (\texttt{\{layer\}\_checkpoint}), Fluent API 1.x; exit 1 = data failure, 2 = build error \\
 \bottomrule
 \end{longtable}
 \end{center}
 
-The SQL suite auto-detects mode per file via \texttt{psycopg2 ResourceClosedError} (\texttt{tests/unit/test\_sql\_test.py:89}). GX suites are built \texttt{add\_or\_update} so re-runs reconcile instead of duplicating, and all requested layers run even if an earlier one fails unless \texttt{--fail-fast} is passed (\texttt{pipeline/data\_quality/run.py:150}).
+The SQL suite auto-detects mode per file via \texttt{psycopg2 ResourceClosedError} (\url{tests/unit/test_sql_test.py}). GX checkpoints reconcile on re-run instead of duplicating, and all requested layers run even if an earlier one fails unless \texttt{--fail-fast} is passed (\url{gx/run.py}).
 
 Together: bronze has 3 SQL checks, silver 9, gold 7, plus $\approx$23 GX expectation suites and 100+ dbt tests.
 
@@ -405,46 +408,47 @@ Together: bronze has 3 SQL checks, silver 9, gold 7, plus $\approx$23 GX expecta
 \section{Orchestration — One Pipeline, Three Runners}
 
 \begin{center}
-\begin{longtable}{l p{5.6cm} p{5.6cm}}
+\begin{longtable}{l >{\raggedright\arraybackslash}p{5.6cm} >{\raggedright\arraybackslash}p{5.6cm}}
 \toprule
 Runner & Entry point & How it loads env \& runs \\
 \midrule
 \endhead
-Windows host & \texttt{pipeline/run\_pipeline.ps1} + \texttt{run\_pipeline.bat} shim & \texttt{Import-DotEnv} overwrites process env; \texttt{Assert-Prerequisites} checks 7 paths; \texttt{Invoke-PipelineCommand} shells out via \texttt{uv} \\
-Standalone container & \texttt{main.py} (used by \texttt{docker/Dockerfile} \texttt{ENTRYPOINT}) & \texttt{load\_dotenv} via \texttt{setdefault} (container env wins); \texttt{in\_container()} check refuses to self-heal PySpark inside a built image \\
-Airflow DAG & \texttt{airflow/dags/walmart\_pipeline\_dag.py} \newline \texttt{dag\_id=walmart\_medallion\_pipeline} & Every \texttt{@task.bash} prefixes \texttt{\_PREAMBLE}: \texttt{source .env}, rewrite \texttt{localhost $\rightarrow$ host.docker.internal}, force \texttt{PYSPARK\_PYTHON=/app/.venv/bin/python}, set \texttt{DBT\_PROFILES\_DIR=/app/docker/dbt} \\
+Windows host & \texttt{pipeline/run\_pipeline.ps1} + \texttt{run\_pipeline.bat} shim & \texttt{Import-DotEnv} overwrites process env; \texttt{Assert-Prerequisites} checks paths; \texttt{Invoke-PipelineCommand} shells out via \texttt{uv} \\
+Standalone container & \texttt{main.py} (used by \texttt{docker/Dockerfile.pipeline} \texttt{ENTRYPOINT}) & \texttt{load\_dotenv} via \texttt{setdefault} (container env wins); \texttt{in\_container()} check refuses to self-heal PySpark inside a built image \\
+Airflow DAGs & \url{airflow/dags/walmart_pipeline_dag.py} (\url{walmart_mwf_morning}, \url{walmart_rest_night}) + \url{walmart_health_dag.py} (\url{walmart_hourly_health_check}) & Every \texttt{@task.bash} prefixes \texttt{\_PREAMBLE}: parse \texttt{.env}, rewrite \texttt{localhost} to \texttt{host.docker.internal}, force \url{PYSPARK_PYTHON=/app/.venv/bin/python}, set \url{DBT_PROFILES_DIR=/app/dbt} \\
 \bottomrule
 \end{longtable}
 \end{center}
 
-DAG tasks form a linear chain \texttt{preflight $\rightarrow$ extract $\rightarrow$ bronze\_tests $\rightarrow$ silver\_run $\rightarrow$ silver\_test $\rightarrow$ silver\_sql $\rightarrow$ gold\_run $\rightarrow$ gold\_test $\rightarrow$ gold\_sql $\rightarrow$ gx} with default \texttt{retries=0, max\_active\_runs=1}. Fail-fast is free from Airflow's \texttt{all\_success}.
+The pipeline DAGs form a linear chain \url{preflight -> extract -> bronze_sql_tests -> dbt_silver_run -> dbt_silver_test -> silver_sql_tests -> dbt_gold_run -> dbt_gold_test -> gold_sql_tests -> great_expectations_tests -> collect_results -> choose_email -> email_success/failure} with \texttt{retries=1, max\_active\_runs=1}. Fail-fast is free from Airflow's \texttt{all\_success}.
 
-``Localhost problem'' (\texttt{docs/architecture.md:29}): \texttt{.env} keeps \texttt{localhost} for local \texttt{uv run}; only consuming layers rewrite — the DAG \texttt{\_PREAMBLE} and \texttt{docker run --env-file} overrides. \texttt{.env} itself is never edited.
+``Localhost problem'' (\texttt{docs/architecture.md}): \texttt{.env} keeps \texttt{localhost} for local \texttt{uv run}; only consuming layers rewrite — the DAG \texttt{\_PREAMBLE} and \texttt{docker run --env-file} overrides. \texttt{.env} itself is never edited.
 
 % ================================================================= 11
 \section{Containerisation}
 
 \textbf{Two images, two jobs} (\texttt{docs/docker.md}):
 \begin{itemize}[leftmargin=1.4em]
-  \item \texttt{docker/Dockerfile} — standalone runner: \texttt{python:3.12-slim + JDK 17 + uv}, copies \texttt{jars/}, installs from \texttt{uv.lock}, sets \texttt{RUNNING\_IN\_DOCKER=1}, \texttt{ENTRYPOINT ["python","main.py"]}.
-  \item \texttt{docker/Dockerfile.airflow} — CeleryExecutor base: \texttt{apache/airflow:3.3.0 + JDK 17 + uv}, same \texttt{jars/} layer, used by \texttt{docker/compose.yml} for 6 services (apiserver, scheduler, dag-processor, worker, triggerer, postgres+redis).
+  \item \texttt{docker/Dockerfile.pipeline} — standalone runner: \texttt{python:3.12-slim + JDK 17 + uv}, copies \texttt{jars/}, installs from \texttt{uv.lock}, sets \texttt{RUNNING\_IN\_DOCKER=1}, \texttt{ENTRYPOINT ["python","main.py"]}.
+  \item \texttt{docker/Dockerfile.airflow} — scheduler base: \texttt{apache/airflow:3.3.0 + JDK 17 + uv}, same \texttt{jars/} layer, used by \texttt{docker/compose.yml} for 4 services (metadata, apiserver, migrate, scheduler) on \texttt{LocalExecutor}.
 \end{itemize}
 
-\texttt{docker/compose.yml} mounts the project root to \texttt{/app} and shadows \texttt{/app/.venv} with an anonymous volume so the container's Linux venv never clobbers the host's Windows venv. \texttt{airflow-worker} gets \texttt{extra\_hosts: host.docker.internal:host-gateway} to reach host Postgres/Mongo.
+\texttt{docker/compose.yml} mounts the project root to \texttt{/app} and shadows \texttt{/app/.venv} with an anonymous volume so the container's Linux venv never clobbers the host's Windows venv. The shared Airflow block sets \texttt{extra\_hosts: host.docker.internal:host-gateway} so tasks reach host Postgres/Mongo, and pins \texttt{AIRFLOW\_\_CORE\_\_EXECUTION\_API\_SERVER\_URL} plus shared API/JWT secrets so scheduler-spawned tasks authenticate to the Execution API.
 
 Dev container (\texttt{.devcontainer/devcontainer.json}) mirrors the standalone Dockerfile (JDK 17, uv preinstalled) so PySpark works without local Java.
 
 % ================================================================= 12
 \section{CI / CD}
 
-\texttt{.github/workflows/ci.yml} (6 jobs, \texttt{PYTHON\_VERSION 3.11}, \texttt{AIRFLOW\_VERSION 3.3.0}):
+\texttt{.github/workflows/ci.yml} (7 jobs, \texttt{PYTHON\_VERSION 3.11}, \texttt{AIRFLOW\_VERSION 3.3.0}):
 
 \begin{enumerate}[leftmargin=1.4em,itemsep=2pt]
   \item \textbf{lint} — \texttt{ruff check}, \texttt{ruff format --check}, \texttt{sqlfluff lint dbt/models sql/ tests/ --dialect postgres}
-  \item \textbf{dashboard-smoke} — installs \emph{only} \texttt{dashboard/requirements.txt} (no \texttt{databricks-sql-connector}), asserts \texttt{databricks} not importable, then imports \texttt{dashboard.queries} with dummy env — catches the unconditional-databricks regression that broke Streamlit Cloud.
-  \item \textbf{unit-tests} — \texttt{pytest tests/unit -v --cov=utils --cov=scripts} (28 tests, mocked, no live DB)
-  \item \textbf{dag-integrity} — installs Airflow via constraints file and asserts \texttt{DagBag} loads \texttt{walmart\_medallion\_pipeline} with no import errors or cycles.
-  \item \textbf{docker-build} — builds both \texttt{docker/Dockerfile} and \texttt{docker/Dockerfile.airflow} with Buildx cache, \texttt{lfs: true} so \texttt{jars/*.jar} are real files.
+  \item \textbf{dashboard-smoke} — installs \emph{only} dashboard deps (no \texttt{databricks-sql-connector}), asserts \texttt{databricks} not importable, then imports with dummy env — catches the unconditional-databricks regression that broke Streamlit Cloud.
+  \item \textbf{unit-tests} — \texttt{pytest tests/unit -v --cov} (28 tests, mocked, no live DB)
+  \item \textbf{smoke-tests} — fast import/startup checks without live services
+  \item \textbf{dag-integrity} — installs Airflow via constraints file and asserts \texttt{DagBag} loads \texttt{airflow/dags} with no import errors or cycles.
+  \item \textbf{docker-build} — builds both \texttt{docker/Dockerfile.pipeline} and \texttt{docker/Dockerfile.airflow} with Buildx cache, \texttt{lfs: true} so \texttt{jars/*.jar} are real files.
   \item \textbf{integration} — live Postgres 16 service; \texttt{ci\_seed\_bronze.py} seeds bronze from fixtures, then the exact gate sequence: bronze SQL $\rightarrow$ \texttt{dbt run/test silver} $\rightarrow$ silver SQL $\rightarrow$ \texttt{dbt run/test gold} $\rightarrow$ gold SQL $\rightarrow$ GX \texttt{--layer all}. Uses absolute \texttt{DBT\_PROFILES\_DIR} and \texttt{PYTHONPATH} fixes documented inline.
 \end{enumerate}
 
@@ -453,22 +457,22 @@ Images are published to GHCR on merge/tag; releases are cut via \texttt{CHANGELO
 % ================================================================= 13
 \section{BI Layer — SQL Reports \& Dashboard}
 
-\subsection{Hand-written SQL (\texttt{sql/}, 21 files)}
-\texttt{00\_init\_schema.sql} creates schemas and extensions; \texttt{01\_brands.sql .. 03\_payment\_methods.sql} and \texttt{08\_order\_status\_analysis.sql .. 20\_no\_sales\_date\_analysis.sql} are analytical queries (brand/category revenue share, payment mix, ranking, Pareto, market basket, ABC, cohort) and two PL/pgSQL functions (\texttt{05\_fn\_product\_report.sql}, \texttt{06\_fn\_sales\_trend.sql}) plus a trigger (\texttt{07\_trg\_loaded.sql}). They query gold directly and are the ancestors of \texttt{reports/brand\_report.md} and \texttt{category\_report.md}.
+\subsection{Hand-written SQL (\texttt{sql/}, 25 files)}
+\texttt{sql/} is organised by area — \texttt{analytics/} (brand/category revenue share, payment mix, ranking, Pareto, market basket, ABC, cohort), \texttt{functions/} (PL/pgSQL reporting functions), \texttt{triggers/}, plus \texttt{extensions/}, \texttt{metadata/}, \texttt{procedure/} and \texttt{scripts/}. They query gold directly and are the ancestors of \texttt{reports/brand\_report.md} and \texttt{category\_report.md}.
 
 \subsection{Gold dashboard (\texttt{dashboard/})}
-\texttt{dashboard/app.py} (766 lines) is a Streamlit app with Plotly charts. All SQL lives in \texttt{queries.py} (parameterised, aggregated in Postgres, cached via \texttt{st.cache\_data}); styling in \texttt{theme.py}; cards/chips in \texttt{components.py}. Filters (date presets 7D/30D/90D/YTD/All, stores, categories, order statuses, granularity Day/Week/Month) build an immutable \texttt{Filters} key; KPIs show period-over-period deltas; tabs are Overview / Trends \& Mix / Breakdown / Data. Graceful empty states when gold is unpopulated. Runs with \texttt{uv run streamlit run dashboard/app.py} or on Streamlit Cloud with \texttt{st.secrets} fallback (\texttt{app.py:34}).
+\texttt{dashboard/} is a multipage Streamlit app with Plotly charts: \texttt{home.py} entry point, \texttt{pages/} per area (Sales, Products, Customers, Categories), SQL in \texttt{lib/queries.py} (parameterised, aggregated in Postgres, cached), styling in \texttt{helpers/theme.py} and shared cards in \texttt{helpers/components.py}. Filters build an immutable key; KPIs show period-over-period deltas; graceful empty states when gold is unpopulated. Runs with \texttt{uv run streamlit run dashboard/home.py} or on Streamlit Cloud with \texttt{st.secrets} fallback.
 
 \subsection{Existing reports (\texttt{reports/})}
-\texttt{reports/brand\_report.md} (7 brands, \$18.9M total, Apple 15.75\% leader) and \texttt{reports/category\_report.md} (Electronics 17.76\% leader, Home 14.34\% outlier) are the reference BI outputs — both derived from gold CTEs that \texttt{LEFT JOIN dim\_* $\rightarrow$ fact\_order\_items} so zero-sales entities remain visible.
+\url{reports/brand_report.md} (7 brands, \$18.9M total, Apple 15.75\% leader) and \url{reports/category_report.md} (Electronics 17.76\% leader, Home 14.34\% outlier) are the reference BI outputs — both derived from gold CTEs that \texttt{LEFT JOIN} \url{dim_* -> fact_order_items} so zero-sales entities remain visible.
 
 % ================================================================= 14
 \section{Shared Utilities}
 
 \begin{description}[leftmargin=1.2em,style=nextline]
-  \item[\texttt{utils/engine.py}] Loads \texttt{.env} at import, validates required vars (\texttt{POSTGRES\_*}, \texttt{MONGO\_*}) with \texttt{OSError} on missing, warns on optional \texttt{POSTGRES\_SCHEMA\_*} and Databricks vars, casts \texttt{POSTGRES\_PORT} to int. Hard-fails fast so every script gets a clear error.
-  \item[\texttt{utils/connection.py}] Cached factories: \texttt{get\_postgres\_engine()} (SQLAlchemy, SSL params), \texttt{get\_mongo\_db()} (pymongo with ping), \texttt{get\_databricks\_connection()} (lazy \texttt{databricks\_sql\_connector}, \texttt{ModuleNotFoundError} if extra not installed — dashboard-safe).
-  \item[\texttt{utils/logger.py}] \texttt{get\_logger(name)} returns a logger with console + daily file handlers (\texttt{logs/pipeline\_YYYY-MM-DD.log}), \texttt{propagate=False}, configurable levels. Used by extract, dashboard, and GX runner.
+  \item[\texttt{src/utils/engine.py}] Loads \texttt{.env} at import, validates required vars (\url{POSTGRES_*}, \url{MONGO_*}) with \texttt{OSError} on missing, warns on optional \url{POSTGRES_SCHEMA_*} and Databricks vars, casts \texttt{POSTGRES\_PORT} to int. Hard-fails fast so every script gets a clear error.
+  \item[\texttt{src/utils/connection.py}] Cached factories: \url{get_postgres_engine()} (SQLAlchemy, SSL params), \texttt{get\_mongo\_db()} (pymongo with ping), \url{get_databricks_connection()} (lazy \url{databricks_sql_connector}, \url{ModuleNotFoundError} if extra not installed — dashboard-safe).
+  \item[\texttt{src/utils/logger.py}] \texttt{get\_logger(name)} returns a logger with console + daily file handlers (\url{logs/pipeline_YYYY-MM-DD.log}), \texttt{propagate=False}, configurable levels. Used by extract, dashboard, and GX runner.
 \end{description}
 
 Patching for tests is via \texttt{tests/unit/test\_*.py} with \texttt{unittest.mock} and small fixtures — never real DB data.
@@ -486,39 +490,39 @@ cp .env.example .env          # fill POSTGRES_*, MONGO_*, optional DATABRICKS_*
 # 2. One-command pipeline (8 stages)
 ./pipeline/run_pipeline.ps1
 # or: uv run python main.py
-# or: uv run python scripts/python/extract.py --dry-run --tables orders,customers
+# or: uv run python src/jobs/extract.py --dry-run --tables orders,customers
 
 # 3. Individual gates
-uv run python scripts/python/sql_test.py tests/bronze
-uv run dbt run --select silver --project-dir dbt && uv run dbt test --select silver --project-dir dbt
-uv run python -m pipeline.data_quality.run --layer all
+uv run python src/jobs/sql_test.py tests/data-quality/bronze
+uv run dbt run --select silver && uv run dbt test --select silver
+uv run python -m gx.run --layer all
 
 # 4. Dashboard
-uv run streamlit run dashboard/app.py
+uv run streamlit run dashboard/home.py
 
 # 5. Quality (pre-commit)
 uv run ruff format . && uv run ruff check . && uv run sqlfluff lint dbt/models --dialect postgres
 uv run pre-commit run --all-files
-uv run pytest tests/unit -v --cov=utils --cov=scripts
+uv run pytest tests/unit -v
 \end{lstlisting}
 
 \begin{lstlisting}[style=bash,caption={Docker \& Airflow}]
 # Standalone container
-docker build -f docker/Dockerfile -t walmart-pipeline .
+docker build -f docker/Dockerfile.pipeline -t walmart-pipeline .
 docker run --env-file .env walmart-pipeline
 
-# Full Airflow stack (CeleryExecutor)
-docker compose -f docker/compose.yml up
-# UI at http://localhost:8080 (airflow/airflow), DAG: walmart_medallion_pipeline
+# Full Airflow stack (LocalExecutor)
+docker compose -f docker/compose.yml up -d
+# UI at http://localhost:8080, DAGs: walmart_mwf_morning, walmart_rest_night, walmart_hourly_health_check
 \end{lstlisting}
 
-Health and security scripts: \texttt{uv run python scripts/python/health\_check.py} and \texttt{security\_check.py} (see \texttt{docs/health.md}).
+Health and security scripts: \texttt{uv run python} \url{scripts/run_health_check.py} and \url{scripts/run_security_check.py} (see \texttt{docs/health.md}).
 
 % ================================================================= 16
 \section{Observability, Security \& Conventions}
 
 \begin{itemize}[leftmargin=1.4em]
-  \item Git workflow: one file/logical change per commit, \texttt{git add <file>} + prefix \texttt{extract: / dbt: / airflow: / docker: / tests: / utils: / docs:} (\texttt{AGENTS.md}, \texttt{docs/git-workflow.md}), rebase before push, no \texttt{.venv / \_\_pycache\_\_ / .env / data/raw|processed} committed.
+  \item Git workflow: one file/logical change per commit, \texttt{git add <file>} + area prefix (\texttt{extract:} / \texttt{dbt:} / \texttt{airflow:} / \texttt{docker:} / \texttt{tests:} / \texttt{src:} / \texttt{docs:}) (\texttt{AGENTS.md}, \texttt{docs/git-workflow.md}), rebase before push, no \url{.venv}, \url{__pycache__}, \url{.env}, or anything under \url{data/raw} or \url{data/processed} committed.
   \item Secrets: \texttt{.env} is git-ignored; \texttt{.env.example} is the template; \texttt{detect-private-key} pre-commit hook; Databricks token never baked into images.
   \item Logging: Rich console + structured file logs + \texttt{etl\_logs} table — three places to diagnose a failed collection without re-running.
   \item Idempotency: control tables and watermark upserts are \texttt{CREATE IF NOT EXISTS / ON CONFLICT} — re-running never duplicates state.
@@ -529,7 +533,7 @@ Health and security scripts: \texttt{uv run python scripts/python/health\_check.
 \section{Limitations \& Roadmap}
 
 \begin{center}
-\begin{longtable}{p{4.2cm} p{10.6cm}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{4.2cm} >{\raggedright\arraybackslash}p{10.6cm}}
 \toprule
 Area & Next step \\
 \midrule
@@ -575,10 +579,10 @@ Task & Command \\
 Create env & \texttt{uv venv} \\
 Install deps & \texttt{uv sync} \\
 Add dep & \texttt{uv add <pkg>} \\
-Run extract & \texttt{uv run python scripts/python/extract.py} \\
+Run extract & \texttt{uv run python src/jobs/extract.py} \\
 Run dbt tests & \texttt{uv run dbt test --select silver} \\
-Run SQL suite & \texttt{uv run python scripts/python/sql\_test.py tests/<layer>} \\
-Run GX & \texttt{uv run python -m pipeline.data\_quality.run --layer all} \\
+Run SQL suite & \texttt{uv run python src/jobs/sql\_test.py tests/data-quality/<layer>} \\
+Run GX & \texttt{uv run python -m gx.run --layer all} \\
 Format & \texttt{uv run ruff format .} \\
 Lint & \texttt{uv run ruff check .} \\
 Stage one file & \texttt{git add <file>} \\
@@ -604,11 +608,13 @@ PYSPARK_DRIVER_PYTHON=python
 DATABRICKS_HOST=
 DATABRICKS_HTTP_PATH=
 DATABRICKS_TOKEN=
+DATABRICKS_CATALOG=walmart
+DATABRICKS_SCHEMA=public
 \end{lstlisting}
 
 \vfill
 \begin{center}
-\small\textcolor{muted}{Generated from repository state at \texttt{main@aa3d139} — September 2026. For the full system design see \texttt{docs/architecture.md} and \texttt{README.md}.}
+\small\textcolor{muted}{Generated from repository state at \texttt{main@2812ada} — October 2026. For the full system design see \texttt{docs/architecture.md} and \texttt{README.md}.}
 \end{center}
 
 \end{document}
