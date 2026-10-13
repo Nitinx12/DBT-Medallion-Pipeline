@@ -17,9 +17,9 @@ Supports TWO test conventions, auto-detected per file:
        - Exception raised    -> FAIL, exception message logged as the reason
 
 Usage:
-    uv run python scripts/python/sql_test.py tests/data-quality/bronze
-    uv run python scripts/python/sql_test.py tests/data-quality/silver
-    uv run python scripts/python/sql_test.py tests/data-quality/gold
+    uv run python src/jobs/sql_test.py tests/data-quality/bronze
+    uv run python src/jobs/sql_test.py tests/data-quality/silver
+    uv run python src/jobs/sql_test.py tests/data-quality/gold
 
 Exit code: 0 if all tests pass, 1 if any test fails.
 

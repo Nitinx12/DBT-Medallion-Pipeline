@@ -21,7 +21,7 @@ flowchart LR
 - **Bronze**: `src/jobs/extract.py` — auto-discovers collections, watermark `updated_* > created_*`, `INSERT ... ON CONFLICT (_id)` upsert via `etl_watermarks`/`etl_logs`.
 - **Silver**: 9 dbt models — `dbt test` + 9 SQL checks (`tests/data-quality/silver/`).
 - **Gold**: 8 dbt models (7 dims + 1 fact, snowflake) — `dbt test` + 7 SQL checks (`tests/data-quality/gold/`).
-- **Tests**: dbt tests (`schema.yml`) + standalone SQL suite (`scripts/python/sql_test.py`) — separate systems.
+- **Tests**: dbt tests (`schema.yml`) + standalone SQL suite (`src/jobs/sql_test.py`) — separate systems.
 
 ## Infra
 

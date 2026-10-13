@@ -5,7 +5,7 @@ Two independent systems — do not conflate.
 | System | Where | Run |
 |---|---|---|
 | dbt tests | `dbt/models/*/schema.yml` | `uv run dbt test --select silver|gold` |
-| SQL suite | `tests/data-quality/{bronze,silver,gold}/*.sql` | `uv run python scripts/python/sql_test.py tests/data-quality/<layer>` |
+| SQL suite | `tests/data-quality/{bronze,silver,gold}/*.sql` | `uv run python src/jobs/sql_test.py tests/data-quality/<layer>` |
 | GX | `gx/` | `uv run python -m gx.run --layer all` |
 
 ## SQL suite

@@ -103,7 +103,7 @@ test-bronze: ## [2/7] Run Bronze-layer SQL tests
 	@echo "------------------------------------------------------------"
 	@echo " STEP 2 / 7  -  BRONZE SQL TESTS"
 	@echo "------------------------------------------------------------"
-	$(PYTHON) scripts/python/sql_test.py tests/data-quality/bronze
+	$(PYTHON) src/jobs/sql_test.py tests/data-quality/bronze
 
 dbt-silver: ## [3/7] Build + test Silver dbt models
 	@echo "------------------------------------------------------------"
@@ -115,7 +115,7 @@ test-silver: ## [4/7] Run Silver-layer SQL tests
 	@echo "------------------------------------------------------------"
 	@echo " STEP 4 / 7  -  SILVER SQL TESTS"
 	@echo "------------------------------------------------------------"
-	$(PYTHON) scripts/python/sql_test.py tests/data-quality/silver
+	$(PYTHON) src/jobs/sql_test.py tests/data-quality/silver
 
 dbt-gold: ## [5/7] Build + test Gold dbt models
 	@echo "------------------------------------------------------------"
@@ -127,7 +127,7 @@ test-gold: ## [6/7] Run Gold-layer SQL tests
 	@echo "------------------------------------------------------------"
 	@echo " STEP 6 / 7  -  GOLD SQL TESTS"
 	@echo "------------------------------------------------------------"
-	$(PYTHON) scripts/python/sql_test.py tests/data-quality/gold
+	$(PYTHON) src/jobs/sql_test.py tests/data-quality/gold
 
 gx-tests: ## [7/7] Run Great Expectations across Bronze/Silver/Gold
 	@echo "------------------------------------------------------------"

@@ -270,7 +270,7 @@ REM =========================================================================
 REM STAGE 2 — BRONZE SQL TESTS
 REM =========================================================================
 call :stage_header "2" "BRONZE SQL TESTS"
-uv run python scripts/python/sql_test.py tests/data-quality/bronze
+uv run python src/jobs/sql_test.py tests/data-quality/bronze
 if errorlevel 1 (
     call :stage_fail "Bronze Tests failed. Stopping pipeline." "Bronze Tests"
     call :print_summary
@@ -307,7 +307,7 @@ REM =========================================================================
 REM STAGE 4 — SILVER SQL TESTS
 REM =========================================================================
 call :stage_header "4" "SILVER SQL TESTS"
-uv run python scripts/python/sql_test.py tests/data-quality/silver
+uv run python src/jobs/sql_test.py tests/data-quality/silver
 if errorlevel 1 (
     call :stage_fail "Silver Tests failed. Stopping pipeline." "Silver Tests"
     call :print_summary
@@ -344,7 +344,7 @@ REM =========================================================================
 REM STAGE 6 — GOLD SQL TESTS
 REM =========================================================================
 call :stage_header "6" "GOLD SQL TESTS"
-uv run python scripts/python/sql_test.py tests/data-quality/gold
+uv run python src/jobs/sql_test.py tests/data-quality/gold
 if errorlevel 1 (
     call :stage_fail "Gold Tests failed. Stopping pipeline." "Gold Tests"
     call :print_summary

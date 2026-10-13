@@ -1,17 +1,19 @@
 # Scripts
 
 ```
+src/jobs/                   # pipeline runtime (moved out of scripts/python/)
+├── extract.py              # Mongo → bronze (incremental, watermark, upsert)
+├── sql_test.py             # runs tests/data-quality/<layer>/*.sql
+└── ci_seed_bronze.py       # CI fixture loader
+
 scripts/
-├── python/                  # python — pipeline runtime
-│   ├── extract.py           # Mongo → bronze (incremental, watermark, upsert)
-│   ├── sql_test.py          # runs tests/data-quality/<layer>/*.sql
-│   ├── ci_seed_bronze.py    # CI fixture loader
+├── python/                 # ops/dev utilities
 │   ├── health_check.py
 │   ├── security_check.py
 │   ├── inspect_gold_schema.py
 │   ├── seed_demo_db.py
 │   └── sync_gold_to_databricks.py
-└── bash/                    # bash — detailed helpers
+└── bash/                   # bash — detailed helpers
     ├── preflight.sh         # env & deps check
     ├── extract.sh           # wrapper for python extract
     ├── run_tests.sh         # bronze/silver/gold
@@ -36,7 +38,7 @@ uv run python src/jobs/extract.py --tables orders,customers --full-refresh --dry
 Runs `tests/data-quality/<layer>/*.sql` — `SELECT` violating rows or `DO` block `RAISE`. `rollback()` on fail.
 
 ```bash
-uv run python scripts/python/sql_test.py tests/data-quality/bronze
+uv run python src/jobs/sql_test.py tests/data-quality/bronze
 ```
 
 See `testing.md` for conventions.

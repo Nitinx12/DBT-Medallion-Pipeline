@@ -32,7 +32,7 @@ uv add --dev pytest ruff
 
 # run any script through uv instead of the bare interpreter
 uv run python src/jobs/extract.py
-uv run python scripts/python/sql_test.py tests/data-quality/bronze
+uv run python src/jobs/sql_test.py tests/data-quality/bronze
 ```
 `uv.lock` is the source of truth — never hand-edit dependency versions
 in `pyproject.toml` without running `uv lock` afterward.
@@ -61,7 +61,8 @@ docker/         # Dockerfile, Dockerfile.airflow, docker-compose.yaml, entrypoin
 docs/           # deep-dive docs: airflow.md, dbt.md, docker.md, pipeline.md, scripts.md, tests.md, src-utils.md
 jars/           # Mongo Spark connector + Postgres JDBC, checked in for offline Spark startup
 pipeline/       # run_pipeline.ps1 — Windows entry point
-scripts/        # python/ (extract.py, sql_test.py, ci_seed_bronze.py, ...) + bash/ (preflight/run_pipeline/run_tests/health/security/clean/setup_env/monitor_logs.sh)
+scripts/        # python/ (ops/dev utils) + bash/ (preflight/run_pipeline/run_tests/health/security/clean/setup_env/monitor_logs.sh)
+src/jobs/       # pipeline runtime: extract.py, sql_test.py, ci_seed_bronze.py
 sql/            # hand-written functions/triggers/reports
 tests/          # standalone SQL data-quality suite, one folder per layer
 src/utils/      # engine.py, connection.py, logger.py — shared infra
@@ -101,7 +102,7 @@ uv run dbt test --select silver
 uv run dbt test --select gold
 
 # standalone SQL data-quality suite (schema-driven PL/pgSQL checks)
-uv run python scripts/python/sql_test.py tests/data-quality/silver
+uv run python src/jobs/sql_test.py tests/data-quality/silver
 ```
 - every new dbt model needs schema.yml tests
 - every new extract/transform function needs at least one unit test
@@ -150,7 +151,7 @@ git commit -m "docker: pin JDK to 17" \
 | add dependency | `uv add <pkg>` |
 | run extract | `uv run python src/jobs/extract.py` |
 | run dbt tests | `uv run dbt test --select silver` |
-| run SQL suite | `uv run python scripts/python/sql_test.py tests/data-quality/<layer>` |
+| run SQL suite | `uv run python src/jobs/sql_test.py tests/data-quality/<layer>` |
 | format code | `uv run ruff format .` |
 | lint code | `uv run ruff check .` |
 | stage one file | `git add <file>` |

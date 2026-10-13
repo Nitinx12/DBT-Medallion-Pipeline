@@ -3,7 +3,7 @@
 -- Purpose:      Runs the repository's data-quality checks natively inside
 --               Postgres and records every check in gold.dq_test_runs, so a
 --               full layer gets a complete PASS/FAIL picture in one CALL.
---               This complements scripts/python/sql_test.py (which runs the
+--               This complements src/jobs/sql_test.py (which runs the
 --               tests/data-quality/*.sql files and stops a pipeline stage on
 --               the first failing file): the procedure never aborts early -
 --               each check is isolated, so one bad table can't hide the

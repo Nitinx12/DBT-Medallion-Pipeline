@@ -133,7 +133,7 @@ function Assert-Prerequisites {
     $requiredPaths = @(
         "pyproject.toml",
         "src/jobs/extract.py",
-        "scripts/python/sql_test.py",
+        "src/jobs/sql_test.py",
         "tests/data-quality/bronze",
         "tests/data-quality/silver",
         "tests/data-quality/gold",
@@ -234,7 +234,7 @@ try {
     }
 
     Invoke-PipelineStage -Number 2 -Name "Bronze Tests" -Title "BRONZE SQL TESTS" -Action {
-        Invoke-PipelineCommand -Description "Bronze SQL tests" -Command @("uv", "run", "python", "scripts/python/sql_test.py", "tests/data-quality/bronze")
+        Invoke-PipelineCommand -Description "Bronze SQL tests" -Command @("uv", "run", "python", "src/jobs/sql_test.py", "tests/data-quality/bronze")
     }
 
     Invoke-PipelineStage -Number 3 -Name "Silver dbt" -Title "DBT SILVER (build and test)" -Action {
@@ -243,7 +243,7 @@ try {
     }
 
     Invoke-PipelineStage -Number 4 -Name "Silver Tests" -Title "SILVER SQL TESTS" -Action {
-        Invoke-PipelineCommand -Description "Silver SQL tests" -Command @("uv", "run", "python", "scripts/python/sql_test.py", "tests/data-quality/silver")
+        Invoke-PipelineCommand -Description "Silver SQL tests" -Command @("uv", "run", "python", "src/jobs/sql_test.py", "tests/data-quality/silver")
     }
 
     Invoke-PipelineStage -Number 5 -Name "Gold dbt" -Title "DBT GOLD (build and test)" -Action {
@@ -252,7 +252,7 @@ try {
     }
 
     Invoke-PipelineStage -Number 6 -Name "Gold Tests" -Title "GOLD SQL TESTS" -Action {
-        Invoke-PipelineCommand -Description "Gold SQL tests" -Command @("uv", "run", "python", "scripts/python/sql_test.py", "tests/data-quality/gold")
+        Invoke-PipelineCommand -Description "Gold SQL tests" -Command @("uv", "run", "python", "src/jobs/sql_test.py", "tests/data-quality/gold")
     }
 
     Invoke-PipelineStage -Number 7 -Name "Great Expectations" -Title "GREAT EXPECTATIONS TESTS (Bronze, Silver, Gold)" -Action {

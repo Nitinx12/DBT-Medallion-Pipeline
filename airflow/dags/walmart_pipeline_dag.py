@@ -89,7 +89,7 @@ def _register(dag_id, schedule):
         def bronze_sql_tests() -> str:
             return (
                 _PREAMBLE
-                + "uv run python scripts/python/sql_test.py tests/data-quality/bronze"
+                + "uv run python src/jobs/sql_test.py tests/data-quality/bronze"
             )
 
         @task.bash(task_id="dbt_silver_run")
@@ -106,7 +106,7 @@ def _register(dag_id, schedule):
         def silver_sql_tests() -> str:
             return (
                 _PREAMBLE
-                + "uv run python scripts/python/sql_test.py tests/data-quality/silver"
+                + "uv run python src/jobs/sql_test.py tests/data-quality/silver"
             )
 
         @task.bash(task_id="dbt_gold_run")
@@ -120,8 +120,7 @@ def _register(dag_id, schedule):
         @task.bash(task_id="gold_sql_tests")
         def gold_sql_tests() -> str:
             return (
-                _PREAMBLE
-                + "uv run python scripts/python/sql_test.py tests/data-quality/gold"
+                _PREAMBLE + "uv run python src/jobs/sql_test.py tests/data-quality/gold"
             )
 
         @task.bash(task_id="great_expectations_tests")

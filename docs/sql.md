@@ -22,6 +22,6 @@ All `postgres` dialect, linted via `sqlfluff lint --dialect postgres`.
 - **Silver (9)**: dupes, nulls, negative, FK, date ranges, domain, spaces, business rules.
 - **Gold (7)**: not empty, date ranges, dupes, negative, referential, spaces, row counts.
 
-Run: `uv run python scripts/python/sql_test.py tests/data-quality/<layer>`
+Run: `uv run python src/jobs/sql_test.py tests/data-quality/<layer>`
 
 See `tests.md`, `dbt.md`.

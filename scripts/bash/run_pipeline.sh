@@ -68,11 +68,11 @@ trap 'echo "${RED}Pipeline interrupted${RESET}" >&2; exit 1' INT TERM
 
 stage "0" "PREFLIGHT" bash scripts/bash/preflight.sh
 stage "1" "EXTRACT (Mongo → bronze)" uv run python src/jobs/extract.py "${EXTRACT_ARGS[@]}"
-stage "2" "BRONZE SQL TESTS" uv run python scripts/python/sql_test.py tests/data-quality/bronze
+stage "2" "BRONZE SQL TESTS" uv run python src/jobs/sql_test.py tests/data-quality/bronze
 stage "3" "DBT SILVER" bash -c 'cd dbt && uv run dbt run --select silver && uv run dbt test --select silver'
-stage "4" "SILVER SQL TESTS" uv run python scripts/python/sql_test.py tests/data-quality/silver
+stage "4" "SILVER SQL TESTS" uv run python src/jobs/sql_test.py tests/data-quality/silver
 stage "5" "DBT GOLD" bash -c 'cd dbt && uv run dbt run --select gold && uv run dbt test --select gold'
-stage "6" "GOLD SQL TESTS" uv run python scripts/python/sql_test.py tests/data-quality/gold
+stage "6" "GOLD SQL TESTS" uv run python src/jobs/sql_test.py tests/data-quality/gold
 stage "7" "GREAT EXPECTATIONS" uv run python -m gx.run --layer all
 
 echo ""

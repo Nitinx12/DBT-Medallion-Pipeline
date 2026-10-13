@@ -189,7 +189,7 @@ def main() -> int:
                     "uv",
                     "run",
                     "python",
-                    "scripts/python/sql_test.py",
+                    "src/jobs/sql_test.py",
                     "tests/data-quality/bronze",
                 ]
             ],
@@ -211,7 +211,7 @@ def main() -> int:
                     "uv",
                     "run",
                     "python",
-                    "scripts/python/sql_test.py",
+                    "src/jobs/sql_test.py",
                     "tests/data-quality/silver",
                 ]
             ],
@@ -233,7 +233,7 @@ def main() -> int:
                     "uv",
                     "run",
                     "python",
-                    "scripts/python/sql_test.py",
+                    "src/jobs/sql_test.py",
                     "tests/data-quality/gold",
                 ]
             ],
