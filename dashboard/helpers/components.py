@@ -1,7 +1,7 @@
 """
-dashboard/components.py — Reusable UI building blocks.
+dashboard/helpers/components.py — Reusable UI building blocks.
 
-Keeps app.py focused on layout/data flow; all HTML card rendering lives here
+Keeps pages focused on layout/data flow; all HTML card rendering lives here
 so it can be tested and restyled in one place.
 """
 
@@ -12,7 +12,7 @@ import html as html_lib
 import pandas as pd
 import streamlit as st
 
-from dashboard.theme import SEMANTIC, WALMART_BLUE, WALMART_YELLOW
+from dashboard.helpers.theme import SEMANTIC, WALMART_BLUE, WALMART_YELLOW
 
 # ---------------------------------------------------------------------------
 # KPI cards

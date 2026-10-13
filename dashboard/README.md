@@ -11,7 +11,7 @@ tabbed navigation, CSV exports, and a cohesive Walmart-inspired design system.
 
 ```powershell
 uv sync
-uv run streamlit run dashboard/app.py
+uv run streamlit run dashboard/home.py
 # → http://localhost:8501
 ```
 
@@ -23,10 +23,10 @@ Deployed demo: Streamlit Community Cloud reads secrets from `st.secrets` (no `.e
 
 ## What changed in the professional pass
 
-- **Design system (`theme.py`)** — single source of truth for palette, typography (Inter),
+- **Design system (`helpers/theme.py`)** — single source of truth for palette, typography (Inter),
   card/KPI/tab/table/button styling, and a unified `style(fig)` for every Plotly figure.
-- **Components (`components.py`)** — reusable `kpi_cards`, `filter_chips`, `dataframe_with_download`,
-  `empty_state`, `footer` so `app.py` stays focused on layout/data flow.
+- **Components (`helpers/components.py`)** — reusable `kpi_cards`, `filter_chips`, `dataframe_with_download`,
+  `empty_state`, `footer` so pages stay focused on layout/data flow.
 - **Header & meta** — `get_gold_meta()` shows live fact-row count + last order timestamp;
   `↻ Refresh` clears `st.cache_data` and reloads from Postgres.
 - **Sidebar** — brand lockup, date presets (7D/30D/90D/YTD/All), per-field Clear/All, grouped sections,
@@ -42,11 +42,19 @@ Deployed demo: Streamlit Community Cloud reads secrets from `st.secrets` (no `.e
 
 | File | Responsibility |
 |---|---|
-| `app.py` | Layout, state (Filters), data orchestration, tab rendering |
-| `queries.py` | All SQL — parameterized via `text()` + `bindparam(expanding=True)`, aggregated in Postgres |
-| `theme.py` | Palette (`PALETTE`, `SEMANTIC`), `style(fig)`, `inject_css()` |
-| `components.py` | KPI grid, chips, card helpers, dataframe+download, empty/footer |
-| `../.streamlit/config.toml` | Streamlit chrome theme |
+| `home.py` | Landing page — KPIs + gold meta, entry point (`streamlit run dashboard/home.py`) |
+| `pages/1_Sales.py` | Revenue trend + store/payment mix |
+| `pages/2_Products.py` | Top products, brands, category→brand treemap |
+| `pages/3_Customers.py` | Top customers + searchable recent orders |
+| `pages/4_Categories.py` | Category donut + order-status breakdown |
+| `helpers/queries.py` | All SQL — parameterized via `text()` + `bindparam(expanding=True)`, aggregated in Postgres |
+| `helpers/theme.py` | Palette (`PALETTE`, `SEMANTIC`), `style(fig)`, `inject_css()` |
+| `helpers/components.py` | KPI grid, chips, card helpers, dataframe+download, empty/footer |
+| `lib/db.py` | Secrets→env + shared Postgres engine |
+| `lib/filters.py` | Shared sidebar (presets + multiselects → `Filters`) |
+| `lib/charts.py` | Shared Plotly builders (`revenue_trend_chart`, `bar_by`, `donut`) |
+| `lib/queries.py` | Stable re-export layer for pages |
+| `.streamlit/config.toml` | Streamlit chrome theme |
 
 ## Design choices worth knowing
 
@@ -59,6 +67,6 @@ Deployed demo: Streamlit Community Cloud reads secrets from `st.secrets` (no `.e
 
 ## Extending it
 
-- Add a breakdown dimension: one line in `_DIMENSION_COLUMNS` in `queries.py` (whitelist-guarded, no raw SQL).
+- Add a breakdown dimension: one line in `_DIMENSION_COLUMNS` in `helpers/queries.py` (whitelist-guarded, no raw SQL).
 - Add a `dim_date` table (fiscal periods, holiday flags) to enrich `get_revenue_trend` beyond `date_trunc`.
-- Swap `PALETTE`/`SEMANTIC` in `theme.py` to rebrand without touching `app.py`.
+- Swap `PALETTE`/`SEMANTIC` in `helpers/theme.py` to rebrand without touching pages.

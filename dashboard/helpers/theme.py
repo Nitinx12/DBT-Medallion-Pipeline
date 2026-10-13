@@ -1,5 +1,5 @@
 """
-dashboard/theme.py — Design system for the Walmart Sales Dashboard.
+dashboard/helpers/theme.py — Design system for the Walmart Sales Dashboard.
 
 Single source of truth for colors, typography, spacing and Plotly styling
 so every chart/table/metric shares the same professional look.

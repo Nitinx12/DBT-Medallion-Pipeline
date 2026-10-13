@@ -37,7 +37,7 @@ dev = [
 
 
 [tool.ruff.lint.per-file-ignores]
-"dashboard/app.py" = ["E402"]
+"dashboard/home.py" = ["E402"]
 "scripts/python/extract.py" = ["E402"]
 "scripts/python/inspect_gold_schema.py" = ["E402"]
 "scripts/python/seed_demo_db.py" = ["E402"]

@@ -1,8 +1,8 @@
 """
-dashboard/queries.py
+dashboard/helpers/queries.py
 
 All SQL against the gold star schema lives here, separate from the
-Streamlit UI in app.py. Two design choices drive this file:
+Streamlit pages. Two design choices drive this file:
 
 1. Every query is parameterized via SQLAlchemy `text()` + bound params —
    never f-string-interpolated filter values — so this stays immune to
