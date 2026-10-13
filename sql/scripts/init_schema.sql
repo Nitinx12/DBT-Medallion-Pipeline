@@ -32,6 +32,6 @@ CREATE SCHEMA IF NOT EXISTS silver;
 CREATE SCHEMA IF NOT EXISTS gold;
 
 -- Schema descriptions for data catalog tooling.
-COMMENT ON SCHEMA bronze IS 'Raw source-system landing layer. Minimal transformation.';
-COMMENT ON SCHEMA silver IS 'Data cleansing, standardization, validation and intermediate transformations.';
-COMMENT ON SCHEMA gold IS 'Production business warehouse containing dimensions and fact tables.';
+COMMENT ON SCHEMA bronze IS 'Raw landing layer. Minimal transformation.';
+COMMENT ON SCHEMA silver IS 'Cleansed and standardized intermediate layer.';
+COMMENT ON SCHEMA gold IS 'Production warehouse: dimensions and facts.';

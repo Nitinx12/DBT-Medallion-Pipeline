@@ -43,13 +43,15 @@ SELECT
     ) AS total_objects
 FROM pg_catalog.pg_namespace AS n
 LEFT JOIN pg_catalog.pg_class AS c
-    ON n.oid = c.relnamespace
-    AND c.relkind IN ('r', 'p', 'v', 'm', 'f')
-WHERE n.nspname NOT IN (
-    'pg_catalog',
-    'information_schema'
-)
-AND n.nspname NOT LIKE 'pg_%'
+    ON
+        n.oid = c.relnamespace
+        AND c.relkind IN ('r', 'p', 'v', 'm', 'f')
+WHERE
+    n.nspname NOT IN (
+        'pg_catalog',
+        'information_schema'
+    )
+    AND n.nspname NOT LIKE 'pg_%'
 GROUP BY
     n.nspname
 ORDER BY
@@ -60,12 +62,12 @@ ORDER BY
 -- 3. List all schemas
 -- =============================================================================
 
-SELECT
-    schema_name
+SELECT schema_name
 FROM information_schema.schemata
-WHERE schema_name NOT IN (
-    'pg_catalog',
-    'information_schema'
-)
-AND schema_name NOT LIKE 'pg_%'
+WHERE
+    schema_name NOT IN (
+        'pg_catalog',
+        'information_schema'
+    )
+    AND schema_name NOT LIKE 'pg_%'
 ORDER BY schema_name;

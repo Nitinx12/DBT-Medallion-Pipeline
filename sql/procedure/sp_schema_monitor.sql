@@ -25,14 +25,14 @@
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS gold.schema_snapshots (
-    snapshot_id     BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    taken_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
-    schema_name     TEXT NOT NULL,
-    table_name      TEXT NOT NULL,
-    column_name     TEXT NOT NULL,
+    snapshot_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    taken_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    schema_name TEXT NOT NULL,
+    table_name TEXT NOT NULL,
+    column_name TEXT NOT NULL,
     ordinal_position INTEGER NOT NULL,
-    data_type       TEXT NOT NULL,
-    row_count       BIGINT NOT NULL
+    data_type TEXT NOT NULL,
+    row_count BIGINT NOT NULL
 );
 
 CREATE OR REPLACE PROCEDURE sp_snapshot_schema(p_schema TEXT)
@@ -84,54 +84,98 @@ $procedure$;
 -- ----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW gold.vw_schema_drift AS
 WITH ranked AS (
-    SELECT DISTINCT schema_name, taken_at,
-           DENSE_RANK() OVER (PARTITION BY schema_name ORDER BY taken_at DESC) AS rnk
+    SELECT DISTINCT
+        schema_name,
+        taken_at,
+        dense_rank()
+            OVER (PARTITION BY schema_name ORDER BY taken_at DESC)
+            AS rnk
     FROM gold.schema_snapshots
 ),
+
 latest AS (
-    SELECT s.* FROM gold.schema_snapshots s
-    JOIN ranked r USING (schema_name, taken_at)
+    SELECT s.* FROM gold.schema_snapshots AS s
+    INNER JOIN
+        ranked AS r
+        ON s.schema_name = r.schema_name AND s.taken_at = r.taken_at
     WHERE r.rnk = 1
 ),
+
 previous AS (
-    SELECT s.* FROM gold.schema_snapshots s
-    JOIN ranked r USING (schema_name, taken_at)
+    SELECT s.* FROM gold.schema_snapshots AS s
+    INNER JOIN
+        ranked AS r
+        ON s.schema_name = r.schema_name AND s.taken_at = r.taken_at
     WHERE r.rnk = 2
 )
-SELECT schema_name, table_name, NULL::TEXT AS column_name,
-       'table_added' AS change_type,
-       'Table present in latest snapshot only' AS detail
-FROM latest l
-WHERE NOT EXISTS (SELECT 1 FROM previous p
-                  WHERE p.schema_name = l.schema_name AND p.table_name = l.table_name)
+
+SELECT
+    schema_name,
+    table_name,
+    NULL::TEXT AS column_name,
+    'table_added' AS change_type,
+    'Table present in latest snapshot only' AS detail
+FROM latest AS l
+WHERE
+    NOT EXISTS (
+        SELECT 1 FROM previous AS p
+        WHERE p.schema_name = l.schema_name AND p.table_name = l.table_name
+    )
 GROUP BY schema_name, table_name
 UNION ALL
-SELECT schema_name, table_name, NULL::TEXT,
-       'table_dropped',
-       'Table present in previous snapshot only'
-FROM previous p
-WHERE NOT EXISTS (SELECT 1 FROM latest l
-                  WHERE l.schema_name = p.schema_name AND l.table_name = p.table_name)
+SELECT
+    schema_name,
+    table_name,
+    NULL::TEXT AS column_name,
+    'table_dropped' AS change_type,
+    'Table present in previous snapshot only' AS detail
+FROM previous AS p
+WHERE
+    NOT EXISTS (
+        SELECT 1 FROM latest AS l
+        WHERE l.schema_name = p.schema_name AND l.table_name = p.table_name
+    )
 GROUP BY schema_name, table_name
 UNION ALL
-SELECT l.schema_name, l.table_name, l.column_name,
-       'column_added',
-       'Column ' || l.column_name || ' (' || l.data_type || ') present in latest snapshot only'
-FROM latest l
-WHERE NOT EXISTS (SELECT 1 FROM previous p
-                  WHERE p.schema_name = l.schema_name AND p.table_name = l.table_name
-                    AND p.column_name = l.column_name)
+SELECT
+    l.schema_name,
+    l.table_name,
+    l.column_name,
+    'column_added' AS change_type,
+    'Column '
+    || l.column_name
+    || ' ('
+    || l.data_type
+    || ') present in latest snapshot only' AS detail
+FROM latest AS l
+WHERE
+    NOT EXISTS (
+        SELECT 1 FROM previous AS p
+        WHERE
+            p.schema_name = l.schema_name AND p.table_name = l.table_name
+            AND p.column_name = l.column_name
+    )
 GROUP BY l.schema_name, l.table_name, l.column_name, l.data_type
 UNION ALL
-SELECT l.schema_name, l.table_name, NULL::TEXT,
-       'row_count_changed',
-       'Rows ' || MAX(p.row_count) || ' -> ' || MAX(l.row_count)
-FROM latest l
-JOIN previous p USING (schema_name, table_name)
+SELECT
+    l.schema_name,
+    l.table_name,
+    NULL::TEXT AS column_name,
+    'row_count_changed' AS change_type,
+    'Rows ' || max(p.row_count) || ' -> ' || max(l.row_count) AS detail
+FROM latest AS l
+INNER JOIN
+    previous AS p
+    ON l.schema_name = p.schema_name AND l.table_name = p.table_name
 GROUP BY l.schema_name, l.table_name
-HAVING MAX(l.row_count) <> MAX(p.row_count)
-   AND (MAX(p.row_count) = 0 OR MAX(l.row_count) = 0
-        OR ABS(MAX(l.row_count) - MAX(p.row_count))::NUMERIC / GREATEST(MAX(p.row_count), 1) > 0.10);
+HAVING
+    max(l.row_count) <> max(p.row_count)
+    AND (
+        max(p.row_count) = 0 OR max(l.row_count) = 0
+        OR abs(max(l.row_count) - max(p.row_count))::NUMERIC
+        / greatest(max(p.row_count), 1)
+        > 0.10
+    );
 
 -- ============================================================================
 -- Example usage

@@ -37,13 +37,13 @@
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS gold.dq_test_runs (
-    run_id      BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    run_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-    layer       TEXT NOT NULL,
-    check_name  TEXT NOT NULL,
-    table_name  TEXT NOT NULL,
-    status      TEXT NOT NULL CHECK (status IN ('PASS', 'FAIL')),
-    detail      TEXT NOT NULL DEFAULT ''
+    run_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    run_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    layer TEXT NOT NULL,
+    check_name TEXT NOT NULL,
+    table_name TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('PASS', 'FAIL')),
+    detail TEXT NOT NULL DEFAULT ''
 );
 
 CREATE OR REPLACE PROCEDURE sp_run_dq_tests(
