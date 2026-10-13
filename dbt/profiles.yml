@@ -9,4 +9,13 @@ walmart_dbt:
       dbname: "{{ env_var('POSTGRES_DATABASE', 'walmart_db') }}"
       schema: "{{ env_var('POSTGRES_SCHEMA_BRONZE', 'bronze') }}"
       threads: 4
+    ci:
+      type: postgres
+      host: "{{ env_var('POSTGRES_HOST', 'localhost') }}"
+      port: "{{ env_var('POSTGRES_PORT', '5432') | int }}"
+      user: "{{ env_var('POSTGRES_USERNAME', 'postgres') }}"
+      pass: "{{ env_var('POSTGRES_PASSWORD', 'admin') }}"
+      dbname: "{{ env_var('POSTGRES_DATABASE', 'walmart_db') }}"
+      schema: "{{ env_var('POSTGRES_SCHEMA_BRONZE', 'bronze') }}"
+      threads: 4
   target: dev
