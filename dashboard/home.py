@@ -17,7 +17,7 @@ from dashboard.lib.db import apply_secrets
 apply_secrets()
 
 from dashboard.helpers import plotly_template
-from dashboard.helpers.components import footer, kpi_cards
+from dashboard.helpers.components import filter_chips, footer, kpi_cards
 from dashboard.helpers.theme import get_theme, inject_css
 from dashboard.lib.filters import sidebar_filters
 from dashboard.lib.queries import get_gold_meta, get_kpis
@@ -30,7 +30,8 @@ st.title("Walmart Gold Dashboard")
 st.caption("Use the sidebar pages: Sales, Products, Customers, Categories.")
 
 try:
-    filters, meta = sidebar_filters(key_prefix="home_")
+    filters, meta = sidebar_filters()
+    filter_chips(filters)
     gold = get_gold_meta()
     current = get_kpis(filters)
     previous = get_kpis(filters.previous_period())

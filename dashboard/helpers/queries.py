@@ -15,7 +15,7 @@ Streamlit pages. Two design choices drive this file:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date, timedelta
 
 import pandas as pd
@@ -51,17 +51,32 @@ class Filters:
     stores: tuple = field(default_factory=tuple)
     categories: tuple = field(default_factory=tuple)
     statuses: tuple = field(default_factory=tuple)
+    provinces: tuple = field(default_factory=tuple)
+    brands: tuple = field(default_factory=tuple)
+    payments: tuple = field(default_factory=tuple)
+    search: str = ""
+    min_value: float = 0.0
+    compare: str = (
+        "prior"  # "prior" (previous equal window) or "yoy" (same window last year)
+    )
 
     def previous_period(self) -> Filters:
-        """Same filters, shifted back by one period-length — used to
-        compute period-over-period KPI deltas."""
+        """Baseline window for period over period KPI deltas."""
+        if self.compare == "yoy":
+            return self.year_ago()
         span = (self.end_date - self.start_date).days
-        return Filters(
+        return replace(
+            self,
             start_date=self.start_date - timedelta(days=span),
             end_date=self.start_date,
-            stores=self.stores,
-            categories=self.categories,
-            statuses=self.statuses,
+        )
+
+    def year_ago(self) -> Filters:
+        """Same window shifted back 365 days for year over year comparison."""
+        return replace(
+            self,
+            start_date=self.start_date - timedelta(days=365),
+            end_date=self.end_date - timedelta(days=365),
         )
 
     def split_in_half(self) -> tuple[Filters, Filters]:
@@ -69,21 +84,35 @@ class Filters:
         the prior period is empty (e.g. 'All time' starts at MIN(date))."""
         span = (self.end_date - self.start_date).days
         mid = self.start_date + timedelta(days=span // 2)
-        common = {
-            "stores": self.stores,
-            "categories": self.categories,
-            "statuses": self.statuses,
-        }
         return (
-            Filters(start_date=self.start_date, end_date=mid, **common),
-            Filters(start_date=mid, end_date=self.end_date, **common),
+            replace(self, end_date=mid),
+            replace(self, start_date=mid),
         )
 
 
+def _escape_like(raw: str) -> str:
+    """Escape SQL LIKE wildcards so free text search matches literally."""
+    return raw.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
 def _where(filters: Filters) -> tuple[str, dict]:
-    """Shared WHERE clause + params for every query. Empty tuples are
-    valid on purpose: an empty `stores` selection means 'match nothing',
-    which SQLAlchemy's expanding IN renders correctly as zero rows."""
+    """Shared WHERE clause + params for every query.
+
+    An empty selection means 'match nothing'. SQLAlchemy renders an empty
+    expanding IN as a typed INTEGER NULL set, which Postgres refuses to
+    compare against varchar columns — so an empty tuple short circuits to
+    `1 = 0` with no tuple params instead of reaching the database.
+    """
+    in_filters = {
+        "stores": "s.store_name",
+        "categories": "c.category_name",
+        "statuses": "o.order_status",
+        "provinces": "s.province",
+        "brands": "b.brand_name",
+        "payments": "pm.payment_method_name",
+    }
+    if any(not tuple(getattr(filters, key)) for key in in_filters):
+        return "1 = 0", {}
     sql = """
         foi.is_active = true
         AND o.is_active = true
@@ -92,6 +121,10 @@ def _where(filters: Filters) -> tuple[str, dict]:
         AND s.store_name IN :stores
         AND c.category_name IN :categories
         AND o.order_status IN :statuses
+        AND s.province IN :provinces
+        AND b.brand_name IN :brands
+        AND pm.payment_method_name IN :payments
+        AND o.total_amount >= :min_value
     """
     params = {
         "start_date": filters.start_date,
@@ -99,7 +132,16 @@ def _where(filters: Filters) -> tuple[str, dict]:
         "stores": tuple(filters.stores),
         "categories": tuple(filters.categories),
         "statuses": tuple(filters.statuses),
+        "provinces": tuple(filters.provinces),
+        "brands": tuple(filters.brands),
+        "payments": tuple(filters.payments),
+        "min_value": float(filters.min_value),
     }
+    if filters.search.strip():
+        # Bound ILIKE with escaped wildcards: free text can never alter
+        # the query shape, only the matched literal.
+        sql += " AND cu.customer_name ILIKE :search ESCAPE '\\'"
+        params["search"] = f"%{_escape_like(filters.search.strip())}%"
     return sql, params
 
 
@@ -131,6 +173,17 @@ def get_filter_options() -> dict:
         f"SELECT DISTINCT order_status FROM {GOLD}.dim_orders WHERE is_active = true ORDER BY 1",
         engine,
     )["order_status"].tolist()
+    provinces = pd.read_sql(
+        f"SELECT DISTINCT province FROM {GOLD}.dim_stores WHERE is_active = true AND province IS NOT NULL ORDER BY 1",
+        engine,
+    )["province"].tolist()
+    brands = pd.read_sql(
+        f"SELECT DISTINCT brand_name FROM {GOLD}.dim_brands ORDER BY 1", engine
+    )["brand_name"].tolist()
+    payments = pd.read_sql(
+        f"SELECT DISTINCT payment_method_name FROM {GOLD}.dim_payment_methods ORDER BY 1",
+        engine,
+    )["payment_method_name"].tolist()
     bounds = pd.read_sql(
         f"""SELECT MIN(order_timestamp)::date AS min_date, MAX(order_timestamp)::date AS max_date
             FROM {GOLD}.dim_orders WHERE is_active = true""",
@@ -140,6 +193,9 @@ def get_filter_options() -> dict:
         "stores": stores,
         "categories": categories,
         "statuses": statuses,
+        "provinces": provinces,
+        "brands": brands,
+        "payments": payments,
         "min_date": bounds["min_date"],
         "max_date": bounds["max_date"],
     }
@@ -174,7 +230,11 @@ def get_kpis(filters: Filters) -> dict:
         {BASE_FROM}
         WHERE {where}
     """
-    row = _run(sql, params).iloc[0]
+    row = _run(sql, params)
+    if row.empty:
+        # Empty selection (or impossible window): zeros, not an IndexError.
+        return {"revenue": 0.0, "orders": 0, "customers": 0, "aov": 0.0}
+    row = row.iloc[0]
     revenue = float(row["revenue"])
     orders = int(row["orders"])
     return {

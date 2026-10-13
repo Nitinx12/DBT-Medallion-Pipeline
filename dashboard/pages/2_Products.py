@@ -18,7 +18,7 @@ from dashboard.lib.db import apply_secrets
 apply_secrets()
 
 from dashboard.helpers import plotly_template
-from dashboard.helpers.components import dataframe_with_download
+from dashboard.helpers.components import dataframe_with_download, filter_chips
 from dashboard.helpers.theme import WALMART_BLUE, get_theme, inject_css, style
 from dashboard.lib.filters import sidebar_filters
 from dashboard.lib.queries import (
@@ -32,7 +32,8 @@ plotly_template.apply_default_template(get_theme())
 st.markdown(inject_css(), unsafe_allow_html=True)
 st.title("Products")
 
-filters, _ = sidebar_filters(key_prefix="prod_")
+filters, _ = sidebar_filters()
+filter_chips(filters)
 top_products = get_top_products(filters, limit=10)
 by_brand = get_revenue_by(filters, "brand", limit=10)
 treemap_data = get_category_brand_treemap(filters)

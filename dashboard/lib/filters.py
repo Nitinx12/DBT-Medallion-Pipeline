@@ -8,6 +8,26 @@ import streamlit as st
 
 from dashboard.helpers.queries import Filters, get_filter_options
 
+# One shared state across pages: the default prefix is empty so choosing
+# "Last 30 days" on Sales persists on Products. Page specific controls
+# (granularity, Top N) keep their own keys on their own pages.
+COMPARE_LABELS = {"Prior period": "prior", "Last year": "yoy"}
+
+
+def _parse_date(raw: str | None, fallback: date) -> date:
+    """Parse an ISO date from the URL, falling back safely on garbage."""
+    try:
+        return date.fromisoformat(raw) if raw else fallback
+    except ValueError:
+        return fallback
+
+
+def _multi(label: str, options: list, key: str) -> tuple:
+    """Multiselect defaulting to all options; empty means match nothing."""
+    return tuple(
+        st.multiselect(label, options, default=options, key=key),
+    )
+
 
 def sidebar_filters(key_prefix: str = "") -> tuple[Filters, dict]:
     options = get_filter_options()
@@ -42,12 +62,18 @@ def sidebar_filters(key_prefix: str = "") -> tuple[Filters, dict]:
                 max_date,
             )
 
+        # Shareable URL: ?from=YYYY-MM-DD&to=YYYY-MM-DD seeds the picker.
+        params = st.query_params
+        url_range = (
+            _parse_date(params.get("from"), min_date),
+            _parse_date(params.get("to"), max_date),
+        )
         default_range: tuple[date, date] = st.session_state.get(
-            f"{key_prefix}_date_range", (min_date, max_date)
+            f"{key_prefix}_date_range", url_range
         )
         default_range = (
-            max(min_date, default_range[0]),
-            min(max_date, default_range[1]),
+            max(min_date, min(default_range[0], max_date)),
+            max(min_date, min(default_range[1], max_date)),
         )
 
         selected_range = st.date_input(
@@ -63,33 +89,66 @@ def sidebar_filters(key_prefix: str = "") -> tuple[Filters, dict]:
             start_date, end_inclusive = default_range
         if start_date > end_inclusive:
             start_date, end_inclusive = end_inclusive, start_date
+        params["from"] = start_date.isoformat()
+        params["to"] = end_inclusive.isoformat()
 
         st.markdown("---")
-        selected_stores = st.multiselect(
-            "Store(s)",
-            options["stores"],
-            default=options["stores"],
-            key=f"{key_prefix}stores",
+        selected_stores = _multi("Store(s)", options["stores"], f"{key_prefix}stores")
+        selected_categories = _multi(
+            "Categor(y/ies)", options["categories"], f"{key_prefix}cats"
         )
-        selected_categories = st.multiselect(
-            "Categor(y/ies)",
-            options["categories"],
-            default=options["categories"],
-            key=f"{key_prefix}cats",
+        selected_statuses = _multi(
+            "Order status", options["statuses"], f"{key_prefix}status"
         )
-        selected_statuses = st.multiselect(
-            "Order status",
-            options["statuses"],
-            default=options["statuses"],
-            key=f"{key_prefix}status",
+        selected_provinces = _multi(
+            "Province/State", options["provinces"], f"{key_prefix}provinces"
         )
+        selected_brands = _multi("Brand(s)", options["brands"], f"{key_prefix}brands")
+        selected_payments = _multi(
+            "Payment method(s)", options["payments"], f"{key_prefix}payments"
+        )
+
+        search = st.text_input(
+            "Customer search",
+            placeholder="Name contains…",
+            key=f"{key_prefix}search",
+        )
+        min_value = float(
+            st.number_input(
+                "Min order value",
+                min_value=0.0,
+                step=50.0,
+                key=f"{key_prefix}min_value",
+            )
+        )
+        compare_label = st.radio(
+            "Compare against",
+            list(COMPARE_LABELS),
+            horizontal=True,
+            key=f"{key_prefix}compare",
+        )
+
+        if st.button(
+            "Reset filters", use_container_width=True, key=f"{key_prefix}reset"
+        ):
+            for k in list(st.session_state.keys()):
+                if k.startswith(key_prefix) and not k.startswith("theme"):
+                    del st.session_state[k]
+            st.query_params.clear()
+            st.rerun()
 
     filters = Filters(
         start_date=start_date,
         end_date=end_inclusive + timedelta(days=1),
-        stores=tuple(selected_stores),
-        categories=tuple(selected_categories),
-        statuses=tuple(selected_statuses),
+        stores=selected_stores,
+        categories=selected_categories,
+        statuses=selected_statuses,
+        provinces=selected_provinces,
+        brands=selected_brands,
+        payments=selected_payments,
+        search=str(search or "").strip(),
+        min_value=min_value,
+        compare=COMPARE_LABELS[compare_label],
     )
     meta = {
         "start_date": start_date,

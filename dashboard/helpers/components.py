@@ -184,6 +184,21 @@ def filter_chips(filters) -> None:
     chips.append(
         f'<span class="chip chip--slate">● {len(filters.statuses)} status(s)</span>'
     )
+    chips.append(
+        f'<span class="chip chip--slate">📍 {len(filters.provinces)} province(s)</span>'
+    )
+    chips.append(
+        f'<span class="chip chip--slate">™ {len(filters.brands)} brand(s)</span>'
+    )
+    chips.append(
+        f'<span class="chip chip--slate">💳 {len(filters.payments)} payment(s)</span>'
+    )
+    if getattr(filters, "search", ""):
+        chips.append(f'<span class="chip">🔎 {html_lib.escape(filters.search)}</span>')
+    if getattr(filters, "min_value", 0.0):
+        chips.append(
+            f'<span class="chip chip--amber">≥ ${filters.min_value:,.0f}</span>'
+        )
     row = "".join(chips)
     st.markdown(
         _safe_html(f'<div class="chip-row">{row}</div>'), unsafe_allow_html=True

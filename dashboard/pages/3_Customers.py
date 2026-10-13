@@ -17,7 +17,7 @@ from dashboard.lib.db import apply_secrets
 apply_secrets()
 
 from dashboard.helpers import plotly_template
-from dashboard.helpers.components import dataframe_with_download
+from dashboard.helpers.components import dataframe_with_download, filter_chips
 from dashboard.helpers.theme import get_theme, inject_css
 from dashboard.lib.filters import sidebar_filters
 from dashboard.lib.queries import get_recent_order_lines, get_top_customers
@@ -27,7 +27,8 @@ plotly_template.apply_default_template(get_theme())
 st.markdown(inject_css(), unsafe_allow_html=True)
 st.title("Customers")
 
-filters, _ = sidebar_filters(key_prefix="cust_")
+filters, _ = sidebar_filters()
+filter_chips(filters)
 top_customers = get_top_customers(filters, limit=10)
 recent = get_recent_order_lines(filters, limit=200)
 

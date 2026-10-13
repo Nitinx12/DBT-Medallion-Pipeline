@@ -17,7 +17,7 @@ from dashboard.lib.db import apply_secrets
 apply_secrets()
 
 from dashboard.helpers import plotly_template
-from dashboard.helpers.components import dataframe_with_download
+from dashboard.helpers.components import dataframe_with_download, filter_chips
 from dashboard.helpers.theme import get_theme, inject_css
 from dashboard.lib.charts import bar_by, donut, revenue_trend_chart
 from dashboard.lib.filters import sidebar_filters
@@ -28,7 +28,8 @@ plotly_template.apply_default_template(get_theme())
 st.markdown(inject_css(), unsafe_allow_html=True)
 st.title("Sales")
 
-filters, meta = sidebar_filters(key_prefix="sales_")
+filters, meta = sidebar_filters()
+filter_chips(filters)
 granularity = st.radio(
     "Trend granularity", ["Day", "Week", "Month"], index=1, horizontal=True
 ).lower()
