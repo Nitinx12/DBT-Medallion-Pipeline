@@ -85,49 +85,60 @@ def _register(dag_id, schedule):
 
         @task.bash(task_id="extract")
         def extract() -> str:
-            return _PREAMBLE + "uv run python src/jobs/extract.py"
+            return _PREAMBLE + "/app/.venv/bin/python src/jobs/extract.py"
 
         @task.bash(task_id="bronze_sql_tests")
         def bronze_sql_tests() -> str:
             return (
                 _PREAMBLE
-                + "uv run python src/jobs/sql_test.py tests/data-quality/bronze"
+                + "/app/.venv/bin/python src/jobs/sql_test.py tests/data-quality/bronze"
             )
 
         @task.bash(task_id="dbt_silver_run")
         def dbt_silver_run() -> str:
-            return _PREAMBLE + f"cd {DBT_PROJECT_DIR} && uv run dbt run --select silver"
+            return (
+                _PREAMBLE
+                + f"cd {DBT_PROJECT_DIR} && /app/.venv/bin/dbt run --select silver"
+            )
 
         @task.bash(task_id="dbt_silver_test")
         def dbt_silver_test() -> str:
             return (
-                _PREAMBLE + f"cd {DBT_PROJECT_DIR} && uv run dbt test --select silver"
+                _PREAMBLE
+                + f"cd {DBT_PROJECT_DIR} && /app/.venv/bin/dbt test --select silver"
             )
 
         @task.bash(task_id="silver_sql_tests")
         def silver_sql_tests() -> str:
             return (
                 _PREAMBLE
-                + "uv run python src/jobs/sql_test.py tests/data-quality/silver"
+                + "/app/.venv/bin/python src/jobs/sql_test.py tests/data-quality/silver"
             )
 
         @task.bash(task_id="dbt_gold_run")
         def dbt_gold_run() -> str:
-            return _PREAMBLE + f"cd {DBT_PROJECT_DIR} && uv run dbt run --select gold"
+            return (
+                _PREAMBLE
+                + f"cd {DBT_PROJECT_DIR} && /app/.venv/bin/dbt run --select gold"
+            )
 
         @task.bash(task_id="dbt_gold_test")
         def dbt_gold_test() -> str:
-            return _PREAMBLE + f"cd {DBT_PROJECT_DIR} && uv run dbt test --select gold"
+            return (
+                _PREAMBLE
+                + f"cd {DBT_PROJECT_DIR} && /app/.venv/bin/dbt test --select gold"
+            )
 
         @task.bash(task_id="gold_sql_tests")
         def gold_sql_tests() -> str:
             return (
-                _PREAMBLE + "uv run python src/jobs/sql_test.py tests/data-quality/gold"
+                _PREAMBLE
+                + "/app/.venv/bin/python src/jobs/sql_test.py tests/data-quality/gold"
             )
 
         @task.bash(task_id="great_expectations_tests")
         def great_expectations_tests() -> str:
-            return _PREAMBLE + "uv run python -m gx.run --layer all"
+            return _PREAMBLE + "/app/.venv/bin/python -m gx.run --layer all"
 
         @task(task_id="collect_results", trigger_rule=TriggerRule.ALL_DONE)
         def collect_results(**context) -> dict:
@@ -173,10 +184,10 @@ def _register(dag_id, schedule):
         email_success = EmailOperator(
             task_id="email_success",
             to=EMAIL_RECIPIENTS,
-            subject="Walmart Pipeline SUCCESS - {{ ds }}",
+            subject="Walmart Pipeline SUCCESS - {{ run_id }}",
             html_content="""
 <h2>Walmart Medallion Pipeline - SUCCESS</h2>
-<p><strong>Date:</strong> {{ ds }}</p>
+<p><strong>Date:</strong> {{ (ti.xcom_pull(task_ids='collect_results') or {}).get('date', '?') }}</p>
 <p><strong>Run ID:</strong> {{ (ti.xcom_pull(task_ids='collect_results') or {}).get('run_id', '?') }}</p>
 <h3>Stage Results</h3>
 <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
@@ -192,10 +203,10 @@ def _register(dag_id, schedule):
         email_failure = EmailOperator(
             task_id="email_failure",
             to=EMAIL_RECIPIENTS,
-            subject="Walmart Pipeline FAILED - {{ ds }}",
+            subject="Walmart Pipeline FAILED - {{ run_id }}",
             html_content="""
 <h2>Walmart Medallion Pipeline - FAILURE</h2>
-<p><strong>Date:</strong> {{ ds }}</p>
+<p><strong>Date:</strong> {{ (ti.xcom_pull(task_ids='collect_results') or {}).get('date', '?') }}</p>
 <h3>Stage Results</h3>
 <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
 <tr style="background:#f44336;color:white;"><th>Stage</th><th>Status</th></tr>
