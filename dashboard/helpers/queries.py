@@ -459,6 +459,51 @@ def get_category_monthly_revenue(filters: Filters) -> pd.DataFrame:
 
 
 @st.cache_data(ttl=600)
+def get_sunburst_revenue(filters: Filters) -> pd.DataFrame:
+    """Category -> brand -> product revenue (sunburst input, ~500 rows max)."""
+    where, params = _where(filters)
+    sql = f"""
+        SELECT c.category_name, b.brand_name, p.product_name,
+               SUM(foi.line_amount) AS revenue
+        {BASE_FROM}
+        WHERE {where}
+          AND c.category_name IS NOT NULL
+          AND b.brand_name IS NOT NULL
+        GROUP BY 1, 2, 3
+        ORDER BY revenue DESC
+    """
+    return _run(sql, params)
+
+
+@st.cache_data(ttl=600)
+def get_status_funnel(filters: Filters) -> pd.DataFrame:
+    """Distinct orders per status in pipeline order (not alphabetical).
+
+    Unknown future statuses sort last, then alphabetically, so the chart
+    never depends on hardcoded status names beyond the known four.
+    """
+    where, params = _where(filters)
+    sql = f"""
+        SELECT o.order_status,
+               COUNT(DISTINCT o.order_id) AS orders,
+               SUM(foi.line_amount) AS revenue
+        {BASE_FROM}
+        WHERE {where}
+        GROUP BY o.order_status
+        ORDER BY
+            CASE o.order_status
+                WHEN 'Pending' THEN 1
+                WHEN 'Completed' THEN 2
+                WHEN 'Returned' THEN 3
+                WHEN 'Cancelled' THEN 4
+                ELSE 5
+            END,
+            o.order_status
+    """
+    return _run(sql, params)
+
+
+@st.cache_data(ttl=600)
 def get_top_customers(filters: Filters, limit: int = 10) -> pd.DataFrame:
     where, params = _where(filters)
     sql = f"""

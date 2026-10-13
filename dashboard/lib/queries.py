@@ -17,6 +17,8 @@ from dashboard.helpers.queries import (
     get_recent_order_lines,
     get_revenue_by,
     get_revenue_trend,
+    get_status_funnel,
+    get_sunburst_revenue,
     get_top_customers,
     get_top_products,
 )
@@ -36,6 +38,8 @@ __all__ = [
     "get_recent_order_lines",
     "get_revenue_by",
     "get_revenue_trend",
+    "get_status_funnel",
+    "get_sunburst_revenue",
     "get_top_customers",
     "get_top_products",
 ]

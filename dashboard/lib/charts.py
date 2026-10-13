@@ -170,3 +170,59 @@ def waterfall(df: pd.DataFrame):
     )
     fig.update_layout(height=380, showlegend=False)
     return style(fig)
+
+
+def sunburst(df: pd.DataFrame):
+    """Category -> brand -> product revenue sunburst."""
+    fig = px.sunburst(
+        df,
+        path=["category_name", "brand_name", "product_name"],
+        values="revenue",
+        color="category_name",
+    )
+    fig.update_traces(
+        insidetextorientation="radial",
+        hovertemplate="<b>%{label}</b><br>$%{value:,.0f}<extra></extra>",
+    )
+    fig.update_layout(height=520)
+    return style(fig, currency=False, legend=False)
+
+
+def funnel(df: pd.DataFrame):
+    """Order status funnel (rows must arrive in pipeline order)."""
+    fig = px.funnel(
+        df,
+        x="orders",
+        y="order_status",
+        labels={"orders": "Orders", "order_status": ""},
+    )
+    fig.update_traces(
+        marker_color=WALMART_BLUE,
+        hovertemplate="%{y}: %{x:,} orders<extra></extra>",
+    )
+    fig.update_layout(
+        height=380,
+        showlegend=False,
+        yaxis={
+            "categoryorder": "array",
+            "categoryarray": df.order_status.tolist(),
+        },
+    )
+    return style(fig, currency=False)
+
+
+def share_area(df: pd.DataFrame):
+    """100% stacked area: category revenue share over months."""
+    fig = px.area(
+        df,
+        x="month",
+        y="revenue",
+        color="category_name",
+        groupnorm="percent",
+        labels={"month": "", "revenue": "Share", "category_name": "Category"},
+    )
+    fig.update_layout(yaxis={"ticksuffix": "%"}, height=380)
+    fig.update_traces(
+        hovertemplate="%{fullData.name}<br>%{x|%b %Y}: %{y:.1f}%<extra></extra>"
+    )
+    return style(fig, currency=False)

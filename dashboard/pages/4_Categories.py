@@ -1,4 +1,4 @@
-"""Categories page — category and status breakdown."""
+"""Categories page — sunburst, funnel, share over time."""
 
 from __future__ import annotations
 
@@ -11,17 +11,17 @@ if str(PROJECT_ROOT) not in sys.path:
 
 import streamlit as st
 
-from dashboard.lib.db import apply_secrets
-
-# Secrets first: pages after this read config at import time.
-apply_secrets()
-
 from dashboard.helpers import plotly_template
 from dashboard.helpers.components import dataframe_with_download, filter_chips
 from dashboard.helpers.theme import get_theme, inject_css
-from dashboard.lib.charts import bar_by, donut
+from dashboard.lib.charts import bar_by, donut, funnel, share_area, sunburst
 from dashboard.lib.filters import sidebar_filters
-from dashboard.lib.queries import get_revenue_by
+from dashboard.lib.queries import (
+    get_category_monthly_revenue,
+    get_revenue_by,
+    get_status_funnel,
+    get_sunburst_revenue,
+)
 
 st.set_page_config(page_title="Categories", page_icon="🏷️", layout="wide")
 plotly_template.apply_default_template(get_theme())
@@ -33,8 +33,26 @@ filter_chips(filters)
 by_category = get_revenue_by(filters, "category")
 by_status = get_revenue_by(filters, "order_status")
 
+st.subheader("Category → Brand → Product")
+sunburst_data = get_sunburst_revenue(filters)
+if not sunburst_data.empty:
+    st.plotly_chart(
+        sunburst(sunburst_data),
+        use_container_width=True,
+        config={"displayModeBar": False},
+    )
+
 c1, c2 = st.columns(2)
 with c1:
+    st.subheader("Order status funnel")
+    funnel_data = get_status_funnel(filters)
+    if not funnel_data.empty:
+        st.plotly_chart(
+            funnel(funnel_data),
+            use_container_width=True,
+            config={"displayModeBar": False},
+        )
+with c2:
     st.subheader("Revenue by Category")
     if not by_category.empty:
         st.plotly_chart(
@@ -45,12 +63,21 @@ with c1:
         dataframe_with_download(
             by_category, "revenue_by_category.csv", key="dl_cat_tbl"
         )
-with c2:
+
+st.subheader("Category share over time")
+share_data = get_category_monthly_revenue(filters)
+if not share_data.empty:
+    st.plotly_chart(
+        share_area(share_data),
+        use_container_width=True,
+        config={"displayModeBar": False},
+    )
+
+if not by_status.empty:
     st.subheader("Revenue by Order Status")
-    if not by_status.empty:
-        xcol = "status" if "status" in by_status.columns else by_status.columns[0]
-        st.plotly_chart(
-            bar_by(by_status, xcol),
-            use_container_width=True,
-            config={"displayModeBar": False},
-        )
+    xcol = "status" if "status" in by_status.columns else by_status.columns[0]
+    st.plotly_chart(
+        bar_by(by_status, xcol),
+        use_container_width=True,
+        config={"displayModeBar": False},
+    )
