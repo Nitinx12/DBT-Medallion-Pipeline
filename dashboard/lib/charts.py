@@ -258,3 +258,40 @@ def store_map(df: pd.DataFrame):
     )
     fig.update_layout(margin={"l": 0, "r": 0, "t": 0, "b": 0})
     return style(fig, currency=False, legend=False)
+
+
+def rfm_scatter(df: pd.DataFrame):
+    """Customer portfolio: order frequency vs money, colored by segment."""
+    fig = px.scatter(
+        df,
+        x="frequency",
+        y="monetary",
+        color="segment",
+        hover_name="customer_name",
+        hover_data={
+            "frequency": True,
+            "monetary": ":$,.0f",
+            "r": False,
+            "f": False,
+            "m": False,
+        },
+        labels={"frequency": "Orders", "monetary": "Spend", "segment": "Segment"},
+    )
+    fig.update_traces(marker={"size": 9, "opacity": 0.75, "line": {"width": 0}})
+    return style(fig)
+
+
+def cohort_heatmap(df: pd.DataFrame):
+    """Cohort retention grid: fraction of each cohort active per month offset."""
+    fig = px.imshow(
+        df,
+        aspect="auto",
+        labels={"x": "Months since first order", "y": "Cohort", "color": "Active"},
+        color_continuous_scale=["#F4F7FB", "#9CC9F0", "#0071CE", "#0B1F3A"],
+        text_auto=".0%",
+    )
+    fig.update_layout(height=380)
+    fig.update_traces(
+        hovertemplate="Cohort %{y}<br>Month %{x}: %{z:.0%} active<extra></extra>"
+    )
+    return style(fig, currency=False)

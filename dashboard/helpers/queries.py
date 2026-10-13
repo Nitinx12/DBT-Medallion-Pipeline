@@ -492,6 +492,72 @@ def get_store_revenue(filters: Filters) -> pd.DataFrame:
     return _run(sql, params)
 
 
+@st.cache_data(ttl=300)
+def get_rfm_segments(filters: Filters) -> pd.DataFrame:
+    """RFM scored customers with segment labels (scatter + summary input).
+
+    Recency/frequency/monetary each split into quintiles; segment names
+    follow the standard playbook (Champions/Loyal/New/At risk/Hibernating).
+    """
+    where, params = _where(filters)
+    sql = f"""
+        WITH base AS (
+            SELECT cu.customer_id,
+                   MAX(cu.customer_name) AS customer_name,
+                   MAX(o.order_timestamp)::date AS last_order,
+                   COUNT(DISTINCT o.order_id) AS frequency,
+                   SUM(foi.line_amount) AS monetary
+            {BASE_FROM}
+            WHERE {where} AND cu.customer_id IS NOT NULL
+            GROUP BY cu.customer_id
+        ),
+        scored AS (
+            SELECT *,
+                   NTILE(5) OVER (ORDER BY last_order) AS r,
+                   NTILE(5) OVER (ORDER BY frequency) AS f,
+                   NTILE(5) OVER (ORDER BY monetary) AS m
+            FROM base
+        )
+        SELECT *, CASE
+            WHEN r >= 4 AND f >= 4 THEN 'Champions'
+            WHEN r >= 3 AND f >= 3 THEN 'Loyal'
+            WHEN r >= 4 AND f <= 2 THEN 'New'
+            WHEN r <= 2 AND f >= 3 THEN 'At risk'
+            ELSE 'Hibernating'
+        END AS segment
+        FROM scored
+        ORDER BY monetary DESC
+    """
+    return _run(sql, params)
+
+
+@st.cache_data(ttl=300)
+def get_cohort_activity(filters: Filters) -> pd.DataFrame:
+    """One row per active customer month: cohort + activity month-starts.
+
+    The page derives cohort size, month offsets, and retention shares in
+    pandas (calendar math is clearer there than in nested SQL).
+    """
+    where, params = _where(filters)
+    sql = f"""
+        WITH firsts AS (
+            SELECT cu.customer_id,
+                   MIN(date_trunc('month', o.order_timestamp)) AS cohort_month
+            {BASE_FROM}
+            WHERE {where} AND cu.customer_id IS NOT NULL
+            GROUP BY cu.customer_id
+        )
+        SELECT f.cohort_month,
+               date_trunc('month', o.order_timestamp) AS activity_month,
+               COUNT(DISTINCT o.customer_id) AS customers
+        {BASE_FROM}
+        JOIN firsts f ON f.customer_id = o.customer_id
+        WHERE {where}
+        GROUP BY 1, 2
+    """
+    return _run(sql, params)
+
+
 @st.cache_data(ttl=600)
 def get_status_funnel(filters: Filters) -> pd.DataFrame:
     """Distinct orders per status in pipeline order (not alphabetical).
