@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# scripts/bash/setup_env.sh — one-shot dev setup for Linux/macOS (and Git Bash on Windows)
+# scripts/setup_env.sh — one-shot dev setup for Linux/macOS (and Git Bash on Windows)
 # Idempotent: safe to run multiple times.
 set -euo pipefail
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -54,4 +54,4 @@ fi
 
 echo ""
 echo "${GREEN}Setup complete.${RESET}"
-echo "Next: edit .env, then run: bash scripts/bash/preflight.sh && bash scripts/bash/run_pipeline.sh"
+echo "Next: edit .env, then run: bash scripts/preflight.sh"

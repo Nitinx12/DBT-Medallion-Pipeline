@@ -3,12 +3,12 @@ Quick one-off: list every table + column in the Postgres `gold` schema,
 using this project's own src/utils/connection.py so it respects .env exactly
 the way extract.py and everything else does.
 
-Lives in scripts/python/, so the repo root is added to sys.path below —
+Lives in scripts/, so the repo root is added to sys.path below —
 that's what makes `from src.utils.connection import ...` resolve regardless of
 your current directory.
 
 Run from the repo root:
-    uv run python scripts/python/inspect_gold_schema.py
+    uv run python scripts/inspect_gold_schema.py
 """
 
 import sys
@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pandas as pd
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.utils.connection import get_postgres_engine
 

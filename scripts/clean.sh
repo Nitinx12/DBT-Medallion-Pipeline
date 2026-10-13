@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# scripts/bash/clean.sh — housekeeping (mirrors Makefile `clean` / `clean-venv`)
-# Usage: scripts/bash/clean.sh [--venv] [--deep]
+# scripts/clean.sh — housekeeping (mirrors Makefile `clean` / `clean-venv`)
+# Usage: scripts/clean.sh [--venv] [--deep]
 set -euo pipefail
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$PROJECT_ROOT"
@@ -11,7 +11,7 @@ RESET="$(tput sgr0 2>/dev/null || true)"
 
 usage() {
   cat <<'EOF'
-Usage: scripts/bash/clean.sh [--venv] [--deep]
+Usage: scripts/clean.sh [--venv] [--deep]
 
   (no args)  remove caches + dbt artifacts (keeps .venv)
   --venv     also remove .venv (next run needs uv sync)

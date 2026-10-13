@@ -1,7 +1,7 @@
 """Cross-platform, Docker-safe equivalent of ps1/run_pipeline.ps1.
 
 Pure orchestration only: every stage shells out to the same
-scripts/python/*.py, dbt, and uv commands the PowerShell script calls. It
+src/jobs/*.py, scripts/*.py, dbt, and uv commands the PowerShell script calls. It
 does not re-implement any extract/transform logic itself.
 
 Stage structure intentionally mirrors run_pipeline.ps1 exactly:

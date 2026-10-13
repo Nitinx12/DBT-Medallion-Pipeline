@@ -5,17 +5,17 @@ the pipeline's operational readiness and security baseline. Run them from the
 project root with `uv`.
 
 ```powershell
-uv run python scripts/python/health_check.py
-uv run python scripts/python/security_check.py
+uv run python scripts/run_health_check.py
+uv run python scripts/run_security_check.py
 ```
 
 Both scripts use Rich for a clear terminal report and return a non-zero exit
 code when a blocking problem is found. This makes them useful before running
 the pipeline and in CI.
 
-## `health_check.py`
+## `run_health_check.py`
 
-`health_check.py` verifies that the local pipeline environment is ready to
+`run_health_check.py` verifies that the local pipeline environment is ready to
 run. It checks:
 
 - Postgres and MongoDB connectivity with real ping/query requests
@@ -28,15 +28,15 @@ run. It checks:
 Use the faster dependency-only Spark check when needed:
 
 ```powershell
-uv run python scripts/python/health_check.py --quick
+uv run python scripts/run_health_check.py --quick
 ```
 
 This check helps catch stopped services, broken credentials, missing Spark
 setup, and incomplete pipeline runs before an ETL job fails partway through.
 
-## `security_check.py`
+## `run_security_check.py`
 
-`security_check.py` (in `scripts/python/`) scans Git-visible project files
+`run_security_check.py` (in `scripts/`) scans Git-visible project files
 without printing any
 credential values. It checks for:
 

@@ -3,7 +3,7 @@
 # ============================================================================
 # LOG MONITOR & CLEANUP  (v2)
 # ============================================================================
-# Location: scripts/bash/ (two levels below the project root; PROJECT_ROOT
+# Location: scripts/ (two levels below the project root; PROJECT_ROOT
 #           below resolves to the grandparent of this file's directory)
 #
 # Rules:

@@ -46,9 +46,9 @@ See `testing.md` for conventions.
 
 ## Bash
 
-Mirrors `pipeline/run_pipeline.ps1` for Linux. See `scripts/bash/README.md`.
+Stage wrappers in `scripts/` (preflight, extract, tests, dbt, health, security, clean, setup, monitor).
 
 ```bash
-bash scripts/bash/preflight.sh --strict
-bash scripts/bash/run_pipeline.sh --full-refresh
+bash scripts/preflight.sh --strict
+uv run python scripts/run_tests.py all
 ```

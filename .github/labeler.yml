@@ -1,9 +1,10 @@
 # .github/labeler.yml — used by label workflow to auto-tag PRs by changed paths
-extract: ["scripts/python/extract.py", "utils/engine.py", "utils/connection.py"]
+extract: ["src/jobs/extract.py", "src/utils/engine.py", "src/utils/connection.py"]
 dbt: ["dbt/**", "sql/**"]
 airflow: ["airflow/**"]
 docker: ["docker/**", "docker-compose.*", "Dockerfile*"]
-tests: ["tests/**", "gx/**", "pipeline/data_quality/**"]
+tests: ["tests/**", "gx/**"]
 docs: ["docs/**", "*.md", "assets/**"]
 ci: [".github/**", "Makefile", "pyproject.toml", "uv.lock"]
 dashboard: ["dashboard/**"]
+src: ["src/**"]

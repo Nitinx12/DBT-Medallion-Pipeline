@@ -39,9 +39,9 @@ dev = [
 [tool.ruff.lint.per-file-ignores]
 "dashboard/home.py" = ["E402"]
 "src/jobs/extract.py" = ["E402"]
-"scripts/python/inspect_gold_schema.py" = ["E402"]
-"scripts/python/seed_demo_db.py" = ["E402"]
-"scripts/python/sync_gold_to_databricks.py" = ["E402"]
+"scripts/inspect_gold_schema.py" = ["E402"]
+"scripts/seed_demo_db.py" = ["E402"]
+"scripts/sync_gold_to_databricks.py" = ["E402"]
 # DAGs must never fail on import (broad timetable fallback) and build bash
 # via .format() so ${...} is not doubled as f-strings would require.
 "airflow/dags/*.py" = ["BLE001", "UP030", "UP032"]
@@ -53,5 +53,5 @@ addopts = "-v --cov=src --cov=scripts --cov-report=term-missing"
 source = ["src", "scripts"]
 omit = ["src/*/__pycache__/*", "scripts/__pycache__/*"]
 
-# Scripts layout (organized 2026-09): python helpers in scripts/python/, bash helpers in scripts/bash/
-# Clean structure — no shims; old scripts/*.py paths removed (use scripts/python/*.py).
+# Scripts layout (flattened 2026-10): flat scripts/*.py + scripts/*.sh;
+# pipeline runtime lives in src/jobs/.

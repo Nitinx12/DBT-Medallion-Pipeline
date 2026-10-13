@@ -1,7 +1,7 @@
 @echo off
 REM =============================================================================
 REM Walmart Medallion Pipeline — Windows Batch runner (CMD mirror of
-REM pipeline/run_pipeline.ps1 and scripts/bash/run_pipeline.sh)
+REM pipeline/run_pipeline.ps1)
 REM
 REM Runs the fixed 8-stage pipeline in strict order, stopping immediately
 REM when any command fails:
@@ -99,7 +99,6 @@ if "%SHOW_HELP%"=="1" (
     echo.
     echo Other entry points:
     echo   powershell:  .\pipeline\run_pipeline.ps1
-    echo   bash:        bash scripts/bash/run_pipeline.sh
     echo   docker:      docker compose -f docker\compose.yml up
     echo   python:      uv run python main.py
     exit /b 0

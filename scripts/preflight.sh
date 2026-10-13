@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# scripts/bash/preflight.sh — [0/7] Dependency & env preflight (bash mirror of Makefile `preflight`)
+# scripts/preflight.sh — [0/7] Dependency & env preflight (bash mirror of Makefile `preflight`)
 # Fails fast before any data moves. Mirrors pipeline/run_pipeline.ps1 Stage 0 and Makefile preflight.
 set -euo pipefail
 
@@ -15,7 +15,7 @@ RESET="$(tput sgr0 2>/dev/null || true)"
 
 usage() {
   cat <<'EOF'
-Usage: scripts/bash/preflight.sh [--strict]
+Usage: scripts/preflight.sh [--strict]
 
 Checks:
   - Python 3.11+ and uv

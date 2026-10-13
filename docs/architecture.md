@@ -31,7 +31,7 @@ flowchart LR
 
 ## Layout
 ```
-airflow/  docker/  docs/  jars/  pipeline/  scripts/python|bash/  sql/  tests/  src/utils/  dbt/
+airflow/  docker/  docs/  jars/  pipeline/  scripts/  sql/  tests/  src/  dbt/
 ```
 
 ## Next
