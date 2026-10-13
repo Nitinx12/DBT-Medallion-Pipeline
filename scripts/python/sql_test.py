@@ -3,13 +3,13 @@ Runs every .sql file in a given test directory against Postgres.
 
 Supports TWO test conventions, auto-detected per file:
 
-  1. SELECT-style tests (e.g. dbt generic tests, tests/silver/*.sql,
-     tests/gold/*.sql):
+  1. SELECT-style tests (e.g. dbt generic tests, tests/data-quality/silver/*.sql,
+     tests/data-quality/gold/*.sql):
        - The query SELECTs the rows that VIOLATE the rule.
        - Empty result set  -> PASS
        - Any rows returned -> FAIL (rows written to the log file)
 
-  2. DO-block-style tests (e.g. tests/bronze/*.sql loops that RAISE EXCEPTION):
+  2. DO-block-style tests (e.g. tests/data-quality/bronze/*.sql loops that RAISE EXCEPTION):
        - The script does its own looping/checking in a DO $$ ... $$ block
          and raises an exception itself when something is wrong.
        - No exception raised -> PASS (the block returns no rows at all,
@@ -17,9 +17,9 @@ Supports TWO test conventions, auto-detected per file:
        - Exception raised    -> FAIL, exception message logged as the reason
 
 Usage:
-    uv run python scripts/python/sql_test.py tests/bronze
-    uv run python scripts/python/sql_test.py tests/silver
-    uv run python scripts/python/sql_test.py tests/gold
+    uv run python scripts/python/sql_test.py tests/data-quality/bronze
+    uv run python scripts/python/sql_test.py tests/data-quality/silver
+    uv run python scripts/python/sql_test.py tests/data-quality/gold
 
 Exit code: 0 if all tests pass, 1 if any test fails.
 
