@@ -201,7 +201,7 @@ def get_filter_options() -> dict:
     }
 
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=60)
 def get_gold_meta() -> dict:
     """Lightweight warehouse metadata for the header/footer."""
     engine = get_postgres_engine()
@@ -216,10 +216,78 @@ def get_gold_meta() -> dict:
     return {"fact_rows": int(row["fact_rows"]), "last_order_ts": row["last_order_ts"]}
 
 
+@st.cache_data(ttl=60)
+def get_freshness() -> dict:
+    """Newest order timestamp warehouse wide (freshness badge input)."""
+    engine = get_postgres_engine()
+    row = pd.read_sql(
+        f"SELECT MAX(order_timestamp) AS last_order FROM {GOLD}.dim_orders "
+        "WHERE is_active = true",
+        engine,
+    ).iloc[0]
+    return {"last_order_ts": row["last_order"]}
+
+
+@st.cache_data(ttl=300)
+def get_table_counts() -> pd.DataFrame:
+    """Live row count per gold base table (Data Health inventory)."""
+    engine = get_postgres_engine()
+    with engine.connect() as conn:
+        tables = pd.read_sql(
+            text(
+                "SELECT table_name FROM information_schema.tables "
+                "WHERE table_schema = :schema AND table_type = 'BASE TABLE' "
+                "ORDER BY table_name"
+            ),
+            conn,
+            params={"schema": GOLD},
+        )["table_name"].tolist()
+    rows = []
+    with engine.connect() as conn:
+        for table in tables:
+            if not table.replace("_", "").isalnum() or not table[0].isalpha():
+                continue
+            count = conn.execute(
+                text(f'SELECT COUNT(*) FROM "{GOLD}"."{table}"')
+            ).scalar()
+            rows.append({"table_name": table, "row_count": int(count or 0)})
+    return pd.DataFrame(rows, columns=["table_name", "row_count"])
+
+
+@st.cache_data(ttl=60)
+def get_pipeline_status() -> pd.DataFrame:
+    """Latest extract run per bronze table plus watermark state.
+
+    Reads the control tables extract.py maintains (etl_logs for run
+    history, etl_watermarks for incremental state). Empty when the
+    warehouse was built another way (dbt seeds, demo restores).
+    """
+    bronze = getattr(config, "POSTGRES_SCHEMA_BRONZE", None) or "bronze"
+    engine = get_postgres_engine()
+    sql = f"""
+        SELECT l.table_name, l.status, l.mode,
+               l.rows_inserted, l.rows_updated,
+               l.validation_status, l.finished_at,
+               w.incremental_column, w.last_watermark_value
+        FROM (
+            SELECT DISTINCT ON (table_name) *
+            FROM {bronze}.etl_logs
+            ORDER BY table_name, finished_at DESC NULLS LAST, id DESC
+        ) l
+        LEFT JOIN {bronze}.etl_watermarks w ON w.table_name = l.table_name
+        ORDER BY l.table_name
+    """
+    try:
+        with engine.connect() as conn:
+            return pd.read_sql(text(sql), conn)
+    except Exception:  # noqa: BLE001 -- control tables may not exist; health shows empty
+        return pd.DataFrame()
+
+
 # ---------------------------------------------------------------------------
 # KPIs
 # ---------------------------------------------------------------------------
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=60)
 def get_kpis(filters: Filters) -> dict:
     where, params = _where(filters)
     sql = f"""
@@ -248,7 +316,7 @@ def get_kpis(filters: Filters) -> dict:
 # ---------------------------------------------------------------------------
 # Extended KPIs — volume, loyalty, and operational leak in one pass
 # ---------------------------------------------------------------------------
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=60)
 def get_kpis_extended(filters: Filters) -> dict:
     """Units, repeat customers, and cancelled/returned orders.
 
@@ -292,7 +360,7 @@ def get_kpis_extended(filters: Filters) -> dict:
     }
 
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=60)
 def get_daily_kpis(filters: Filters) -> pd.DataFrame:
     """One row per day: revenue, distinct orders, distinct customers.
 
@@ -313,7 +381,7 @@ def get_daily_kpis(filters: Filters) -> pd.DataFrame:
     return _run(sql, params)
 
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=60)
 def get_monthly_revenue(filters: Filters) -> pd.DataFrame:
     """Revenue per calendar month in the window (month-over-month growth)."""
     where, params = _where(filters)
@@ -331,7 +399,7 @@ def get_monthly_revenue(filters: Filters) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # Revenue trend — aggregated in SQL at the requested granularity
 # ---------------------------------------------------------------------------
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=60)
 def get_revenue_trend(filters: Filters, granularity: str) -> pd.DataFrame:
     if granularity not in {"day", "week", "month"}:
         raise ValueError(f"Unsupported granularity: {granularity}")
@@ -361,7 +429,7 @@ _DIMENSION_COLUMNS = {
 }
 
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=60)
 def get_revenue_by(
     filters: Filters, dimension: str, limit: int | None = None
 ) -> pd.DataFrame:
@@ -384,7 +452,7 @@ def get_revenue_by(
     return _run(sql, params)
 
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=60)
 def get_category_brand_treemap(filters: Filters) -> pd.DataFrame:
     where, params = _where(filters)
     sql = f"""
@@ -397,7 +465,7 @@ def get_category_brand_treemap(filters: Filters) -> pd.DataFrame:
     return _run(sql, params)
 
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=60)
 def get_top_products(filters: Filters, limit: int = 10) -> pd.DataFrame:
     where, params = _where(filters)
     sql = f"""
@@ -414,7 +482,7 @@ def get_top_products(filters: Filters, limit: int = 10) -> pd.DataFrame:
     return _run(sql, params)
 
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=60)
 def get_product_revenue(filters: Filters) -> pd.DataFrame:
     """Revenue per product, full list ordered desc (Pareto analysis)."""
     where, params = _where(filters)
@@ -428,7 +496,7 @@ def get_product_revenue(filters: Filters) -> pd.DataFrame:
     return _run(sql, params)
 
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=60)
 def get_dow_hour_revenue(filters: Filters) -> pd.DataFrame:
     """Revenue by ISO day of week (1=Mon..7=Sun) and hour (0..23)."""
     where, params = _where(filters)
@@ -443,7 +511,7 @@ def get_dow_hour_revenue(filters: Filters) -> pd.DataFrame:
     return _run(sql, params)
 
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=60)
 def get_category_monthly_revenue(filters: Filters) -> pd.DataFrame:
     """Revenue per category per calendar month (waterfall input)."""
     where, params = _where(filters)
@@ -459,7 +527,7 @@ def get_category_monthly_revenue(filters: Filters) -> pd.DataFrame:
     return _run(sql, params)
 
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=60)
 def get_sunburst_revenue(filters: Filters) -> pd.DataFrame:
     """Category -> brand -> product revenue (sunburst input, ~500 rows max)."""
     where, params = _where(filters)
@@ -476,7 +544,7 @@ def get_sunburst_revenue(filters: Filters) -> pd.DataFrame:
     return _run(sql, params)
 
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=60)
 def get_store_revenue(filters: Filters) -> pd.DataFrame:
     """Revenue + orders per store (map bubbles and leaderboard input)."""
     where, params = _where(filters)
@@ -558,7 +626,7 @@ def get_cohort_activity(filters: Filters) -> pd.DataFrame:
     return _run(sql, params)
 
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=60)
 def get_status_funnel(filters: Filters) -> pd.DataFrame:
     """Distinct orders per status in pipeline order (not alphabetical).
 
@@ -586,7 +654,7 @@ def get_status_funnel(filters: Filters) -> pd.DataFrame:
     return _run(sql, params)
 
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=60)
 def get_top_customers(filters: Filters, limit: int = 10) -> pd.DataFrame:
     where, params = _where(filters)
     sql = f"""
@@ -603,7 +671,7 @@ def get_top_customers(filters: Filters, limit: int = 10) -> pd.DataFrame:
     return _run(sql, params)
 
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=60)
 def get_recent_order_lines(filters: Filters, limit: int = 200) -> pd.DataFrame:
     """A bounded sample for the 'raw data' expander — not the full
     filtered set, to avoid pulling unbounded rows into the app."""

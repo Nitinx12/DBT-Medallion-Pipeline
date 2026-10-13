@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -20,13 +21,16 @@ from dashboard.helpers import plotly_template
 from dashboard.helpers.components import (
     filter_chips,
     footer,
+    freshness_badge,
     kpi_cards,
     kpi_quality_cards,
 )
 from dashboard.helpers.theme import get_theme, inject_css
 from dashboard.lib.filters import sidebar_filters
 from dashboard.lib.queries import (
+    Filters,
     get_daily_kpis,
+    get_freshness,
     get_gold_meta,
     get_kpis,
     get_kpis_extended,
@@ -39,21 +43,25 @@ plotly_template.apply_default_template(get_theme())
 st.markdown(inject_css(), unsafe_allow_html=True)
 
 st.title("Walmart Gold Dashboard")
-st.caption("Use the sidebar pages: Sales, Products, Customers, Categories, Geo.")
+st.caption(
+    "Use the sidebar pages: Sales, Products, Customers, Categories, Geo, Data Health."
+)
 
-try:
-    filters, meta = sidebar_filters()
-    filter_chips(filters)
+
+def _pct(curr: float, prev: float) -> float | None:
+    return (curr - prev) / prev * 100 if prev else None
+
+
+def _div(a: float, b: float) -> float:
+    return float(a) / float(b) if b else 0.0
+
+
+def _live_overview(filters: Filters) -> None:
+    """All KPI content in one place so the live fragment can rerun it."""
     gold = get_gold_meta()
     current = get_kpis(filters)
     previous = get_kpis(filters.previous_period())
     daily = get_daily_kpis(filters)
-
-    def _pct(curr: float, prev: float) -> float | None:
-        return (curr - prev) / prev * 100 if prev else None
-
-    def _div(a: float, b: float) -> float:
-        return float(a) / float(b) if b else 0.0
 
     kpi_cards(
         current["revenue"],
@@ -178,6 +186,23 @@ try:
     st.info(
         f"Gold fact rows: {gold.get('fact_rows', 0):,} · Last order: {gold.get('last_order_ts') or '—'}"
     )
+    freshness_badge(get_freshness()["last_order_ts"])
+
+
+try:
+    filters, meta = sidebar_filters()
+    filter_chips(filters)
+    live = st.sidebar.toggle("Live mode", value=False, key="home_live")
+
+    @st.fragment(run_every="30s" if live else None)
+    def _fragment() -> None:
+        _live_overview(filters)
+        if live:
+            st.caption(
+                f"Auto-refreshing every 30s · updated {datetime.now(UTC):%H:%M:%S} UTC"
+            )
+
+    _fragment()
 except Exception as exc:  # noqa: BLE001
     st.error(f"Could not connect to Postgres: {exc}")
     st.stop()

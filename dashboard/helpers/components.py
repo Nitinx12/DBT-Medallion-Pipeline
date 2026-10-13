@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import html as html_lib
 import textwrap
+from datetime import UTC, datetime
 
 import pandas as pd
 import streamlit as st
@@ -248,6 +249,36 @@ def filter_chips(filters) -> None:
     row = "".join(chips)
     st.markdown(
         _safe_html(f'<div class="chip-row">{row}</div>'), unsafe_allow_html=True
+    )
+
+
+def freshness_badge(last_order_ts) -> None:
+    """Trust pill: how stale the warehouse is (green < 15 min, amber < 2 h).
+
+    A timestamp in the future (synthetic demo data) counts as fresh.
+    Missing timestamps render grey instead of crashing.
+    """
+    if last_order_ts is None or pd.isna(last_order_ts):
+        dot, text = "#94A3B8", "No orders in view"
+    else:
+        ts = pd.Timestamp(last_order_ts)
+        if ts.tzinfo is not None:
+            ts = ts.tz_convert(None)
+        lag_min = (
+            datetime.now(UTC).replace(tzinfo=None) - ts.to_pydatetime()
+        ).total_seconds() / 60
+        if lag_min < 15:
+            dot, text = "#0E9F6E", f"Fresh · {ts:%b %d, %Y %H:%M}"
+        elif lag_min < 120:
+            dot, text = "#D97706", f"{lag_min:.0f} min old · {ts:%b %d, %Y %H:%M}"
+        else:
+            dot, text = "#DC2626", f"{lag_min / 60:.1f} h old · {ts:%b %d, %Y %H:%M}"
+    st.markdown(
+        _safe_html(
+            f'<div class="chip-row"><span class="chip">'
+            f'<span style="color:{dot}">●</span> {html_lib.escape(text)}</span></div>'
+        ),
+        unsafe_allow_html=True,
     )
 
 
