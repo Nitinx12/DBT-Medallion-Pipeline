@@ -138,7 +138,7 @@ BEGIN
     END LOOP;
 
     RAISE NOTICE '========================================';
-    RAISE NOTICE 'sp_attach_loaded_at_triggers: attached % trigger(s) to schema %.% tables (column: %)', v_count, p_schema, p_loaded_at_column;
+    RAISE NOTICE 'sp_attach_loaded_at_triggers: attached % trigger(s) in schema % (column: %)', v_count, p_schema, p_loaded_at_column;
 END;
 $procedure$;
 
