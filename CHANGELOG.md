@@ -98,6 +98,16 @@ Version bumps happen on `release/vX.Y.Z` branches; the `vX.Y.Z` tag triggers
   MONGO_URI=mongodb://host.docker.internal:27017` (`.env` stays
   `localhost`; only DAG `_PREAMBLE`/run flags rewrite it).
 
+## [0.2.2] — 2026-10-13
+
+### Fixed
+
+- **Missing `ci` dbt target broke the release.** `ci.yml`, `dbt.yml`
+  and `release.yml` all use `--target ci` but `dbt/profiles.yml`
+  defined only `dev`, so the v0.2.1 release failed its smoke gate.
+  Added a `ci` output mirroring `dev` (env-driven); default stays
+  `dev`. v0.2.1 published nothing, so the release moves to v0.2.2.
+
 ## [0.2.1] — 2026-10-13
 
 ### Fixed
