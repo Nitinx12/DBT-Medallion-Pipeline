@@ -2,15 +2,14 @@ services:
   dev:
     build:
       context: ..
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/Dockerfile.pipeline
     volumes:
       - ..:/app
       - devcontainer-venv:/app/.venv
-    environment:
-      POSTGRES_HOST: host.docker.internal
-      # MONGO_URI: mongodb://<your-user>:<your-pass>@host.docker.internal:27017/<db>
     env_file:
       - ../.env
+    environment:
+      POSTGRES_HOST: host.docker.internal
     extra_hosts:
       - "host.docker.internal:host-gateway"
     entrypoint: ["sleep", "infinity"]

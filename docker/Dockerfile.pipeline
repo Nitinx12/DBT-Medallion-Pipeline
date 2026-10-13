@@ -1,0 +1,30 @@
+FROM python:3.12-slim-bookworm
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openjdk-17-jre-headless \
+    curl \
+    git \
+    bash \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+ENV PATH="${JAVA_HOME}/bin:${PATH}"
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
+ENV PYSPARK_PYTHON=/app/.venv/bin/python
+ENV PYSPARK_DRIVER_PYTHON=/app/.venv/bin/python
+ENV RUNNING_IN_DOCKER=1
+ENV DBT_PROFILES_DIR=/app/dbt
+
+WORKDIR /app
+
+COPY pyproject.toml uv.lock ./
+RUN pip install --no-cache-dir uv && uv sync --frozen
+
+COPY . .
+RUN chmod +x docker/entrypoint.sh && uv run dbt deps --project-dir dbt --profiles-dir dbt
+
+ENTRYPOINT ["docker/entrypoint.sh"]
+CMD ["uv", "run", "main.py"]
