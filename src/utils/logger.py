@@ -25,7 +25,10 @@ from datetime import datetime
 from logging.handlers import RotatingFileHandler
 
 LOG_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs"
+    # logger.py sits at src/utils/logger.py, so three levels up is the repo
+    # root (this was two levels when the module lived at utils/logger.py).
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+    "logs",
 )
 LOG_FORMAT = "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
