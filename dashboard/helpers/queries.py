@@ -428,6 +428,37 @@ def get_product_revenue(filters: Filters) -> pd.DataFrame:
 
 
 @st.cache_data(ttl=600)
+def get_dow_hour_revenue(filters: Filters) -> pd.DataFrame:
+    """Revenue by ISO day of week (1=Mon..7=Sun) and hour (0..23)."""
+    where, params = _where(filters)
+    sql = f"""
+        SELECT EXTRACT(ISODOW FROM o.order_timestamp)::int AS dow,
+               EXTRACT(HOUR FROM o.order_timestamp)::int AS hr,
+               SUM(foi.line_amount) AS revenue
+        {BASE_FROM}
+        WHERE {where}
+        GROUP BY 1, 2
+    """
+    return _run(sql, params)
+
+
+@st.cache_data(ttl=600)
+def get_category_monthly_revenue(filters: Filters) -> pd.DataFrame:
+    """Revenue per category per calendar month (waterfall input)."""
+    where, params = _where(filters)
+    sql = f"""
+        SELECT c.category_name,
+               date_trunc('month', o.order_timestamp) AS month,
+               SUM(foi.line_amount) AS revenue
+        {BASE_FROM}
+        WHERE {where} AND c.category_name IS NOT NULL
+        GROUP BY 1, 2
+        ORDER BY 2, 1
+    """
+    return _run(sql, params)
+
+
+@st.cache_data(ttl=600)
 def get_top_customers(filters: Filters, limit: int = 10) -> pd.DataFrame:
     where, params = _where(filters)
     sql = f"""

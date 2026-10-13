@@ -133,3 +133,40 @@ def bubble(df: pd.DataFrame):
         },
     )
     return style(fig, height=420)
+
+
+def dow_hour_heatmap(df: pd.DataFrame):
+    """Revenue heatmap: ISO weekday rows (Mon..Sun) by hour columns."""
+    pivot = (
+        df.pivot(index="dow", columns="hr", values="revenue")
+        .reindex(range(1, 8))
+        .reindex(columns=range(24))
+        .fillna(0)
+    )
+    fig = px.imshow(
+        pivot,
+        aspect="auto",
+        labels={"x": "Hour", "y": "Day", "color": "Revenue"},
+        y=["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+        color_continuous_scale=["#F4F7FB", "#9CC9F0", "#0071CE", "#0B1F3A"],
+    )
+    fig.update_layout(height=340)
+    fig.update_traces(hovertemplate="%{y} %{x}:00 — $%{z:,.0f}<extra></extra>")
+    return style(fig, currency=False)
+
+
+def waterfall(df: pd.DataFrame):
+    """Month over month revenue change by category (relative waterfall)."""
+    fig = go.Figure(
+        go.Waterfall(
+            x=df.category_name,
+            y=df.delta,
+            measure=["relative"] * len(df),
+            increasing={"marker": {"color": "#0E9F6E"}},
+            decreasing={"marker": {"color": "#E7462A"}},
+            connector={"line": {"color": "#CBD5E1"}},
+            hovertemplate="%{x}: %{y:+$,.0f}<extra></extra>",
+        )
+    )
+    fig.update_layout(height=380, showlegend=False)
+    return style(fig)

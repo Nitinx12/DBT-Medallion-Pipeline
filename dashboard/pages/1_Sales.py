@@ -19,9 +19,20 @@ apply_secrets()
 from dashboard.helpers import plotly_template
 from dashboard.helpers.components import dataframe_with_download, filter_chips
 from dashboard.helpers.theme import get_theme, inject_css
-from dashboard.lib.charts import bar_by, donut, revenue_trend_chart
+from dashboard.lib.charts import (
+    bar_by,
+    donut,
+    dow_hour_heatmap,
+    revenue_trend_chart,
+    waterfall,
+)
 from dashboard.lib.filters import sidebar_filters
-from dashboard.lib.queries import get_revenue_by, get_revenue_trend
+from dashboard.lib.queries import (
+    get_category_monthly_revenue,
+    get_dow_hour_revenue,
+    get_revenue_by,
+    get_revenue_trend,
+)
 
 st.set_page_config(page_title="Sales", page_icon="📊", layout="wide")
 plotly_template.apply_default_template(get_theme())
@@ -62,3 +73,33 @@ with c2:
             use_container_width=True,
             config={"displayModeBar": False},
         )
+
+st.subheader("When do shoppers buy")
+dow_hour = get_dow_hour_revenue(filters)
+if not dow_hour.empty:
+    st.plotly_chart(
+        dow_hour_heatmap(dow_hour),
+        use_container_width=True,
+        config={"displayModeBar": False},
+    )
+
+st.subheader("What moved month over month")
+cat_monthly = get_category_monthly_revenue(filters)
+months = sorted(cat_monthly["month"].unique()) if not cat_monthly.empty else []
+if len(months) >= 2:
+    last, prev = months[-1], months[-2]
+    cur = cat_monthly[cat_monthly["month"] == last].set_index("category_name")[
+        "revenue"
+    ]
+    old = cat_monthly[cat_monthly["month"] == prev].set_index("category_name")[
+        "revenue"
+    ]
+    delta = cur.sub(old, fill_value=0.0).reset_index()
+    delta.columns = ["category_name", "delta"]
+    delta = delta.sort_values("delta", ascending=False)
+    st.plotly_chart(
+        waterfall(delta), use_container_width=True, config={"displayModeBar": False}
+    )
+    st.caption(f"Category change from {prev:%b %Y} to {last:%b %Y}.")
+else:
+    st.caption("Pick a window spanning two months to see movement.")

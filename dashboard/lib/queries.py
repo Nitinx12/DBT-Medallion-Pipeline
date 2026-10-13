@@ -5,7 +5,9 @@ from __future__ import annotations
 from dashboard.helpers.queries import (
     Filters,
     get_category_brand_treemap,
+    get_category_monthly_revenue,
     get_daily_kpis,
+    get_dow_hour_revenue,
     get_filter_options,
     get_gold_meta,
     get_kpis,
@@ -22,7 +24,9 @@ from dashboard.helpers.queries import (
 __all__ = [
     "Filters",
     "get_category_brand_treemap",
+    "get_category_monthly_revenue",
     "get_daily_kpis",
+    "get_dow_hour_revenue",
     "get_filter_options",
     "get_gold_meta",
     "get_kpis",
