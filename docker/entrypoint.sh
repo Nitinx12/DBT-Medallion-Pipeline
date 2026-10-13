@@ -14,6 +14,14 @@ if [ "${#missing[@]}" -gt 0 ]; then
   exit 1
 fi
 
+# Container correction (same rule as the Airflow DAG _PREAMBLE): .env keeps
+# plain localhost for local runs, but inside a container localhost means
+# the container itself, so rewrite to the host gateway.
+POSTGRES_HOST="${POSTGRES_HOST/localhost/host.docker.internal}"
+export POSTGRES_HOST
+MONGO_URI="${MONGO_URI//localhost/host.docker.internal}"
+export MONGO_URI
+
 echo "Waiting for Postgres at ${POSTGRES_HOST}:${POSTGRES_PORT}..."
 for i in $(seq 1 30); do
   if (exec 3<>"/dev/tcp/${POSTGRES_HOST}/${POSTGRES_PORT}") 2>/dev/null; then

@@ -14,6 +14,8 @@ x-airflow-common: &airflow-common
     - ../airflow/plugins:/opt/airflow/plugins
     - ..:/app
     - /app/.venv
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     airflow-metadata:

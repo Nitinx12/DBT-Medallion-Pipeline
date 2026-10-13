@@ -50,7 +50,9 @@ _PREAMBLE = (
     + 'while IFS= read -r line || [ -n "$line" ]; do '
     'case "$line" in ""|"#"*) continue;; *=*) export "$line" || true;; esac; '
     + f"done < <(tr -d '\\r' < \"{PROJECT_ROOT}/.env\"); set +a; fi; "
+    + 'export POSTGRES_HOST="${POSTGRES_HOST:-}"; '
     + 'export POSTGRES_HOST="${POSTGRES_HOST/localhost/host.docker.internal}"; '
+    + 'export MONGO_URI="${MONGO_URI:-}"; '
     'export MONGO_URI="${MONGO_URI//localhost/host.docker.internal}"; '
     f"export PYTHONPATH={PROJECT_ROOT}; "
     "export PYSPARK_PYTHON=/app/.venv/bin/python; "
@@ -175,11 +177,11 @@ def _register(dag_id, schedule):
             html_content="""
 <h2>Walmart Medallion Pipeline - SUCCESS</h2>
 <p><strong>Date:</strong> {{ ds }}</p>
-<p><strong>Run ID:</strong> {{ ti.xcom_pull(task_ids='collect_results')['run_id'] }}</p>
+<p><strong>Run ID:</strong> {{ (ti.xcom_pull(task_ids='collect_results') or {}).get('run_id', '?') }}</p>
 <h3>Stage Results</h3>
 <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
 <tr style="background:#4CAF50;color:white;"><th>Stage</th><th>Status</th></tr>
-{% for stage, status in ti.xcom_pull(task_ids='collect_results')['stages'].items() %}
+{% for stage, status in (ti.xcom_pull(task_ids='collect_results') or {}).get('stages', {}).items() %}
 <tr><td>{{ stage }}</td><td>{{ status | upper }}</td></tr>
 {% endfor %}
 </table>
@@ -197,7 +199,7 @@ def _register(dag_id, schedule):
 <h3>Stage Results</h3>
 <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;">
 <tr style="background:#f44336;color:white;"><th>Stage</th><th>Status</th></tr>
-{% set stages = ti.xcom_pull(task_ids='collect_results', default={'stages': {}})['stages'] %}
+{% set stages = (ti.xcom_pull(task_ids='collect_results') or {}).get('stages', {}) %}
 {% for stage, status in stages.items() %}
 <tr><td>{{ stage }}</td><td>{{ status | upper }}</td></tr>
 {% endfor %}

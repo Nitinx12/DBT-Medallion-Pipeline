@@ -34,7 +34,9 @@ _PREAMBLE = (
     + 'while IFS= read -r line || [ -n "$line" ]; do '
     'case "$line" in ""|"#"*) continue;; *=*) export "$line" || true;; esac; '
     + f"done < <(tr -d '\\r' < \"{PROJECT_ROOT}/.env\"); set +a; fi; "
+    + 'export POSTGRES_HOST="${POSTGRES_HOST:-}"; '
     + 'export POSTGRES_HOST="${POSTGRES_HOST/localhost/host.docker.internal}"; '
+    + 'export MONGO_URI="${MONGO_URI:-}"; '
     'export MONGO_URI="${MONGO_URI//localhost/host.docker.internal}"; '
     f"export PYTHONPATH={PROJECT_ROOT}; "
 )
@@ -74,7 +76,7 @@ def walmart_hourly_health_check():
     email_failure = EmailOperator(
         task_id="email_failure",
         to=EMAIL_RECIPIENTS,
-        subject="Walmart Health Check FAILED - {{ ds }} {{ ti.hostname }}",
+        subject="Walmart Health Check FAILED - {{ ds }}",
         html_content="""
 <h2>Walmart Hourly Health Check - FAILURE</h2>
 <p><strong>Date:</strong> {{ ds }} {{ data_interval_start }}</p>
