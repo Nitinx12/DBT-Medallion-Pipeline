@@ -6,7 +6,7 @@ does not re-implement any extract/transform logic itself.
 
 Stage structure intentionally mirrors run_pipeline.ps1 exactly:
     0. Preflight        (pyspark <-> mongo-spark-connector version check)
-    1. Extract          (scripts/python/extract.py)
+    1. Extract          (src/jobs/extract.py)
     2. Bronze SQL tests (tests/data-quality/bronze/*.sql)
     3. dbt silver build + test (dbt, models/silver)  -- one stage
     4. Silver SQL tests (tests/data-quality/silver/*.sql)
@@ -178,8 +178,8 @@ def main() -> int:
     stages = [
         Stage(
             "Extract",
-            "EXTRACT (scripts/python/extract.py)",
-            [["uv", "run", "python", "scripts/python/extract.py"]],
+            "EXTRACT (src/jobs/extract.py)",
+            [["uv", "run", "python", "src/jobs/extract.py"]],
         ),
         Stage(
             "Bronze Tests",

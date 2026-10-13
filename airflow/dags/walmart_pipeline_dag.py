@@ -83,7 +83,7 @@ def _register(dag_id, schedule):
 
         @task.bash(task_id="extract")
         def extract() -> str:
-            return _PREAMBLE + "uv run python scripts/python/extract.py"
+            return _PREAMBLE + "uv run python src/jobs/extract.py"
 
         @task.bash(task_id="bronze_sql_tests")
         def bronze_sql_tests() -> str:

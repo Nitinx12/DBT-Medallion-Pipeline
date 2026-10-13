@@ -5,7 +5,7 @@ Bash complements of the Python pipeline. Every script is `set -euo pipefail`, ha
 | Script | Purpose | Mirrors |
 |---|---|---|
 | `preflight.sh` | Env & dependency preflight (Python, uv, .env, pyspark 3.5.x, schemas) | `Makefile: preflight`, `pipeline/run_pipeline.ps1` Stage 0 |
-| `extract.sh` | Thin wrapper for `scripts/python/extract.py` (`--tables`, `--full-refresh`, `--dry-run`) | `Makefile: extract` |
+| `extract.sh` | Thin wrapper for `src/jobs/extract.py` (`--tables`, `--full-refresh`, `--dry-run`) | `Makefile: extract` |
 | `run_tests.sh` | `bronze\|silver\|gold\|all` via `scripts/python/sql_test.py` | `Makefile: test-bronze/silver/gold`, `ci.yml: integration` |
 | `run_pipeline.sh` | **Full 8-stage pipeline** (Linux/macOS mirror of `run_pipeline.ps1`): preflight → extract → bronze tests → dbt silver → silver tests → dbt gold → gold tests → GX | `pipeline/run_pipeline.ps1`, `Makefile: data-pipeline` |
 | `health_check.sh` | Shell disk/port checks + delegates to `scripts/python/health_check.py` | `scripts/python/health_check.py` |

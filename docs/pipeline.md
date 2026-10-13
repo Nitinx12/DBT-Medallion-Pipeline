@@ -7,7 +7,7 @@ Windows entry point: `pipeline/run_pipeline.ps1`. Linux mirror: `scripts/bash/ru
 | # | Stage | Command |
 |---|---|---|
 | 0 | Preflight | `uv run python -c "import pyspark"` (3.5.x check) |
-| 1 | Extract | `uv run python scripts/python/extract.py` |
+| 1 | Extract | `uv run python src/jobs/extract.py` |
 | 2 | Bronze tests | `uv run python scripts/python/sql_test.py tests/data-quality/bronze` |
 | 3 | dbt silver | `cd dbt && dbt run --select silver && dbt test --select silver` |
 | 4 | Silver tests | `sql_test.py tests/data-quality/silver` |

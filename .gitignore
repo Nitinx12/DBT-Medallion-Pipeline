@@ -162,6 +162,7 @@ __init__.py
 !scripts/python/__init__.py
 !src/__init__.py
 !src/utils/__init__.py
+!src/jobs/__init__.py
 !dashboard/__init__.py
 !dashboard/lib/__init__.py
 !dashboard/helpers/__init__.py

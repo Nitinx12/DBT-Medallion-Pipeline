@@ -97,7 +97,7 @@ extract: ## [1/7] Extract MongoDB collections into Bronze
 	@echo "------------------------------------------------------------"
 	@echo " STEP 1 / 7  -  EXTRACT (MongoDB to Bronze)"
 	@echo "------------------------------------------------------------"
-	$(PYTHON) scripts/python/extract.py
+	$(PYTHON) src/jobs/extract.py
 
 test-bronze: ## [2/7] Run Bronze-layer SQL tests
 	@echo "------------------------------------------------------------"

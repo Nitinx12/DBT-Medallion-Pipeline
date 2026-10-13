@@ -6,7 +6,7 @@ REM
 REM Runs the fixed 8-stage pipeline in strict order, stopping immediately
 REM when any command fails:
 REM   0. Preflight            (pyspark 3.5.x version check)
-REM   1. Extract              (MongoDB -> bronze  via scripts/python/extract.py)
+REM   1. Extract              (MongoDB -> bronze  via src/jobs/extract.py)
 REM   2. Bronze SQL tests     (tests/data-quality/bronze)
 REM   3. dbt Silver           (dbt run + test --select silver)
 REM   4. Silver SQL tests     (tests/data-quality/silver)
@@ -257,7 +257,7 @@ REM =========================================================================
 REM STAGE 1 — EXTRACT
 REM =========================================================================
 call :stage_header "1" "EXTRACT (MongoDB to Bronze)"
-uv run python scripts/python/extract.py %EXTRACT_ARGS%
+uv run python src/jobs/extract.py %EXTRACT_ARGS%
 if errorlevel 1 (
     call :stage_fail "Extract failed. Stopping pipeline. See logs/ for detail." "Extract"
     call :print_summary

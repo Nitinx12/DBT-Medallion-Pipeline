@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# scripts/bash/extract.sh — [1/7] Thin wrapper around scripts/python/extract.py
+# scripts/bash/extract.sh — [1/7] Thin wrapper around src/jobs/extract.py
 # Passes all args through, ensures PYTHONPATH, and mirrors Makefile `extract`.
 set -euo pipefail
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -9,7 +9,7 @@ usage() {
   cat <<'EOF'
 Usage: scripts/bash/extract.sh [extract.py options]
 
-Wraps: uv run python scripts/python/extract.py
+Wraps: uv run python src/jobs/extract.py
 
 Options (from extract.py):
   --tables <list>              comma-separated collections (default: auto-discover)
@@ -30,4 +30,4 @@ if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then usage; exit 0; fi
 export PYTHONPATH="${PROJECT_ROOT}:${PYTHONPATH:-}"
 export PYTHONIOENCODING="${PYTHONIOENCODING:-utf-8}"
 
-exec uv run python scripts/python/extract.py "$@"
+exec uv run python src/jobs/extract.py "$@"

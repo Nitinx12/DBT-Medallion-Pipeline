@@ -31,7 +31,7 @@ uv add package_name
 uv add --dev pytest ruff
 
 # run any script through uv instead of the bare interpreter
-uv run python scripts/python/extract.py
+uv run python src/jobs/extract.py
 uv run python scripts/python/sql_test.py tests/data-quality/bronze
 ```
 `uv.lock` is the source of truth — never hand-edit dependency versions
@@ -111,7 +111,7 @@ uv run python scripts/python/sql_test.py tests/data-quality/silver
 Work on one file or one logical change at a time.
 ```bash
 # stage only the file you edited
-git add scripts/python/extract.py
+git add src/jobs/extract.py
 
 # commit with a clear, meaningful message
 git commit -m "extract: fall back to append-only when no unique index"
@@ -148,7 +148,7 @@ git commit -m "docker: pin JDK to 17" \
 | create env | `uv venv` |
 | install deps | `uv sync` |
 | add dependency | `uv add <pkg>` |
-| run extract | `uv run python scripts/python/extract.py` |
+| run extract | `uv run python src/jobs/extract.py` |
 | run dbt tests | `uv run dbt test --select silver` |
 | run SQL suite | `uv run python scripts/python/sql_test.py tests/data-quality/<layer>` |
 | format code | `uv run ruff format .` |

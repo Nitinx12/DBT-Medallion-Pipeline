@@ -28,7 +28,7 @@ scripts/
 - Auto-discovers Mongo collections, picks watermark `updated_* > created_*`, `$gt` pushdown, `_id` upsert via `INSERT ... ON CONFLICT`, validates via recount. See `architecture.md`.
 
 ```bash
-uv run python scripts/python/extract.py --tables orders,customers --full-refresh --dry-run
+uv run python src/jobs/extract.py --tables orders,customers --full-refresh --dry-run
 ```
 
 ## Python — `sql_test.py`

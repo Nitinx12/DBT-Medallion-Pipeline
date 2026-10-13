@@ -1,6 +1,6 @@
 """
-scripts/python/extract.py
-=========================
+src/jobs/extract.py
+===================
 Production-grade MongoDB -> PostgreSQL extraction script, built on PySpark.
 
 WHAT IT DOES
@@ -50,11 +50,11 @@ WHAT IT DOES
 
 USAGE
 -----
-    uv run python scripts/python/extract.py
-    uv run python scripts/python/extract.py --tables orders,customers
-    uv run python scripts/python/extract.py --full-refresh
-    uv run python scripts/python/extract.py --dry-run
-    uv run python scripts/python/extract.py --watermark-column updated_timestamp
+    uv run python src/jobs/extract.py
+    uv run python src/jobs/extract.py --tables orders,customers
+    uv run python src/jobs/extract.py --full-refresh
+    uv run python src/jobs/extract.py --dry-run
+    uv run python src/jobs/extract.py --watermark-column updated_timestamp
 
 Requires (pyproject.toml): pyspark, pymongo, sqlalchemy, psycopg2-binary,
 python-dotenv, rich. Also requires network access (first run) to fetch the

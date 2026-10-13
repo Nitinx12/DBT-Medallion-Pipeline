@@ -65,7 +65,7 @@ ok "Required env vars present"
 if uv run python -c "import pyspark" 2>/dev/null; then
   PYSPARK_VER="$(uv run python -c "import pyspark; print(pyspark.__version__)" 2>/dev/null || echo "unknown")"
   if [[ "$PYSPARK_VER" == 4.* ]]; then
-    fail "pyspark $PYSPARK_VER installed — mongo-spark-connector 10.4.0 only supports 3.5.x (see scripts/python/extract.py:227)"
+    fail "pyspark $PYSPARK_VER installed — mongo-spark-connector 10.4.0 only supports 3.5.x (see src/jobs/extract.py:227)"
   fi
   # must be 3.5.x
   if [[ "$PYSPARK_VER" != 3.5.* ]]; then

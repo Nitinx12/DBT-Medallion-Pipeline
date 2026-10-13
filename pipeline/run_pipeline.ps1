@@ -132,7 +132,7 @@ function Import-DotEnv {
 function Assert-Prerequisites {
     $requiredPaths = @(
         "pyproject.toml",
-        "scripts/python/extract.py",
+        "src/jobs/extract.py",
         "scripts/python/sql_test.py",
         "tests/data-quality/bronze",
         "tests/data-quality/silver",
@@ -230,7 +230,7 @@ try {
     }
 
     Invoke-PipelineStage -Number 1 -Name "Extract" -Title "EXTRACT (MongoDB to Bronze)" -Action {
-        Invoke-PipelineCommand -Description "Extract" -Command @("uv", "run", "python", "scripts/python/extract.py")
+        Invoke-PipelineCommand -Description "Extract" -Command @("uv", "run", "python", "src/jobs/extract.py")
     }
 
     Invoke-PipelineStage -Number 2 -Name "Bronze Tests" -Title "BRONZE SQL TESTS" -Action {

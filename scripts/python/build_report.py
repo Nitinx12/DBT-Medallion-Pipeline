@@ -540,7 +540,7 @@ def build():
     )
     story.append(
         p(
-            "Conventions: <b>snake_case</b>, type hints on every signature, one function = one responsibility (see scripts/python/extract.py stage split), short “why not what” comments, <b>uv run ruff format/check</b> before commit.",
+            "Conventions: <b>snake_case</b>, type hints on every signature, one function = one responsibility (see src/jobs/extract.py stage split), short “why not what” comments, <b>uv run ruff format/check</b> before commit.",
             sBody,
         )
     )
@@ -567,7 +567,7 @@ def build():
                 [
                     "1",
                     "Extract",
-                    "uv run python scripts/python/extract.py",
+                    "uv run python src/jobs/extract.py",
                     "Per-collection VALIDATION FAILED → non-zero exit",
                 ],
                 [
@@ -623,7 +623,7 @@ def build():
     story.append(hr())
     story.append(
         p(
-            "File: <b>scripts/python/extract.py</b> (~1230 lines) — the only place that touches MongoDB.",
+            "File: <b>src/jobs/extract.py</b> (~1230 lines) — the only place that touches MongoDB.",
             ParagraphStyle("note", parent=sBody, textColor=MUTED, fontSize=8),
         )
     )
@@ -936,7 +936,7 @@ def build():
     story.append(p("Local (Windows) — mirrors README “Run it”:", sH3))
     story.append(
         p(
-            'uv venv<br/> .venv\\Scripts\\activate &nbsp; <font color="#64748B"># Windows; source .venv/bin/activate on Linux/Mac</font><br/> uv sync &nbsp; <font color="#64748B"># from uv.lock</font><br/> cp .env.example .env &nbsp; <font color="#64748B"># fill POSTGRES_*, MONGO_*, optional DATABRICKS_*</font><br/><br/> ./pipeline/run_pipeline.ps1 &nbsp; <font color="#64748B"># 8 stages</font><br/> # or: uv run python main.py<br/> # or: uv run python scripts/python/extract.py --dry-run --tables orders,customers<br/><br/> uv run python scripts/python/sql_test.py tests/data-quality/bronze<br/> uv run dbt run --select silver --project-dir dbt &amp;&amp; uv run dbt test --select silver --project-dir dbt<br/> uv run python -m gx.run --layer all<br/><br/> uv run streamlit run dashboard/home.py<br/><br/> uv run ruff format . &amp;&amp; uv run ruff check . &amp;&amp; uv run sqlfluff lint dbt/models --dialect postgres<br/> uv run pre-commit run --all-files<br/> uv run pytest tests/unit -v --cov=src.utils --cov=scripts',
+            'uv venv<br/> .venv\\Scripts\\activate &nbsp; <font color="#64748B"># Windows; source .venv/bin/activate on Linux/Mac</font><br/> uv sync &nbsp; <font color="#64748B"># from uv.lock</font><br/> cp .env.example .env &nbsp; <font color="#64748B"># fill POSTGRES_*, MONGO_*, optional DATABRICKS_*</font><br/><br/> ./pipeline/run_pipeline.ps1 &nbsp; <font color="#64748B"># 8 stages</font><br/> # or: uv run python main.py<br/> # or: uv run python src/jobs/extract.py --dry-run --tables orders,customers<br/><br/> uv run python scripts/python/sql_test.py tests/data-quality/bronze<br/> uv run dbt run --select silver --project-dir dbt &amp;&amp; uv run dbt test --select silver --project-dir dbt<br/> uv run python -m gx.run --layer all<br/><br/> uv run streamlit run dashboard/home.py<br/><br/> uv run ruff format . &amp;&amp; uv run ruff check . &amp;&amp; uv run sqlfluff lint dbt/models --dialect postgres<br/> uv run pre-commit run --all-files<br/> uv run pytest tests/unit -v --cov=src.utils --cov=scripts',
             sCode,
         )
     )
@@ -1036,7 +1036,7 @@ def build():
                 ["Create env", "uv venv"],
                 ["Install deps", "uv sync"],
                 ["Add dep", "uv add <pkg>"],
-                ["Run extract", "uv run python scripts/python/extract.py"],
+                ["Run extract", "uv run python src/jobs/extract.py"],
                 ["Run dbt tests", "uv run dbt test --select silver"],
                 [
                     "Run SQL suite",
