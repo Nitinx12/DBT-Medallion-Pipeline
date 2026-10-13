@@ -17,6 +17,7 @@ scripts/
     ├── preflight.sh         # env & deps check
     ├── extract.sh           # wrapper for python extract
     ├── run_tests.sh         # bronze/silver/gold
+    ├── run_dbt.sh           # dbt deps → silver run/test → gold run/test
     ├── run_pipeline.sh      # full 8 stages (Linux)
     ├── health_check.sh
     ├── security_check.sh
