@@ -8,12 +8,12 @@ Windows entry point: `pipeline/run_pipeline.ps1`. Linux mirror: `scripts/bash/ru
 |---|---|---|
 | 0 | Preflight | `uv run python -c "import pyspark"` (3.5.x check) |
 | 1 | Extract | `uv run python scripts/python/extract.py` |
-| 2 | Bronze tests | `uv run python scripts/python/sql_test.py tests/bronze` |
+| 2 | Bronze tests | `uv run python scripts/python/sql_test.py tests/data-quality/bronze` |
 | 3 | dbt silver | `cd dbt && dbt run --select silver && dbt test --select silver` |
-| 4 | Silver tests | `sql_test.py tests/silver` |
+| 4 | Silver tests | `sql_test.py tests/data-quality/silver` |
 | 5 | dbt gold | `dbt run/test --select gold` |
-| 6 | Gold tests | `sql_test.py tests/gold` |
-| 7 | GX | `python -m pipeline.data_quality.run --layer all` |
+| 6 | Gold tests | `sql_test.py tests/data-quality/gold` |
+| 7 | GX | `python -m gx.run --layer all` |
 
 dbt stages `cd dbt/` and back; others run from repo root.
 

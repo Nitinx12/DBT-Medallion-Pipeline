@@ -22,6 +22,6 @@ docker compose -f docker/compose.yml up
 - **PYTHONPATH=/app** in both images.
 - **Compose**: CeleryExecutor (scheduler, worker, triggerer, redis, postgres meta). Worker runs `bash` tasks; code changes need no rebuild (bind mount).
 - **Localhost fix**: `.env` stays `localhost`; DAG `_PREAMBLE` rewrites to `host.docker.internal` for containers.
-- **Profiles**: host uses `~/.dbt/profiles.yml`; Airflow uses `docker/dbt/profiles.yml` via `DBT_PROFILES_DIR`.
+- **Profiles**: host and containers both use `dbt/profiles.yml` via `DBT_PROFILES_DIR`.
 
 See `architecture.md` §6, `docker/Dockerfile` / `docker/Dockerfile.airflow`.

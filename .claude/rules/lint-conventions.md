@@ -8,7 +8,7 @@ paths:
 
 # Lint conventions
 
-- Don't reorder imports in `dashboard/app.py`, `extract.py`,
+- Don't reorder imports in `dashboard/home.py`, `extract.py`,
   `seed_demo_db.py`, or `sync_gold_to_databricks.py` to "fix" E402 — the
   `sys.path.insert(...)` calls before those imports are intentional, and
   the E402 rule is already suppressed for these files in

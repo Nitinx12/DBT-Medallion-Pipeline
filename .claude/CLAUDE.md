@@ -40,7 +40,7 @@ support Postgres) instead of this project's dbt-core + dbt-postgres.
 
 ## Known lint exceptions (don't "fix" these)
 - `pyproject.toml` has `[tool.ruff.lint.per-file-ignores]` suppressing E402 in
-  `dashboard/app.py`, `extract.py`, `seed_demo_db.py`, and
+  `dashboard/home.py`, `extract.py`, `seed_demo_db.py`, and
   `sync_gold_to_databricks.py` — these intentionally call
   `sys.path.insert(...)` before local imports.
 - `.sqlfluffignore` excludes `sql/00_init_schema.sql` — it contains psql

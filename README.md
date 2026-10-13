@@ -167,7 +167,7 @@ flowchart TD
 ./pipeline/run_pipeline.ps1
 
 # Run Great Expectations checks alone when needed
-uv run python -m pipeline.data_quality.run --layer all
+uv run python -m gx.run --layer all
 
 # Standalone container runner (supply container-correct database hosts)
 docker run --env-file .env walmart-pipeline
@@ -176,7 +176,7 @@ docker run --env-file .env walmart-pipeline
 docker compose -f docker/compose.yml up
 
 # Sales dashboard (reads from your local gold schema)
-uv run streamlit run dashboard/app.py
+uv run streamlit run dashboard/home.py
 ```
 
 ## Documentation

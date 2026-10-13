@@ -32,7 +32,7 @@ uv add --dev pytest ruff
 
 # run any script through uv instead of the bare interpreter
 uv run python scripts/python/extract.py
-uv run python scripts/python/sql_test.py tests/bronze
+uv run python scripts/python/sql_test.py tests/data-quality/bronze
 ```
 `uv.lock` is the source of truth — never hand-edit dependency versions
 in `pyproject.toml` without running `uv lock` afterward.
@@ -101,7 +101,7 @@ uv run dbt test --select silver
 uv run dbt test --select gold
 
 # standalone SQL data-quality suite (schema-driven PL/pgSQL checks)
-uv run python scripts/python/sql_test.py tests/silver
+uv run python scripts/python/sql_test.py tests/data-quality/silver
 ```
 - every new dbt model needs schema.yml tests
 - every new extract/transform function needs at least one unit test
@@ -150,7 +150,7 @@ git commit -m "docker: pin JDK to 17" \
 | add dependency | `uv add <pkg>` |
 | run extract | `uv run python scripts/python/extract.py` |
 | run dbt tests | `uv run dbt test --select silver` |
-| run SQL suite | `uv run python scripts/python/sql_test.py tests/<layer>` |
+| run SQL suite | `uv run python scripts/python/sql_test.py tests/data-quality/<layer>` |
 | format code | `uv run ruff format .` |
 | lint code | `uv run ruff check .` |
 | stage one file | `git add <file>` |

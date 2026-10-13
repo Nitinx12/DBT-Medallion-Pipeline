@@ -30,6 +30,12 @@ ENV/
 !.env.example
 
 # ==========================
+# Streamlit secrets (real values never committed)
+# ==========================
+**/secrets.toml
+!**/secrets.toml.example
+
+# ==========================
 # IDE / Editors
 # ==========================
 .vscode/
@@ -155,6 +161,11 @@ __init__.py
 !scripts/__init__.py
 !scripts/python/__init__.py
 !utils/__init__.py
+!dashboard/__init__.py
+!dashboard/lib/__init__.py
+!dashboard/helpers/__init__.py
+!gx/__init__.py
+!gx/suites/__init__.py
 .qwen/
 # ==========================
 # Generated Reports / Assets (do not version generated charts)
@@ -172,3 +183,6 @@ link/
 # Great Expectations generated files
 /gx/checkpoints/
 /gx/validation_definitions/
+
+
+file.txt

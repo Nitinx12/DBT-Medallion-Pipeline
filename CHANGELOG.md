@@ -11,6 +11,93 @@ Version bumps happen on `release/vX.Y.Z` branches; the `vX.Y.Z` tag triggers
 
 ## [Unreleased]
 
+### Added
+
+- **Split-schedule Airflow pipelines.** Replaced the single DAG with
+  `walmart_mwf_morning` (Mon/Wed/Fri 11:00 Asia/Kolkata) and
+  `walmart_rest_night` (Tue/Thu/Sat/Sun 23:00 Asia/Kolkata) in
+  `airflow/dags/walmart_pipeline_dag.py`, covering all 7 days. Both run the
+  same 10 tasks mirroring `run_pipeline.ps1`/`main.py`, with HTML
+  success/failure summary mails via the `AIRFLOW__SMTP__*` settings.
+  SMTP verified with a live test mail.
+- **Hourly health-check DAG.** Added
+  `airflow/dags/walmart_health_dag.py` (`walmart_hourly_health_check`,
+  hourly Asia/Kolkata): parallel Postgres + Mongo pings via
+  `utils/connection.py`, failure-only mail (`ONE_FAILED`) to avoid hourly
+  spam.
+- **Dashboard multipage restructure.** Added `dashboard/home.py` landing
+  (KPIs + gold meta), `dashboard/pages/` (`1_Sales`, `2_Products`,
+  `3_Customers`, `4_Categories`), and `dashboard/lib/` (`db.py`,
+  `filters.py`, `charts.py`, `queries.py` re-export layer) plus
+  `dashboard/Dockerfile`. Professionalized `.streamlit/config.toml`
+  (server/runner/logger sections) with `secrets.toml.example`; per-deploy
+  secrets live in `dashboard/.streamlit/secrets.toml` (git-ignored).
+- **Pipeline image command sheet.** Added `file.txt` (repo root): env
+  setup, tests, `Dockerfile.pipeline` build/run, Airflow stack up, DAG
+  trigger, and cleanup commands.
+
+### Changed
+
+- **Docker stack rewritten from scratch.** `docker/` now holds minimal
+  working files: `Dockerfile.pipeline` (python slim + JDK 17 + uv),
+  `Dockerfile.airflow` (Airflow 3.3.0 + JDK 17 + uv), `compose.yml`
+  (LocalExecutor: metadata db + api-server + scheduler), `entrypoint.sh`
+  (Postgres wait + exec), and `dev-container.yml`.
+- **dbt profiles moved out of `docker/`.** `docker/dbt/profiles.yml`
+  moved to `dbt/profiles.yml`; `DBT_PROFILES_DIR` is now `/app/dbt`
+  (`${{ github.workspace }}/dbt` in CI). Updated both Dockerfiles, the
+  pipeline DAG `_PREAMBLE`, `ci.yml`/`dbt.yml`/`release.yml`, and
+  `docs/docker.md`.
+- **All GX code consolidated under `gx/`.** `pipeline/data_quality/`
+  (`context.py`, `run.py`, `suites/`) moved to `gx/context.py`,
+  `gx/run.py`, `gx/suites/` via `git mv` (history preserved); entry point
+  is now `uv run python -m gx.run --layer all`. Updated `main.py`,
+  `run_pipeline.ps1/.bat/.sh`, `Makefile`, the Airflow DAG, `README.md`,
+  `docs/great-expectations.md`, `docs/pipeline.md`, `docs/tests.md`, and
+  `build_report.py`; logger names renamed to `gx.*`. `pipeline/` keeps
+  only the shell runners.
+- **Dashboard helpers consolidated.** `dashboard/components.py`,
+  `queries.py`, `theme.py` moved to `dashboard/helpers/`; all page/lib
+  imports updated; legacy single-file `dashboard/app.py` removed in favor
+  of `home.py` + `pages/`. Updated `README.md`, `pyproject.toml`
+  per-file-ignores, lint docs, and report strings.
+- **`.gitignore` hardened.** Added `**/secrets.toml` (real Streamlit
+  secrets were committable) with `!**/secrets.toml.example` kept tracked;
+  added `!dashboard/...`, `!gx/...` `__init__.py` exceptions so the new
+  packages commit; `gx/.gitignore` now also covers generated
+  `checkpoints/` + `validation_definitions/`.
+- **Root `.streamlit/config.toml` restored.** Streamlit only reads
+  `./.streamlit/` from the working directory, so the dashboard-owned
+  config was ignored on local runs; root copy mirrors it while
+  `dashboard/.streamlit/` stays the deploy source of truth.
+
+- **SQL rectification (`sql/`).** New layout `analytics/` (16 gold
+  reports), `functions/` (3 report functions), `procedure/`, `triggers/`,
+  `scripts/init_schema.sql` — all at scripts-level commenting (header
+  Purpose/Parameters/Security blocks, why-comments, usage examples).
+  Wrote `sp_run_dq_tests` (in-DB DQ runner mirroring
+  `tests/data-quality/`, logging to `gold.dq_test_runs`, never aborts
+  early) and `sp_schema_monitor` (catalog snapshots +
+  `gold.vw_schema_drift` view). Fixed: `RAISE` placeholder/arg mismatch
+  in `sp_attach_loaded_at_triggers`, illegal OUT-after-default signature
+  in `sp_run_dq_tests`, `COMMENT ON SCHEMA source` → `bronze` plus lost
+  `\gexec`/`\c` flow in `init_schema.sql`, `schema_montior` typo and
+  `dq-tests_runs` dashes in filenames. Live-deployed to `walmart_db`:
+  bronze 12/12, full run 46/46 PASS. `docs/sql.md` rewritten for the new
+  layout; `.sqlfluffignore` restored for the psql-only init script
+  (zero parse errors repo-wide).
+
+### Fixed
+
+- **`AIRFLOW__CORE__FERNET_KEY` compose warning.** Removed the
+  host-interpolated `${AIRFLOW__CORE__FERNET_KEY}` line from
+  `docker/compose.yml` (`env_file: ../.env` already injects it);
+  `docker compose config` now resolves the key with no warning.
+- **Container Postgres `localhost` trap.** Documented that standalone
+  `docker run` needs `-e POSTGRES_HOST=host.docker.internal -e
+  MONGO_URI=mongodb://host.docker.internal:27017` (`.env` stays
+  `localhost`; only DAG `_PREAMBLE`/run flags rewrite it).
+
 ## [0.2.0] — 2026-10-01
 
 ### Added

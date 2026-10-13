@@ -383,7 +383,7 @@ def build():
         "Replicate <b>every</b> user collection from MongoDB to Postgres automatically (no hard-coded list) and keep it incrementally fresh without re-copying unchanged data.",
         "Cure source issues once (typing, deduplication, SCD2) so gold consumers never re-implement cleaning.",
         "Publish a dimensional star (<b>fact_order_items</b> + 7 dims) that powers both SQL reports (<b>sql/*.sql</b>) and an interactive dashboard.",
-        "Gate quality twice at each hand-off: dbt built-ins (<b>schema.yml</b>) <i>and</i> a standalone SQL suite (<b>tests/bronze|silver|gold</b>), plus a final cross-layer Great Expectations checkpoint.",
+        "Gate quality twice at each hand-off: dbt built-ins (<b>schema.yml</b>) <i>and</i> a standalone SQL suite (<b>tests/data-quality/bronze|silver|gold</b>), plus a final cross-layer Great Expectations checkpoint.",
         "Run the <b>same</b> logic three ways — local Windows, Airflow schedule, standalone container — without forking code.",
         "Ship like a team would: <b>uv</b> lockfile, Ruff + SQLFluff + pre-commit, GitHub Actions CI with a live Postgres integration job, Docker images published to GHCR.",
     ]:
@@ -493,12 +493,12 @@ def build():
                 [
                     "Quality",
                     "Great Expectations",
-                    "1.21.0 — suites per layer in pipeline/data_quality/suites/",
+                    "1.21.0 — suites per layer in gx/suites/",
                 ],
                 [
                     "BI",
                     "Streamlit 1.62 + Plotly 7.0",
-                    "Live gold dashboard at dashboard/app.py",
+                    "Live gold dashboard at dashboard/home.py + pages/",
                 ],
                 [
                     "Lint / Format",
@@ -532,7 +532,7 @@ def build():
     story.append(hr())
     story.append(
         p(
-            "airflow/dags/walmart_pipeline_dag.py &nbsp;|&nbsp; docker/Dockerfile, Dockerfile.airflow, compose.yml &nbsp;|&nbsp; docs/*.md &nbsp;|&nbsp; jars/*.jar &nbsp;|&nbsp; pipeline/run_pipeline.ps1 + data_quality/ &nbsp;|&nbsp; scripts/python/ (extract.py, sql_test.py, ci_seed_bronze.py, …) &nbsp;|&nbsp; sql/ (21 files) &nbsp;|&nbsp; tests/bronze (3), silver (9), gold (7) &nbsp;|&nbsp; utils/ (engine.py, connection.py, logger.py) &nbsp;|&nbsp; dbt/models/{silver,gold} &nbsp;|&nbsp; dashboard/ (app.py, queries.py, theme.py) &nbsp;|&nbsp; reports/ &nbsp;|&nbsp; main.py",
+            "airflow/dags/walmart_pipeline_dag.py &nbsp;|&nbsp; docker/Dockerfile, Dockerfile.airflow, compose.yml &nbsp;|&nbsp; docs/*.md &nbsp;|&nbsp; jars/*.jar &nbsp;|&nbsp; pipeline/run_pipeline.ps1 + data_quality/ &nbsp;|&nbsp; scripts/python/ (extract.py, sql_test.py, ci_seed_bronze.py, …) &nbsp;|&nbsp; sql/ (21 files) &nbsp;|&nbsp; tests/data-quality/bronze (3), silver (9), gold (7) &nbsp;|&nbsp; utils/ (engine.py, connection.py, logger.py) &nbsp;|&nbsp; dbt/models/{silver,gold} &nbsp;|&nbsp; dashboard/ (app.py, queries.py, theme.py) &nbsp;|&nbsp; reports/ &nbsp;|&nbsp; main.py",
             ParagraphStyle(
                 "mono", parent=sCode, fontSize=7, leading=10, alignment=TA_LEFT
             ),
@@ -573,7 +573,7 @@ def build():
                 [
                     "2",
                     "Bronze SQL tests",
-                    "uv run python scripts/python/sql_test.py tests/bronze",
+                    "uv run python scripts/python/sql_test.py tests/data-quality/bronze",
                     "3 checks; violating rows → FAIL",
                 ],
                 [
@@ -582,18 +582,18 @@ def build():
                     "cd dbt && dbt run --select silver; dbt test --select silver",
                     "schema.yml tests; failure stops stage",
                 ],
-                ["4", "Silver SQL tests", "…/sql_test.py tests/silver", "9 checks"],
+                ["4", "Silver SQL tests", "…/sql_test.py tests/data-quality/silver", "9 checks"],
                 [
                     "5",
                     "dbt gold",
                     "dbt run --select gold + test",
                     "8 models (7 dims + 1 fact)",
                 ],
-                ["6", "Gold SQL tests", "…/sql_test.py tests/gold", "7 checks"],
+                ["6", "Gold SQL tests", "…/sql_test.py tests/data-quality/gold", "7 checks"],
                 [
                     "7",
                     "Great Expectations",
-                    "python -m pipeline.data_quality.run --layer all",
+                    "python -m gx.run --layer all",
                     "Bronze/Silver/Gold suites; exit 1=data fail, 2=build error",
                 ],
             ],
@@ -709,7 +709,7 @@ def build():
     story.append(Spacer(1, 2 * mm))
     story.append(
         p(
-            "Each model has a <b>schema.yml</b> with <b>not_null, unique, relationships, accepted_values</b> tests. Grain is one row per source document — no aggregation yet. <b>tests/silver/</b> adds 9 PL/pgSQL checks (row counts, orphan FKs, distinctness) via <b>scripts/python/sql_test.py</b>.",
+            "Each model has a <b>schema.yml</b> with <b>not_null, unique, relationships, accepted_values</b> tests. Grain is one row per source document — no aggregation yet. <b>tests/data-quality/silver/</b> adds 9 PL/pgSQL checks (row counts, orphan FKs, distinctness) via <b>scripts/python/sql_test.py</b>.",
             sBody,
         )
     )
@@ -754,7 +754,7 @@ def build():
         story.append(p(f"• &nbsp; {b}", sBullet))
     story.append(
         p(
-            "Gold is gated by <b>dbt test --select gold</b> plus 7 standalone checks under <b>tests/gold/</b>.",
+            "Gold is gated by <b>dbt test --select gold</b> plus 7 standalone checks under <b>tests/data-quality/gold/</b>.",
             sBody,
         )
     )
@@ -780,8 +780,8 @@ def build():
                 ],
                 [
                     "Great Expectations",
-                    "pipeline/data_quality/suites/",
-                    "python -m pipeline.data_quality.run --layer all",
+                    "gx/suites/",
+                    "python -m gx.run --layer all",
                     "One checkpoint per layer ({layer}_checkpoint), Fluent API 1.x; exit 1=data fail, 2=build error",
                 ],
             ],
@@ -791,7 +791,7 @@ def build():
     story.append(Spacer(1, 2 * mm))
     story.append(
         p(
-            "The SQL suite auto-detects mode per file via <b>psycopg2 ResourceClosedError</b> (tests/unit/test_sql_test.py:89). GX suites are built <b>add_or_update</b> so re-runs reconcile instead of duplicating, and all requested layers run even if an earlier one fails unless <b>--fail-fast</b> is passed (pipeline/data_quality/run.py:150). Together: bronze 3 checks, silver 9, gold 7, plus ~23 GX suites and 100+ dbt tests.",
+            "The SQL suite auto-detects mode per file via <b>psycopg2 ResourceClosedError</b> (tests/unit/test_sql_test.py:89). GX suites are built <b>add_or_update</b> so re-runs reconcile instead of duplicating, and all requested layers run even if an earlier one fails unless <b>--fail-fast</b> is passed (gx/run.py:150). Together: bronze 3 checks, silver 9, gold 7, plus ~23 GX suites and 100+ dbt tests.",
             sBody,
         )
     )
@@ -816,7 +816,7 @@ def build():
                 [
                     "Airflow DAG",
                     "airflow/dags/walmart_pipeline_dag.py\ndag_id=walmart_medallion_pipeline",
-                    "Every @task.bash prefixes _PREAMBLE: source .env, rewrite localhost→host.docker.internal, force PYSPARK_PYTHON=/app/.venv/bin/python, set DBT_PROFILES_DIR=/app/docker/dbt",
+                    "Every @task.bash prefixes _PREAMBLE: source .env, rewrite localhost→host.docker.internal, force PYSPARK_PYTHON=/app/.venv/bin/python, set DBT_PROFILES_DIR=/app/dbt",
                 ],
             ],
             col_widths=[28 * mm, 44 * mm, 84 * mm],
@@ -883,7 +883,7 @@ def build():
     story.append(p("13.2 &nbsp; Gold dashboard (dashboard/)", sH2))
     story.append(
         p(
-            "<b>dashboard/app.py</b> (766 lines) is a Streamlit app with Plotly charts. All SQL lives in <b>queries.py</b> (parameterised, aggregated in Postgres, cached via <b>st.cache_data</b>); styling in <b>theme.py</b>; cards/chips in <b>components.py</b>. Filters (date presets 7D/30D/90D/YTD/All, stores, categories, order statuses, granularity Day/Week/Month) build an immutable <b>Filters</b> key; KPIs show period-over-period deltas; tabs are Overview / Trends &amp; Mix / Breakdown / Data. Graceful empty states when gold is unpopulated. Runs with <b>uv run streamlit run dashboard/app.py</b> or on Streamlit Cloud with <b>st.secrets</b> fallback (app.py:34).",
+            "<b>dashboard/home.py + pages/</b> is a Streamlit multipage app with Plotly charts. All SQL lives in <b>helpers/queries.py</b> (parameterised, aggregated in Postgres, cached via <b>st.cache_data</b>); styling in <b>helpers/theme.py</b>; cards/chips in <b>helpers/components.py</b>; shared sidebar/filters in <b>lib/</b>. Filters (date presets 7D/30D/90D/YTD/All, stores, categories, order statuses, granularity Day/Week/Month) build an immutable <b>Filters</b> key; KPIs show period-over-period deltas. Pages are Home / Sales / Products / Customers / Categories. Graceful empty states when gold is unpopulated. Runs with <b>uv run streamlit run dashboard/home.py</b> or on Streamlit Cloud with <b>st.secrets</b> fallback.",
             sBody,
         )
     )
@@ -926,7 +926,7 @@ def build():
     story.append(p("Local (Windows) — mirrors README “Run it”:", sH3))
     story.append(
         p(
-            'uv venv<br/> .venv\\Scripts\\activate &nbsp; <font color="#64748B"># Windows; source .venv/bin/activate on Linux/Mac</font><br/> uv sync &nbsp; <font color="#64748B"># from uv.lock</font><br/> cp .env.example .env &nbsp; <font color="#64748B"># fill POSTGRES_*, MONGO_*, optional DATABRICKS_*</font><br/><br/> ./pipeline/run_pipeline.ps1 &nbsp; <font color="#64748B"># 8 stages</font><br/> # or: uv run python main.py<br/> # or: uv run python scripts/python/extract.py --dry-run --tables orders,customers<br/><br/> uv run python scripts/python/sql_test.py tests/bronze<br/> uv run dbt run --select silver --project-dir dbt &amp;&amp; uv run dbt test --select silver --project-dir dbt<br/> uv run python -m pipeline.data_quality.run --layer all<br/><br/> uv run streamlit run dashboard/app.py<br/><br/> uv run ruff format . &amp;&amp; uv run ruff check . &amp;&amp; uv run sqlfluff lint dbt/models --dialect postgres<br/> uv run pre-commit run --all-files<br/> uv run pytest tests/unit -v --cov=utils --cov=scripts',
+            'uv venv<br/> .venv\\Scripts\\activate &nbsp; <font color="#64748B"># Windows; source .venv/bin/activate on Linux/Mac</font><br/> uv sync &nbsp; <font color="#64748B"># from uv.lock</font><br/> cp .env.example .env &nbsp; <font color="#64748B"># fill POSTGRES_*, MONGO_*, optional DATABRICKS_*</font><br/><br/> ./pipeline/run_pipeline.ps1 &nbsp; <font color="#64748B"># 8 stages</font><br/> # or: uv run python main.py<br/> # or: uv run python scripts/python/extract.py --dry-run --tables orders,customers<br/><br/> uv run python scripts/python/sql_test.py tests/data-quality/bronze<br/> uv run dbt run --select silver --project-dir dbt &amp;&amp; uv run dbt test --select silver --project-dir dbt<br/> uv run python -m gx.run --layer all<br/><br/> uv run streamlit run dashboard/home.py<br/><br/> uv run ruff format . &amp;&amp; uv run ruff check . &amp;&amp; uv run sqlfluff lint dbt/models --dialect postgres<br/> uv run pre-commit run --all-files<br/> uv run pytest tests/unit -v --cov=utils --cov=scripts',
             sCode,
         )
     )
@@ -1032,7 +1032,7 @@ def build():
                     "Run SQL suite",
                     "uv run python scripts/python/sql_test.py tests/<layer>",
                 ],
-                ["Run GX", "uv run python -m pipeline.data_quality.run --layer all"],
+                ["Run GX", "uv run python -m gx.run --layer all"],
                 ["Format", "uv run ruff format ."],
                 ["Lint", "uv run ruff check ."],
                 ["Stage one file", "git add <file>"],

@@ -4,7 +4,7 @@
 scripts/
 ├── python/                  # python — pipeline runtime
 │   ├── extract.py           # Mongo → bronze (incremental, watermark, upsert)
-│   ├── sql_test.py          # runs tests/<layer>/*.sql
+│   ├── sql_test.py          # runs tests/data-quality/<layer>/*.sql
 │   ├── ci_seed_bronze.py    # CI fixture loader
 │   ├── health_check.py
 │   ├── security_check.py
@@ -33,10 +33,10 @@ uv run python scripts/python/extract.py --tables orders,customers --full-refresh
 
 ## Python — `sql_test.py`
 
-Runs `tests/<layer>/*.sql` — `SELECT` violating rows or `DO` block `RAISE`. `rollback()` on fail.
+Runs `tests/data-quality/<layer>/*.sql` — `SELECT` violating rows or `DO` block `RAISE`. `rollback()` on fail.
 
 ```bash
-uv run python scripts/python/sql_test.py tests/bronze
+uv run python scripts/python/sql_test.py tests/data-quality/bronze
 ```
 
 See `testing.md` for conventions.

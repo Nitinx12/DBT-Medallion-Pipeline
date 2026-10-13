@@ -24,7 +24,7 @@ from pathlib import Path
 # scripts/python/seed_demo_db.py -> repo root is two levels up. Put it on
 # sys.path so `from utils....` resolves when this is run directly
 # (`python scripts/python/seed_demo_db.py`), which only puts `scripts/python/`
-# itself on sys.path, not the repo root — same fix as dashboard/app.py.
+# itself on sys.path, not the repo root — same fix as dashboard/home.py.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
