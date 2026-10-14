@@ -102,9 +102,9 @@ flowchart LR
 
 <p align="center"><sub>Every arrow into <code>silver</code> and <code>gold</code> is a <b>quality gate</b> — the next layer only builds if the prior layer's tests pass. Full breakdown: <a href="docs/architecture.md"><code>docs/architecture.md</code></a> §4.</sub></p>
 
-## Orchestration — one pipeline, run three ways
+## Orchestration — one pipeline, run five ways
 
-The same eight stages run locally via PowerShell, on a schedule in Airflow, or through the standalone Docker runner:
+The same eight stages run locally via PowerShell or CMD, on a schedule in Airflow, through the standalone Docker runner, or as granular Make targets:
 
 ```mermaid
 flowchart TD
@@ -117,7 +117,7 @@ flowchart TD
     S6 --> S7["7 · Great Expectations<br/>Bronze · Silver · Gold"]
 
     classDef stage fill:#1a2a3a,color:#fff,stroke:#4a90d9
-    class S0,S1,S2,S3,S4,S5,S6 stage
+    class S0,S1,S2,S3,S4,S5,S6,S7 stage
 ```
 
 <p align="center"><sub>In Airflow this is <code>walmart_medallion_pipeline</code>, with <code>all_success</code> trigger rules stopping the DAG the moment any stage fails. Full DAG detail: <a href="docs/airflow.md"><code>docs/airflow.md</code></a>.</sub></p>

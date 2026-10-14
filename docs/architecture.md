@@ -8,6 +8,17 @@ flowchart LR
   BRONZE -->|dbt silver| SILVER[(silver<br/>clean)]
   SILVER -->|dbt gold| GOLD[(gold<br/>star)]
   GOLD --> BI[reports/]
+
+  classDef mongo fill:#13AA52,color:#fff,stroke:#0d7a3b
+  classDef bronze fill:#B5651D,color:#fff,stroke:#7a4413
+  classDef silver fill:#6B7B8C,color:#fff,stroke:#4a565f
+  classDef gold fill:#D4A017,color:#1A1F2B,stroke:#8a6d1f
+  classDef bi fill:#0071CE,color:#fff,stroke:#004C91
+  class MONGO mongo
+  class BRONZE bronze
+  class SILVER silver
+  class GOLD gold
+  class BI bi
 ```
 
 ## Pipeline (8 stages)

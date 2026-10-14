@@ -20,26 +20,47 @@ flowchart LR
     A["You push code"] --> B["CI runs checks"]
     B -->|"fails"| C["Fix it, push again"]
     B -->|"passes, on main"| D["CD publishes Docker images"]
+
+    classDef action fill:#0071CE,color:#fff,stroke:#004C91
+    classDef bad fill:#C62828,color:#fff,stroke:#8f1d1d
+    classDef good fill:#1B8A5A,color:#fff,stroke:#11603e
+    class A,B action
+    class C bad
+    class D good
 ```
 
 ---
 
-## What CI does here — 5 jobs
+## What CI does here — 7 jobs
 
 ```mermaid
 flowchart TD
     LINT["1. Lint<br/>style + SQL formatting"]
     LINT --> UNIT["2. Unit tests"]
-    LINT --> DAG["3. Airflow DAG check"]
-    LINT --> BUILD["4. Docker build check"]
-    UNIT --> INT["5. Integration test"]
+    LINT --> SMOKE["3. Smoke tests"]
+    LINT --> DASH["4. Dashboard smoke"]
+    LINT --> DAG["5. Airflow DAG check"]
+    LINT --> BUILD["6. Docker build check"]
+    UNIT --> INT["7. Integration test"]
+    SMOKE --> INT
+    DASH --> INT
     DAG --> INT
+    BUILD --> INT
+
+    classDef gate fill:#0071CE,color:#fff,stroke:#004C91
+    classDef check fill:#017CEE,color:#fff,stroke:#015da8
+    classDef live fill:#1B8A5A,color:#fff,stroke:#11603e
+    class LINT gate
+    class UNIT,SMOKE,DASH,DAG,BUILD check
+    class INT live
 ```
 
 | Job | What it checks, in plain terms |
 |---|---|
 | **lint** | Is the code and SQL formatted consistently? Runs first — no point running slow tests on messy code. |
 | **unit-tests** | Do the small, isolated pieces of Python code (`src/utils/`, `extract.py` logic) work correctly? |
+| **smoke-tests** | Do all modules import, the repo layout hold, and CLIs answer? No live services needed. |
+| **dashboard-smoke** | Does the dashboard import with only its own pinned deps (no `databricks` connector)? |
 | **dag-integrity** | Does the Airflow pipeline definition actually load without errors or circular dependencies? |
 | **docker-build** | Do both Docker images actually build? This job never pushes anything — it just proves the `Dockerfile`s aren't broken. |
 | **integration** | The real test: spin up a throwaway Postgres, load fake sample data, and run the **entire** bronze → silver → gold pipeline exactly like it would run for real. |
@@ -56,6 +77,15 @@ flowchart LR
     C --> D["Check silver data"]
     D --> E["Build gold layer"]
     E --> F["Check gold data"]
+
+    classDef bronze fill:#B5651D,color:#fff,stroke:#7a4413
+    classDef silver fill:#6B7B8C,color:#fff,stroke:#4a565f
+    classDef gold fill:#D4A017,color:#1A1F2B,stroke:#8a6d1f
+    classDef check fill:#0071CE,color:#fff,stroke:#004C91
+    class A bronze
+    class B,D,F check
+    class C silver
+    class E gold
 ```
 
 Each arrow is a **gate**: if a check fails, everything after it stops.
@@ -71,6 +101,11 @@ caught before it ever touches real data.
 flowchart LR
     A["CI passes on main"] --> B["Build 2 Docker images"]
     B --> C["Push to GitHub's<br/>container registry (GHCR)"]
+
+    classDef good fill:#1B8A5A,color:#fff,stroke:#11603e
+    classDef action fill:#0071CE,color:#fff,stroke:#004C91
+    class A good
+    class B,C action
 ```
 
 Two images get built and published:
