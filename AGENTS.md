@@ -104,6 +104,7 @@ git commit -m "fix(docker): pin JDK to 17" -m "Mongo connector is untested on JD
 
 ## Rules for Agents
 **Do**
+- Read `dashboard/AGENTS.md` before touching `dashboard/`, `reports/AGENTS.md` before touching `reports/`; skill procedures live in `.claude/skills/<name>/SKILL.md`
 - Keep `.env` untouched; host fixes go in the DAG `_PREAMBLE` or `docker run` flags
 - Read schema names from `.env` via `src/utils/engine.py`
 - Auto-discover Mongo collections

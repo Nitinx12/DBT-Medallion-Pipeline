@@ -155,6 +155,11 @@ Stop and ask the owner before:
 
 ## 10. Skills available
 
+Each skill lives at `.claude/skills/<name>/SKILL.md` with its procedure.
+`dashboard-verify` additionally ships
+`.claude/skills/dashboard-verify/scripts/smoke_check.py` (ruff plus pytest
+smoke gate, run via `uv run python`).
+
 * `dashboard-bugfix`: diagnose and fix dashboard bugs, with a symptom to cause map.
 * `dashboard-feature`: add KPIs, charts, filters, pages and map views the right way.
 * `dashboard-verify`: run static checks and manual test matrix before declaring done.

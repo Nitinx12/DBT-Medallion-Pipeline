@@ -1,5 +1,13 @@
 # Walmart Medallion Pipeline
 
+## Agent guidance
+
+- Area rules: `AGENTS.md` (repo), `dashboard/AGENTS.md` (dashboard),
+  `reports/AGENTS.md` (technical report).
+- Skill procedures: `.claude/skills/<name>/SKILL.md` — `dashboard-bugfix`,
+  `dashboard-feature`, `dashboard-verify` (plus `scripts/smoke_check.py`),
+  `dashboard-release`, `report-verify`, `report-extend`.
+
 ## Stack
 uv (Python), dbt-postgres, Airflow, Great Expectations, pre-commit, sqlfluff, ruff.
 Package manager is uv — always prefix Python tool invocations with `uv run`
@@ -24,11 +32,8 @@ support Postgres) instead of this project's dbt-core + dbt-postgres.
   ruff-format, sqlfluff, and file-hygiene checks.
 - Hook files must have the executable bit set (`git ls-files -s .githooks/`
   should show `100755`, not `100644`) or they silently fail to fire.
-- `main` has a GitHub ruleset requiring CodeQL code scanning to complete
-  before a push is accepted. **Direct pushes to main will be rejected.**
-  Always: branch → push branch → open PR on GitHub → wait for CodeQL →
-  merge via GitHub UI → delete branch. Don't retry a direct push to main
-  expecting it to eventually pass; the check runs per-PR, not per-push.
+- Direct pushes to `main` currently succeed. If a branch-protection ruleset
+  is added later, switch to branch → push branch → PR → merge via UI.
 
 ## Secrets
 - Never commit `.env` — only `.env.example` with placeholder values.
