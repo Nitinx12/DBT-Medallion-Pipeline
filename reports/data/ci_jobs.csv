@@ -1,0 +1,8 @@
+job,needs
+lint,
+dashboard-smoke,lint
+unit-tests,lint
+smoke-tests,lint
+dag-integrity,lint
+docker-build,lint
+integration,"dag-integrity,dashboard-smoke,docker-build,smoke-tests,unit-tests"

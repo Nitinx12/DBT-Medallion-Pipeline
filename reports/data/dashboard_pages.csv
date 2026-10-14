@@ -1,0 +1,7 @@
+page,charts,source_tables
+1_Sales,8,"dim_brands,dim_categories,dim_customers,dim_orders,dim_payment_methods,dim_products,dim_stores,fact_order_items"
+2_Products,8,"dim_brands,dim_categories,dim_customers,dim_orders,dim_payment_methods,dim_products,dim_stores,fact_order_items"
+3_Customers,4,"dim_brands,dim_categories,dim_customers,dim_orders,dim_payment_methods,dim_products,dim_stores,fact_order_items"
+4_Categories,9,"dim_brands,dim_categories,dim_customers,dim_orders,dim_payment_methods,dim_products,dim_stores,fact_order_items"
+5_Geo,3,"dim_brands,dim_categories,dim_customers,dim_orders,dim_payment_methods,dim_products,dim_stores,fact_order_items"
+6_Data_Health,0,"dim_brands,dim_categories,dim_customers,dim_orders,dim_payment_methods,dim_products,dim_stores,fact_order_items"

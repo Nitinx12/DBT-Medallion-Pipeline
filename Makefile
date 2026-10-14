@@ -42,7 +42,7 @@ VERSION  := $(shell $(UV) run python -c "import tomllib; print(tomllib.load(open
         preflight extract test-bronze dbt-deps dbt-silver test-silver dbt-gold test-gold gx-tests \
         contracts-check contracts-sync contracts-fix-types dashboard-smoke dag-check \
         data-pipeline all build clean clean-venv \
-        report report-watch report-clean report-lint
+        report-data report report-watch report-clean report-lint
 
 # ---- Help ----------------------------------------------------------------
 help: ## Show this help
@@ -190,11 +190,11 @@ clean-venv: ## Remove the virtual environment entirely (forces a full uv sync ne
 	@echo "Note: on Windows, a locked .venv (e.g. an active dbt shell or VS Code kernel) may need that process closed first, or an elevated terminal."
 
 # ---- Technical report (LaTeX, XeLaTeX) ------------------------------------
-# NOTE: `report` gains a `report-data` dependency once
-# scripts/report/collect_metrics.py lands; until then it builds from
-# committed CSVs plus buildmeta written below. -cd keeps font/style
-# paths resolving from reports/ on every platform.
-report: ## Build reports/build/main.pdf (writes buildmeta, then latexmk)
+# -cd keeps font/style paths resolving from reports/ on every platform.
+report-data: ## Regenerate CSVs for report charts
+	$(PYTHON) scripts/report/collect_metrics.py
+
+report: report-data ## Build reports/build/main.pdf (writes buildmeta, then latexmk)
 	$(PYTHON) scripts/report/write_buildmeta.py
 	latexmk -xelatex -cd -outdir=build reports/main.tex
 

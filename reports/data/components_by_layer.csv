@@ -1,0 +1,4 @@
+layer,dbt_models,sql_tests,gx_validations,contracts
+bronze,0,3,6,8
+silver,9,9,9,9
+gold,8,7,8,8

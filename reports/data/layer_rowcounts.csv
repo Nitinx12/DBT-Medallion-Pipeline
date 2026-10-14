@@ -1,0 +1,10 @@
+table,bronze,silver,gold
+brands,,8,8
+categories,,7,7
+customers,1,2000,2000
+employees,1,250,
+order_items,1,30021,30021
+orders,1,10000,10000
+payment_methods,,5,5
+products,1,500,500
+stores,1,25,25

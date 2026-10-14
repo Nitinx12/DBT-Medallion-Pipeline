@@ -1,0 +1,9 @@
+stage,name,tool,duration_s
+0,Preflight,pyspark,0
+1,Extract,extract.py,19
+2,Bronze SQL tests,SQL,1
+3,dbt silver,dbt,15
+4,Silver SQL tests,SQL,1
+5,dbt gold,dbt,15
+6,Gold SQL tests,SQL,1
+7,Great Expectations,GX,11
