@@ -165,6 +165,7 @@ flowchart TD
 ```powershell
 # Local, Windows
 ./pipeline/run_pipeline.ps1
+# or double-click run_pipeline.bat, or: make data-pipeline
 
 # Run Great Expectations checks alone when needed
 uv run python -m gx.run --layer all

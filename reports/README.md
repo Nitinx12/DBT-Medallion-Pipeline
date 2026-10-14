@@ -29,7 +29,7 @@ fonts. Prefer the Docker route (`reports/Dockerfile`) for a clean room.
   summary written last), `appendix_a`–`g` (inventory, commands,
   env vars, glossary, ERD, contract sample, changelog).
 - `figures/tikz/` — 14 vector diagrams, one file each.
-- `scripts/` — `collect_metrics.py` builds `data/*.csv` from the repo
+- `reports/scripts/` — `collect_metrics.py` builds `data/*.csv` from the repo
   (file counts, contract fields, log timestamps); unknown cells stay
   empty and missing inputs fail instead of fabricating.
   `write_buildmeta.py` injects version, commit SHA and date.

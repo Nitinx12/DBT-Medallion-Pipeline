@@ -20,7 +20,7 @@ Entry point is `dashboard/home.py`. There is no `app.py`. Any mention of one is 
 
 ```
 dashboard/home.py                 entry point, KPI cards, gold freshness banner
-dashboard/pages/                  1_Sales.py to 4_Categories.py (numeric prefix sets sidebar order)
+dashboard/pages/                  1_Sales.py to 6_Data_Health.py (numeric prefix sets sidebar order)
 dashboard/helpers/theme.py        palette, Plotly style(), global CSS
 dashboard/helpers/components.py   reusable HTML blocks, _safe_html, KPI cards, tables, footer
 dashboard/helpers/queries.py      ALL gold SQL, Filters dataclass

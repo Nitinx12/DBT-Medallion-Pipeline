@@ -14,7 +14,10 @@ flowchart LR
 `0 preflight → 1 extract → 2 bronze tests → 3 dbt silver → 4 silver tests → 5 dbt gold → 6 gold tests → 7 GX`
 
 - **Stops on first failure** (exit code check / Airflow `all_success`).
-- **One logic, three runners**: `pipeline/run_pipeline.ps1` (Windows), `airflow/dags/walmart_pipeline_dag.py` (Docker), `main.py` (standalone image). Keep stage order in sync.
+- **One logic, five runners**: `pipeline/run_pipeline.ps1` (canonical, Windows),
+  `run_pipeline.bat` (repo root, double-clickable CMD), `main.py` (standalone
+  image), `airflow/dags/walmart_pipeline_dag.py` (scheduled), `make data-pipeline`
+  (granular targets). Keep stage order in sync.
 
 ## Layers & Gates
 
@@ -25,13 +28,14 @@ flowchart LR
 
 ## Infra
 
-- **Docker**: `docker/Dockerfile` (standalone) + `docker/Dockerfile.airflow` (Compose stack). See `docker.md`.
+- **Docker**: `docker/Dockerfile.pipeline` (standalone) + `docker/Dockerfile.airflow` (Compose stack). See `docker.md`.
 - **Localhost fix**: `.env` stays `localhost`; containers rewrite to `host.docker.internal` in DAG `_PREAMBLE`/`docker run`.
 - **Shared**: `src/utils/engine.py` (env validation at import), `src/utils/connection.py` (cached), `src/utils/logger.py` (console+file).
 
 ## Layout
 ```
-airflow/  docker/  docs/  jars/  pipeline/  scripts/  sql/  tests/  src/  dbt/
+airflow/  contracts/  dashboard/  docker/  docs/  gx/  jars/  pipeline/
+scripts/  sql/  tests/  src/  dbt/  reports/
 ```
 
 ## Next

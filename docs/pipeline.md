@@ -26,9 +26,19 @@ dbt stages `cd dbt/` and back; others run from repo root.
 ## Run
 
 ```powershell
-.\pipeline\run_pipeline.ps1
-.\pipeline\run_pipeline.ps1 --dry-run
+.\pipeline\run_pipeline.ps1     # canonical PowerShell runner
 ```
+
+```bat
+run_pipeline.bat                :: repo-root CMD runner (double-click works)
+```
+
+```bash
+make data-pipeline              # same 8 stages as granular Make targets
+```
+
+The PowerShell runner takes only `-NoClear`. There is no `--dry-run` flag;
+use `make -n data-pipeline` to preview commands without running them.
 
 Exit `0` all pass, `1` any fail.
 
