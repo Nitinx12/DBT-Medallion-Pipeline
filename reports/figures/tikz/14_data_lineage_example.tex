@@ -1,0 +1,14 @@
+% Column lineage example: line_amount from Mongo to dashboard KPI.
+\begin{tikzpicture}[node distance=8mm and 10mm]
+  \node[db=MongoGreen] (m) {Mongo\\\scriptsize \texttt{order\_items}};
+  \node[bronze box, right=of m] (b) {bronze\\\scriptsize TEXT amount};
+  \node[silver box, right=of b] (s) {silver\\\scriptsize recomputed\\\scriptsize \texttt{qty * price}};
+  \node[gold box, right=of s] (g) {fact\\\scriptsize NUMERIC, tested};
+  \node[box=StreamlitRed, right=of g] (d) {KPI\\\scriptsize revenue};
+  \foreach \a/\b in {m/b,b/s,s/g,g/d}
+    \draw[strong flow] (\a) -- (\b);
+  \node[gate, below=of s] (q1) {QA};
+  \node[gate, below=of g] (q2) {QA};
+  \draw[flow] (s) -- (q1);
+  \draw[flow] (g) -- (q2);
+\end{tikzpicture}

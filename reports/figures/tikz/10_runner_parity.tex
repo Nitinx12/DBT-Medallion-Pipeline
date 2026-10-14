@@ -1,0 +1,13 @@
+% Runner parity: five runners converge on the same eight stages.
+\begin{tikzpicture}[node distance=7mm and 10mm]
+  \node[box] (ps1) {\texttt{run\_pipeline.ps1}\\\scriptsize canonical};
+  \node[box, below=of ps1] (bat) {\texttt{run\_pipeline.bat}\\\scriptsize double-click};
+  \node[box, below=of bat] (py) {\texttt{main.py}\\\scriptsize Docker};
+  \node[box, below=of py] (dag) {Airflow DAG\\\scriptsize scheduled};
+  \node[box, below=of dag] (mk) {\texttt{make data-pipeline}\\\scriptsize granular};
+  \node[box=WmBlue, minimum height=52mm, right=28mm of bat] (stages)
+    {\textbf{Stages 0--7}\\\scriptsize preflight \textrightarrow{} extract \textrightarrow{} bronze tests\\\scriptsize \textrightarrow{} dbt silver \textrightarrow{} silver tests\\\scriptsize \textrightarrow{} dbt gold \textrightarrow{} gold tests \textrightarrow{} GX};
+  \foreach \r in {ps1,bat,py,dag,mk}
+    \draw[strong flow] (\r) -- (stages);
+  \node[tag=Fail, above=of stages] {keep in sync};
+\end{tikzpicture}

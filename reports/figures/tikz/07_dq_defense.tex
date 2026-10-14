@@ -1,0 +1,14 @@
+% Defense-in-depth matrix: dbt tests, SQL suite and GX per medallion layer,
+% with each system's unique capability highlighted.
+\begin{tikzpicture}[node distance=5mm and 6mm]
+  \matrix (m) [matrix of nodes, nodes={box, minimum width=34mm},
+    column sep=6mm, row sep=5mm,
+    row 1/.style={nodes={fill=WmBlueDeep, draw=WmBlueDeep, text=white, font=\sffamily\bfseries\footnotesize}}] {
+    {} & |[fill=DbtOrange, draw=DbtOrange, text=white]| dbt tests &
+    |[fill=PgBlue, draw=PgBlue, text=white]| SQL suite &
+    |[fill=GxPurple, draw=GxPurple, text=white]| GX \\[2mm]
+    |[bronze box]| \layer{bronze} & none (sources only) & structure: non-empty, \_id unique & values: Y/N, amounts $\ge$ 0 \\
+    |[silver box]| \layer{silver} & FK relationships, ranges, email & sweeps + business rules & load-timestamp signal \\
+    |[gold box]| \layer{gold} & dim relationships & RI joins, count parity & gold\_loaded\_at \\
+  };
+\end{tikzpicture}

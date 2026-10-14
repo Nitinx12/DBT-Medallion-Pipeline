@@ -1,0 +1,19 @@
+% Gold star schema ERD: fact_order_items at the centre, dims around it.
+\begin{tikzpicture}[node distance=8mm and 8mm]
+  \node[gold box, minimum width=34mm] (fact) {\textbf{\texttt{fact\_order\_items}}\\\scriptsize \texttt{order\_item\_id} PK};
+  \node[gold box, above=of fact] (do) {\texttt{dim\_orders}\\\scriptsize \texttt{order\_id} PK};
+  \node[gold box, left=of fact] (dp) {\texttt{dim\_products}\\\scriptsize \texttt{product\_id} PK};
+  \node[gold box, right=of fact] (dc) {\texttt{dim\_customers}\\\scriptsize \texttt{customer\_id} PK};
+  \node[gold box, below=of fact] (ds) {\texttt{dim\_stores}\\\scriptsize \texttt{store\_id} PK};
+  \node[gold box, above=of dp] (br) {\texttt{dim\_brands}\\\scriptsize \texttt{brand\_id} PK};
+  \node[gold box, below=of dp] (ct) {\texttt{dim\_categories}\\\scriptsize \texttt{category\_id} PK};
+  \node[gold box, above=of dc] (pm) {\texttt{dim\_payment\_methods}\\\scriptsize \texttt{payment\_method\_id} PK};
+  \draw[flow] (fact) -- (do);
+  \draw[flow] (fact) -- (dp);
+  \draw[flow] (fact) -- (dc);
+  \draw[flow] (do) -- (ds);
+  \draw[flow] (do) -- (dc);
+  \draw[flow] (do) -- (pm);
+  \draw[flow] (dp) -- (br);
+  \draw[flow] (dp) -- (ct);
+\end{tikzpicture}

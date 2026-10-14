@@ -1,0 +1,26 @@
+% Airflow pipeline DAG: 10 stage tasks, result collection, email branch.
+\begin{tikzpicture}[node distance=5mm and 6mm]
+  \node[box=AirflowTeal] (p) {preflight};
+  \node[box=AirflowTeal, right=of p] (e) {extract};
+  \node[box=AirflowTeal, right=of e] (b) {bronze tests};
+  \node[box=AirflowTeal, right=of b] (sr) {silver run};
+  \node[box=AirflowTeal, right=of sr] (st) {silver test};
+  \node[box=AirflowTeal, below=of p] (ss) {silver SQL};
+  \node[box=AirflowTeal, right=of ss] (gr) {gold run};
+  \node[box=AirflowTeal, right=of gr] (gt) {gold test};
+  \node[box=AirflowTeal, right=of gt] (gs) {gold SQL};
+  \node[box=GxPurple, right=of gs] (gx) {GX};
+  \node[box, below=of ss] (col) {collect\_results};
+  \node[diamond, aspect=2.4, draw=WmBlue, fill=WmBlueLight, below=of gt,
+    font=\sffamily\scriptsize\bfseries] (ch) {email?};
+  \node[box=Pass, below=of ch] (ok) {email\_success};
+  \node[box=Fail, left=of ok] (bad) {email\_failure};
+  \foreach \a/\b in {p/e,e/b,b/sr,sr/st,st/ss,ss/gr,gr/gt,gt/gs,gs/gx}
+    \draw[flow] (\a) -- (\b);
+  \draw[flow] (gx) |- (col);
+  \draw[flow] (col) -- (ch);
+  \draw[flow] (ch) -- node[right, font=\sffamily\scriptsize] {ok} (ok);
+  \draw[flow] (ch) -- (bad);
+  \node[font=\sffamily\scriptsize, text=InkSoft, right=of ok, text width=34mm]
+    {MWF 11:00 + rest 23:00 Asia/Kolkata; health DAG hourly};
+\end{tikzpicture}

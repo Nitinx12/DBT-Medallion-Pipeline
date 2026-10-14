@@ -1,0 +1,28 @@
+% extract.py internals: discovery, watermark, pushdown, append vs upsert.
+\begin{tikzpicture}[node distance=7mm and 10mm]
+  \node[box=WmBlue] (d) {Discover\\\scriptsize list collections, drop \texttt{system.*}};
+  \node[diamond, aspect=2.2, draw=WmBlue, fill=WmBlueLight, below=of d,
+    font=\sffamily\scriptsize\bfseries, inner sep=1pt] (wm) {watermark?};
+  \node[box, right=of wm] (full) {Full reload\\\scriptsize warn};
+  \node[box=WmBlue, below=of wm] (read) {Spark read\\\scriptsize \texttt{\$gt} pushdown};
+  \node[box, below=of read] (san) {Sanitize\\\scriptsize \texttt{\_id} to string, nested to JSON};
+  \node[diamond, aspect=2.2, draw=WmBlue, fill=WmBlueLight, below=of san,
+    font=\sffamily\scriptsize\bfseries, inner sep=1pt] (first) {first load?};
+  \node[box, left=of first] (app) {Append};
+  \node[box, right=of first] (up) {Stage \texttt{\_stg\_*} + upsert\\\scriptsize \texttt{ON CONFLICT (\_id)}};
+  \node[box=PgBlue, below=of first] (ctl) {Watermarks + logs\\\scriptsize \texttt{etl\_watermarks}, \texttt{etl\_logs}};
+  \node[gate, below=of ctl] (val) {Validate};
+  \node[box=Pass, below=of val] (rep) {Rich report\\\scriptsize exit 0 / 1};
+  \draw[flow] (d) -- (wm);
+  \draw[flow] (wm) -- node[above, font=\sffamily\scriptsize] {no} (full);
+  \draw[flow] (wm) -- node[right, font=\sffamily\scriptsize] {yes} (read);
+  \draw[flow] (full) |- (read);
+  \draw[flow] (read) -- (san);
+  \draw[flow] (san) -- (first);
+  \draw[flow] (first) -- node[above, font=\sffamily\scriptsize] {yes} (app);
+  \draw[flow] (first) -- node[above, font=\sffamily\scriptsize] {no} (up);
+  \draw[flow] (app) |- (ctl);
+  \draw[flow] (up) |- (ctl);
+  \draw[flow] (ctl) -- (val);
+  \draw[flow] (val) -- (rep);
+\end{tikzpicture}

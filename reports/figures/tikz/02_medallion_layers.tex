@@ -1,0 +1,17 @@
+% Medallion layer panels: what each layer holds, guarantees and an example.
+\begin{tikzpicture}[node distance=8mm and 10mm]
+  \node[bronze box, minimum width=46mm, minimum height=30mm] (b)
+    {\textbf{Bronze} --- raw\\\scriptsize 1 row per Mongo doc\\\scriptsize all TEXT, \texttt{\_id} unique\\\scriptsize \texttt{etl\_watermarks}, \texttt{etl\_logs}};
+  \node[silver box, minimum width=46mm, minimum height=30mm, right=of b] (s)
+    {\textbf{Silver} --- clean\\\scriptsize 9 models, typed\\\scriptsize deduped, FK-resolved\\\scriptsize incremental merge};
+  \node[gold box, minimum width=46mm, minimum height=30mm, right=of s] (g)
+    {\textbf{Gold} --- model\\\scriptsize 7 dims + 1 fact\\\scriptsize Type-1, star schema\\\scriptsize \texttt{gold\_loaded\_at}};
+  \draw[strong flow] (b) -- node[above, font=\sffamily\scriptsize] {dbt silver} (s);
+  \draw[strong flow] (s) -- node[above, font=\sffamily\scriptsize] {dbt gold} (g);
+  \node[box, minimum width=46mm, below=of b, fill=Mist, draw=Rule]
+    {\scriptsize \texttt{is\_active}: \texttt{Y}/\texttt{N}};
+  \node[box, minimum width=46mm, below=of s, fill=Mist, draw=Rule]
+    {\scriptsize \texttt{Y} \textrightarrow{} \texttt{TRUE}, text \textrightarrow{} \texttt{TIMESTAMP}};
+  \node[box, minimum width=46mm, below=of g, fill=Mist, draw=Rule]
+    {\scriptsize \texttt{fact\_order\_items} line grain};
+\end{tikzpicture}

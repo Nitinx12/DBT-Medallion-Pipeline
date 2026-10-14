@@ -1,0 +1,13 @@
+% Contract lifecycle loop: human edits, drift gate, sync, fix types, CI.
+\begin{tikzpicture}[node distance=8mm and 10mm]
+  \node[box] (edit) {Edit human fields\\\scriptsize description, tests};
+  \node[box, right=of edit] (check) {\texttt{--check-only}\\\scriptsize drift gate};
+  \node[box, right=of check] (sync) {Sync\\\scriptsize counts, types, stats};
+  \node[box, below=of sync] (fix) {\texttt{--fix-types}\\\scriptsize adopt DB types};
+  \node[box, left=of fix] (ci) {CI gate\\\scriptsize blocks on drift};
+  \draw[strong flow] (edit) -- (check);
+  \draw[strong flow] (check) -- (sync);
+  \draw[flow] (sync) -- (fix);
+  \draw[flow] (fix) -- (ci);
+  \draw[flow] (ci) -- (edit);
+\end{tikzpicture}

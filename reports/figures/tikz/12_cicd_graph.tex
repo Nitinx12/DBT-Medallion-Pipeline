@@ -1,0 +1,18 @@
+% CI job DAG plus CD, release and refresh triggers.
+\begin{tikzpicture}[node distance=7mm and 9mm]
+  \node[box] (lint) {lint};
+  \node[box, right=of lint] (dash) {dashboard-smoke};
+  \node[box, below=of dash] (unit) {unit-tests};
+  \node[box, below=of unit] (smoke) {smoke-tests};
+  \node[box, below=of smoke] (dag) {dag-integrity};
+  \node[box, below=of dag] (dock) {docker-build};
+  \node[box=GxPurple, below=of dock] (integ) {integration\\\scriptsize live Postgres};
+  \node[box=DockerBlue, right=of integ] (cd) {cd: latest\\\scriptsize on green main};
+  \node[box=DockerBlue, above=of cd] (rel) {release: semver\\\scriptsize on tag};
+  \node[box=WmBlue, below=of cd] (ref) {refresh: Neon gold+\\\scriptsize manual};
+  \foreach \j in {dash,unit,smoke,dag,dock}
+    \draw[flow] (lint) -- (\j);
+  \foreach \j in {dash,unit,smoke,dag,dock}
+    \draw[flow] (\j) -- (integ);
+  \draw[data flow] (integ) -- (cd);
+\end{tikzpicture}
