@@ -2,6 +2,9 @@
 # Walmart Data Pipeline — Makefile
 # Production task runner: static checks, unit tests, the 8-stage data
 # pipeline, and build/release, all wired through uv.
+#
+# Portable across Linux/macOS and Windows (cmd.exe, PowerShell, Git Bash):
+# no `grep`/`awk`/`rm`/`tput` in recipes — portable equivalents only.
 # ==============================================================================
 
 # ---- Environment -------------------------------------------------------------
@@ -10,61 +13,62 @@ ifneq (,$(wildcard ./.env))
     export
 endif
 
-export PYTHONPATH := $(PWD)
+export PYTHONPATH := $(CURDIR)
 export PYTHONIOENCODING := utf-8
 
-SHELL         := /bin/bash
-.SHELLFLAGS   := -eu -o pipefail -c
+# NOTE: no `SHELL := /bin/bash` on purpose. The previous hardcode broke every
+# target on Windows (Chocolatey make falls back to cmd.exe, where /bin/bash,
+# grep, awk, rm, and tput do not exist). Recipes below use only `make` + `uv`
+# + `python` + `docker`, which exist on both platforms.
+# NOTE: no tput colors on purpose — tput is missing on Windows and printed
+# "The system cannot find the path specified." on every invocation.
 
 UV       := uv
 PYTHON   := $(UV) run python
 DBT_DIR  := dbt
-SRC_DIRS := scripts pipeline src tests/unit
+DBT_ARGS := --project-dir $(DBT_DIR) --profiles-dir $(DBT_DIR)
+SRC_DIRS := .
 UNIT_DIR := tests/unit
-VERSION  := $(shell $(UV) run python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])" 2>/dev/null || echo "0.0.0-dev")
-
-# Color helpers — degrade silently on terminals without tput
-BOLD   := $(shell tput bold 2>/dev/null)
-GREEN  := $(shell tput setaf 2 2>/dev/null)
-YELLOW := $(shell tput setaf 3 2>/dev/null)
-RESET  := $(shell tput sgr0 2>/dev/null)
+SMOKE_DIR := tests/smoke
+# NOTE: no `2>/dev/null` here on purpose — that is sh-only syntax and prints
+# "The system cannot find the path specified." under cmd.exe. `||` works in
+# both shells; stderr noise on failure is acceptable (the build needs uv anyway).
+VERSION  := $(shell $(UV) run python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])" || echo 0.0.0-dev)
 
 .DEFAULT_GOAL := help
 
 .PHONY: help install install-dev pre-commit-install \
-        lint lint-fix format format-check type-check static-checks unit-test ci \
-        preflight extract test-bronze dbt-silver test-silver dbt-gold test-gold gx-tests \
+        lint lint-fix format format-check type-check static-checks unit-test smoke-test test ci \
+        preflight extract test-bronze dbt-deps dbt-silver test-silver dbt-gold test-gold gx-tests \
+        contracts-check contracts-sync contracts-fix-types dashboard-smoke dag-check \
         data-pipeline all build clean clean-venv
 
 # ---- Help ----------------------------------------------------------------
 help: ## Show this help
-	@echo "$(BOLD)Walmart Data Pipeline$(RESET) — available targets:"
-	@echo ""
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
-		awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-18s$(RESET) %s\n", $$1, $$2}'
+	$(PYTHON) -c "import re; print('Walmart Data Pipeline - available targets:'); print(''); [print('  ' + a.ljust(18) + ' ' + b) for a, b in re.findall(r'^([a-zA-Z_-]+):.*?## (.*)$$', open('Makefile').read(), re.M)]"
 
 # ---- Setup -----------------------------------------------------------------
 install: ## Install runtime dependencies
-	$(UV) sync
+	$(UV) sync --frozen
 
 install-dev: ## Install runtime + dev dependencies (lint/test tools)
-	$(UV) sync --group dev
+	$(UV) sync --frozen --group dev
 
 pre-commit-install: install-dev ## Install git pre-commit hooks
 	$(UV) run pre-commit install
 
 # ---- Lint / Format / Type-check --------------------------------------------
 lint: ## Lint Python (ruff), SQL (sqlfluff), and validate the dbt project parses
-	@echo "$(BOLD)>> ruff check$(RESET)"
+	@echo ">> ruff check"
 	$(UV) run ruff check $(SRC_DIRS)
-	@echo "$(BOLD)>> sqlfluff lint$(RESET)"
-	$(UV) run sqlfluff lint sql tests $(DBT_DIR)/models
-	@echo "$(BOLD)>> dbt parse (validates the project graph without touching data)$(RESET)"
-	cd $(DBT_DIR) && $(UV) run dbt parse --quiet
+	@echo ">> sqlfluff lint"
+	$(UV) run sqlfluff lint $(DBT_DIR)/models sql tests --dialect postgres
+	@echo ">> dbt parse (validates the project graph without touching data)"
+	$(UV) run dbt parse $(DBT_ARGS) --quiet
 
 lint-fix: ## Auto-fix lint issues where possible
 	$(UV) run ruff check --fix $(SRC_DIRS)
-	$(UV) run sqlfluff fix sql tests $(DBT_DIR)/models
+	$(UV) run sqlfluff fix $(DBT_DIR)/models sql tests --dialect postgres --force
 
 format: ## Format Python code in place
 	$(UV) run ruff format $(SRC_DIRS)
@@ -72,11 +76,12 @@ format: ## Format Python code in place
 format-check: ## Check formatting without modifying files (CI-safe)
 	$(UV) run ruff format --check $(SRC_DIRS)
 
-type-check: ## Static type-check Python with mypy (not yet in dev deps — run `uv add --group dev mypy` first)
-	$(UV) run mypy $(SRC_DIRS)
+type-check: ## Static type-check Python with mypy (auto-provisioned via uv; reports pre-existing findings, not in CI gate)
+	$(UV) run --group dev --with mypy mypy $(SRC_DIRS)
 
-# type-check is deliberately NOT part of static-checks until mypy is added
-# to the dev dependency group — until then it would fail on a missing tool.
+# type-check is deliberately NOT part of static-checks: the codebase has
+# pre-existing mypy findings (missing stubs/annotations), so it reports rather
+# than gates. Fix the findings first, then promote it into static-checks/ci.
 static-checks: lint format-check ## Run all static checks (no tests, no data movement)
 
 # ---- Unit tests ---------------------------------------------------------
@@ -84,10 +89,30 @@ unit-test: ## Run fast unit tests (no live DB/Spark required)
 	$(UV) run pytest $(UNIT_DIR) -v
 
 smoke-test: ## Run smoke tests (imports, layout, CLIs, DAGs, live pings)
-	$(UV) run pytest tests/smoke -v
+	$(UV) run pytest $(SMOKE_DIR) -v
+
+test: ## Run the full pytest suite (unit + smoke)
+	$(UV) run pytest -v
 
 # ---- CI entrypoint -----------------------------------------------------
 ci: static-checks unit-test ## CI entrypoint: static checks + unit tests (safe to run without live infra)
+
+# ---- Contracts ----------------------------------------------------------
+contracts-check: ## Detect contract drift without writing (needs live Postgres)
+	$(PYTHON) scripts/run_update_contract.py --check-only
+
+contracts-sync: ## Sync row counts, types, and stats into contracts/*.yml (needs live Postgres)
+	$(PYTHON) scripts/run_update_contract.py
+
+contracts-fix-types: ## Adopt observed DB types into contracts/*.yml (needs live Postgres)
+	$(PYTHON) scripts/run_update_contract.py --fix-types
+
+# ---- Dashboard / DAG gates (mirror CI jobs) -------------------------------
+dashboard-smoke: ## Verify dashboard + connection imports resolve (lightweight mirror of the CI dashboard job)
+	$(PYTHON) -c "from src.utils.connection import get_postgres_engine, get_databricks_connection; from dashboard.helpers.queries import Filters, get_filter_options, get_kpis; print('dashboard imports OK')"
+
+dag-check: ## Validate Airflow DAGs import with no cycles (needs airflow installed)
+	$(PYTHON) -c "from airflow.models import DagBag; bag = DagBag(dag_folder='airflow/dags'); assert not bag.import_errors, bag.import_errors; assert len(bag.dags) > 0, 'no DAGs found'; print('OK -', len(bag.dags), 'DAG(s):', sorted(bag.dags))"
 
 # ---- Data pipeline (8-stage, strict order, fails fast) ----------------------
 preflight: ## [0/7] Verify environment/dependency compatibility
@@ -108,11 +133,15 @@ test-bronze: ## [2/7] Run Bronze-layer SQL tests
 	@echo "------------------------------------------------------------"
 	$(PYTHON) src/jobs/sql_test.py tests/data-quality/bronze
 
-dbt-silver: ## [3/7] Build + test Silver dbt models
+dbt-deps: ## Install dbt packages (run after clean, which wipes dbt/dbt_packages)
+	$(UV) run dbt deps $(DBT_ARGS)
+
+dbt-silver: ## [3/7] Build + test Silver dbt models (run `make dbt-deps` first if you ran `make clean`)
 	@echo "------------------------------------------------------------"
 	@echo " STEP 3 / 7  -  DBT SILVER (build and test)"
 	@echo "------------------------------------------------------------"
-	cd $(DBT_DIR) && $(UV) run dbt run --select silver && $(UV) run dbt test --select silver
+	$(UV) run dbt run $(DBT_ARGS) --select silver
+	$(UV) run dbt test $(DBT_ARGS) --select silver
 
 test-silver: ## [4/7] Run Silver-layer SQL tests
 	@echo "------------------------------------------------------------"
@@ -124,7 +153,8 @@ dbt-gold: ## [5/7] Build + test Gold dbt models
 	@echo "------------------------------------------------------------"
 	@echo " STEP 5 / 7  -  DBT GOLD (build and test)"
 	@echo "------------------------------------------------------------"
-	cd $(DBT_DIR) && $(UV) run dbt run --select gold && $(UV) run dbt test --select gold
+	$(UV) run dbt run $(DBT_ARGS) --select gold
+	$(UV) run dbt test $(DBT_ARGS) --select gold
 
 test-gold: ## [6/7] Run Gold-layer SQL tests
 	@echo "------------------------------------------------------------"
@@ -140,7 +170,7 @@ gx-tests: ## [7/7] Run Great Expectations across Bronze/Silver/Gold
 
 data-pipeline: preflight extract test-bronze dbt-silver test-silver dbt-gold test-gold gx-tests ## Run the full 8-stage data pipeline in strict order
 	@echo ""
-	@echo "$(GREEN)$(BOLD)PIPELINE COMPLETE$(RESET) — all 8 stages passed."
+	@echo "PIPELINE COMPLETE — all 8 stages passed."
 
 # ---- Composite production gate ----------------------------------------
 all: ci data-pipeline ## Full production gate: static checks + unit tests + the live 8-stage data pipeline
@@ -148,20 +178,12 @@ all: ci data-pipeline ## Full production gate: static checks + unit tests + the 
 # ---- Build / Release --------------------------------------------------------
 build: ## Build a distributable wheel; also builds a Docker image if the Dockerfile exists
 	$(UV) build
-	@if [ -f docker/Dockerfile ]; then \
-		echo "$(BOLD)>> Building Docker image walmart-pipeline:$(VERSION)$(RESET)"; \
-		docker build -t walmart-pipeline:$(VERSION) -f docker/Dockerfile . ; \
-	else \
-		echo "$(YELLOW)No docker/Dockerfile found — skipping image build.$(RESET)"; \
-	fi
+	$(PYTHON) -c "import pathlib, subprocess, sys; sys.exit(subprocess.call(['docker', 'build', '-t', 'walmart-pipeline:$(VERSION)', '-f', 'docker/Dockerfile', '.']) if pathlib.Path('docker/Dockerfile').is_file() else print('No docker/Dockerfile found — skipping image build.'))"
 
 # ---- Housekeeping -----------------------------------------------------------
 clean: ## Remove caches and generated artifacts (keeps the venv)
-	rm -rf .pytest_cache .ruff_cache .mypy_cache
-	find . -type d -name "__pycache__" -exec rm -rf {} +
-	rm -rf $(DBT_DIR)/target $(DBT_DIR)/logs $(DBT_DIR)/dbt_packages
-	rm -rf gx/uncommitted/data_docs
+	$(PYTHON) -c "import pathlib, shutil; [shutil.rmtree(p, ignore_errors=True) for p in ['.pytest_cache', '.ruff_cache', '.mypy_cache', 'dbt/target', 'dbt/logs', 'dbt/dbt_packages', 'gx/uncommitted/data_docs']]; [shutil.rmtree(p, ignore_errors=True) for p in pathlib.Path('.').rglob('__pycache__')]"
 
 clean-venv: ## Remove the virtual environment entirely (forces a full uv sync next run)
-	rm -rf .venv
-	@echo "$(YELLOW)Note: on Windows, a locked .venv (e.g. an active dbt shell or VS Code kernel) may need that process closed first, or an elevated terminal.$(RESET)"
+	$(PYTHON) -c "import shutil; shutil.rmtree('.venv', ignore_errors=True)"
+	@echo "Note: on Windows, a locked .venv (e.g. an active dbt shell or VS Code kernel) may need that process closed first, or an elevated terminal."
