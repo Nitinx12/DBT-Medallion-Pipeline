@@ -66,4 +66,16 @@ cleaned AS (
 
 )
 
-SELECT * FROM cleaned
+-- Grain key first: the duplicates gate requires ordinal_position 1 unique.
+SELECT
+    order_item_id,
+    created_timestamp,
+    updated_timestamp,
+    order_id,
+    product_id,
+    quantity,
+    unit_price,
+    line_amount,
+    is_active,
+    silver_loaded_at
+FROM cleaned

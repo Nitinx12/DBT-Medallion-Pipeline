@@ -66,4 +66,15 @@ cleaned AS (
     WHERE d.rnk = 1
 )
 
-SELECT * FROM cleaned
+-- Grain key first: the duplicates gate requires ordinal_position 1 unique.
+SELECT
+    product_id,
+    brand_id,
+    category_id,
+    created_timestamp,
+    updated_timestamp,
+    product_name,
+    price,
+    is_active,
+    silver_loaded_at
+FROM cleaned

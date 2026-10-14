@@ -100,9 +100,9 @@ cleaned AS (
 )
 
 SELECT
+    customer_id,
     created_timestamp,
     updated_timestamp,
-    customer_id,
     customer_name,
     phone,
     phone_extension,
