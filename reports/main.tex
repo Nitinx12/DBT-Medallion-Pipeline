@@ -1,0 +1,53 @@
+% Walmart Medallion Data Pipeline --- Technical Report.
+% Engine: XeLaTeX only. Build with `make report` (latexmk, outdir=build).
+\documentclass[paper=a4, fontsize=10.5pt, DIV=calc, parskip=half-,
+  headings=small, numbers=noenddot, bibliography=totoc,
+  captions=tableheading, twoside=false]{scrreprt}
+
+\input{latex/preamble}
+\input{latex/colors}
+\input{latex/fonts}
+\input{latex/layout}
+\input{latex/boxes}
+\input{latex/listings}
+\input{latex/tikz-styles}
+\input{latex/pgfplots-styles}
+% Build metadata (version/commit/date) written by make report. The guard
+% keeps direct latexmk builds working when the file was never generated.
+\IfFileExists{latex/buildmeta.tex}{\input{latex/buildmeta}}{}
+\input{latex/macros}
+
+\begin{document}
+
+% scrreprt has no \frontmatter/\mainmatter (book-only commands), so page
+% numbering is switched manually: roman for front matter, arabic from Ch.1.
+\pagenumbering{roman}
+\input{chapters/00_titlepage}
+\input{chapters/00_frontmatter}
+
+\cleardoublepage
+\pagenumbering{arabic}
+\input{chapters/01_executive_summary}
+\input{chapters/02_architecture}
+\input{chapters/03_data_sources_bronze}
+\input{chapters/04_silver}
+\input{chapters/05_gold_star_schema}
+\input{chapters/06_pipeline_orchestration}
+\input{chapters/07_data_quality}
+\input{chapters/08_contracts}
+\input{chapters/09_dashboard}
+\input{chapters/10_cicd_docker}
+\input{chapters/11_operations_security}
+\input{chapters/12_results_metrics}
+\input{chapters/13_limitations_roadmap}
+
+\appendix
+\input{chapters/appendix_a_inventory}
+\input{chapters/appendix_b_commands}
+\input{chapters/appendix_c_envvars}
+\input{chapters/appendix_d_glossary}
+\input{chapters/appendix_e_erd}
+\input{chapters/appendix_f_contract}
+\input{chapters/appendix_g_changelog}
+
+\end{document}

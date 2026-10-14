@@ -41,7 +41,8 @@ VERSION  := $(shell $(UV) run python -c "import tomllib; print(tomllib.load(open
         lint lint-fix format format-check type-check static-checks unit-test smoke-test test ci \
         preflight extract test-bronze dbt-deps dbt-silver test-silver dbt-gold test-gold gx-tests \
         contracts-check contracts-sync contracts-fix-types dashboard-smoke dag-check \
-        data-pipeline all build clean clean-venv
+        data-pipeline all build clean clean-venv \
+        report report-watch report-clean report-lint
 
 # ---- Help ----------------------------------------------------------------
 help: ## Show this help
@@ -187,3 +188,21 @@ clean: ## Remove caches and generated artifacts (keeps the venv)
 clean-venv: ## Remove the virtual environment entirely (forces a full uv sync next run)
 	$(PYTHON) -c "import shutil; shutil.rmtree('.venv', ignore_errors=True)"
 	@echo "Note: on Windows, a locked .venv (e.g. an active dbt shell or VS Code kernel) may need that process closed first, or an elevated terminal."
+
+# ---- Technical report (LaTeX, XeLaTeX) ------------------------------------
+# NOTE: `report` gains a `report-data` dependency once
+# scripts/report/collect_metrics.py lands; until then it builds from
+# committed CSVs plus buildmeta written below. -cd keeps font/style
+# paths resolving from reports/ on every platform.
+report: ## Build reports/build/main.pdf (writes buildmeta, then latexmk)
+	$(PYTHON) scripts/report/write_buildmeta.py
+	latexmk -xelatex -cd -outdir=build reports/main.tex
+
+report-watch: ## Live-rebuild the report on save
+	latexmk -xelatex -cd -pvc -outdir=build reports/main.tex
+
+report-clean: ## Remove LaTeX build artefacts
+	latexmk -cd -C -outdir=build reports/main.tex
+
+report-lint: ## chktex style checks over the report sources
+	chktex -q -n1 -n8 -n13 -n24 reports/main.tex reports/chapters/*.tex

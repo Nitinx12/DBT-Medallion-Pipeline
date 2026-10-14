@@ -1,0 +1,62 @@
+% Package loading for the report. Order matters: fonts first, then
+% colour/graphics, layout, tables, boxes/code, symbols, and hyperref +
+% cleveref last-ish. Deliberate omissions (build-clean wins):
+% unicode-math (no OpenType math font bundled), biblatex/minted
+% (listings needs no shell-escape; references are a manual section).
+
+% --- fonts & language (XeLaTeX) ---
+\usepackage{fontspec}
+\usepackage{microtype}
+\usepackage[english]{babel}
+\usepackage{csquotes}
+
+% --- colour & graphics ---
+\usepackage[table,svgnames,dvipsnames]{xcolor}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,calc,shapes.geometric,shapes.multipart,
+  shadows,backgrounds,decorations.pathmorphing,decorations.markings,
+  matrix,chains,quotes,er}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepgfplotslibrary{groupplots,colorbrewer,statistics,fillbetween}
+\usepackage{pgfplotstable}
+
+% --- layout ---
+\usepackage{scrlayer-scrpage}
+\usepackage{setspace}
+\usepackage{enumitem}
+\usepackage{multicol}
+\usepackage{pdflscape}
+
+% --- tables ---
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{makecell}
+
+% --- boxes, code ---
+% Explicit tcolorbox libraries only ([most]/skins pull tikzfill.image,
+% which minimal TeX trees trim; breakable+listings cover every box here).
+\usepackage[breakable,listings,xparse]{tcolorbox}
+\usepackage{listings}
+
+% --- icons & symbols ---
+\usepackage{fontawesome5}
+\usepackage{pifont}
+
+% --- captions, floats, refs ---
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{xurl}
+\usepackage[hidelinks]{hyperref}
+\usepackage[nameinlink,capitalise]{cleveref}
+\usepackage{bookmark}
+
+% --- misc (no glossaries-extra: Appendix D is a plain longtable, which
+% needs no makeindex pass and keeps the build warning-free) ---
+\usepackage{siunitx}
+\usepackage{etoolbox}
+\usepackage{xfp}

@@ -1,0 +1,40 @@
+% Report macros. Paths/commands handle underscores via \detokenize.
+% \layer draws a coloured square for bronze/silver/gold; \stage a numbered
+% circle. \todo only renders in draft mode and must be zero at release.
+
+% Build metadata injected by the Makefile (fallbacks for direct builds).
+\providecommand{\ReportVersion}{0.2.2}
+\providecommand{\ReportCommit}{dev}
+\providecommand{\ReportDate}{\today}
+
+% Draft switch: \drafttrue shows DRAFT watermark + \todo notes.
+\newif\ifdraft
+\draftfalse
+
+\newcommand{\file}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\cmd}[1]{\texttt{\detokenize{#1}}}
+
+\newcommand{\layer}[1]{%
+  \ifstrequal{#1}{bronze}{\textcolor{Bronze}{\rule{2.2ex}{2.2ex}} bronze}{}%
+  \ifstrequal{#1}{silver}{\textcolor{Silver}{\rule{2.2ex}{2.2ex}} silver}{}%
+  \ifstrequal{#1}{gold}{\textcolor{Gold}{\rule{2.2ex}{2.2ex}} gold}{}%
+}
+
+\newcommand{\stage}[2]{%
+  \tikz[baseline=(n.base)]{\node[numbered](n){#1};}\ \textbf{#2}%
+}
+
+\newcommand{\metric}[2]{\textbf{\num{#1}}\,\textcolor{InkSoft}{#2}}
+
+\newcommand{\ok}{\textcolor{Pass}{\faCheck}}
+\newcommand{\no}{\textcolor{Fail}{\faTimes}}
+
+\newcommand{\todo}[1]{\ifdraft\textcolor{Fail}{\textbf{TODO:} #1}\fi}
+
+% Italic accent-colour chapter lead line.
+\newcommand{\chapterlead}[1]{%
+  \textit{\textcolor{WmBlueDark}{#1}}\par\vspace{6pt}%
+}
+
+% Short report title for headers.
+\newcommand{\ReportShortTitle}{Walmart Medallion Report}

@@ -1,0 +1,40 @@
+% Code highlighting. listings only (no shell-escape, portable).
+% Languages: SQL (PostgreSQL), Python, YAML, Bash, PowerShell, Jinja-SQL.
+% Excerpts stay under 25 lines; the wmlisting wrapper adds a file-path
+% title bar plus language chip.
+
+\lstdefinestyle{wm base}{
+  backgroundcolor=\color{CodeBg},
+  basicstyle=\ttfamily\fontsize{8}{10.5}\selectfont\color{Ink},
+  keywordstyle=\color{WmBlueDark}\bfseries,
+  commentstyle=\color{InkSoft}\itshape,
+  stringstyle=\color{Pass},
+  numberstyle=\color{Warn},
+  showstringspaces=false, breaklines=true, breakatwhitespace=false,
+  columns=fullflexible, keepspaces=true, tabsize=4,
+  numbers=left, numberstyle=\ttfamily\scriptsize\color{InkSoft},
+  numbersep=8pt, xleftmargin=18pt, framexleftmargin=18pt,
+  aboveskip=6pt, belowskip=6pt,
+}
+\lstdefinestyle{wm sql}{style=wm base, language=SQL,
+  morekeywords={TIMESTAMPTZ,BOOLEAN,NUMERIC,RETURNING,FILTER,PARTITION,OVER,ROW_NUMBER}}
+\lstdefinestyle{wm py}{style=wm base, language=Python,
+  morekeywords={dataclass,assert,None,True,False}}
+\lstdefinestyle{wm yaml}{style=wm base, language=Python,
+  commentstyle=\color{InkSoft}\itshape}
+\lstdefinestyle{wm bash}{style=wm base, language=bash}
+\lstdefinestyle{wm ps1}{style=wm base, language=Python,
+  morekeywords={function,param,switch,foreach,if,else,try,catch,throw}}
+\lstdefinestyle{wm jinja}{style=wm base, language=SQL,
+  moredelim=[s][\color{DbtOrange}\bfseries]{\{\{}{\}\}},  % {{ ... }} in dbt orange
+  morekeywords={ref,source,config,materialized,unique_key}}
+
+% File-path title bar + language chip above a listing.
+\newtcblisting{wmlisting}[2]{
+  listing engine=listings, listing options={style=#2},
+  colback=CodeBg, colframe=Rule, boxrule=0.6pt, arc=3pt,
+  left=4pt, right=4pt, top=4pt, bottom=4pt,
+  title={\ttfamily\scriptsize\color{InkSoft} #1},
+  fonttitle=\ttfamily\scriptsize, coltitle=InkSoft,
+  listing only, breakable,
+}

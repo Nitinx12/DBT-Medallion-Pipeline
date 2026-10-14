@@ -1,0 +1,24 @@
+% Shared TikZ node/edge styles for every diagram in figures/tikz/.
+% Load after tikz + libraries (see preamble.tex).
+\tikzset{
+  >={Stealth[length=2.2mm,width=1.8mm]},
+  node font=\sffamily\footnotesize,
+  box/.style={rounded corners=3pt, draw=#1, fill=#1!8, line width=0.8pt,
+              minimum height=9mm, minimum width=24mm, align=center, text=Ink,
+              inner sep=4pt},
+  box/.default=WmBlue,
+  bronze box/.style={box=Bronze, fill=BronzeBg},
+  silver box/.style={box=Silver, fill=SilverBg},
+  gold box/.style={box=Gold,   fill=GoldBg},
+  db/.style={cylinder, shape border rotate=90, aspect=0.25, draw=#1, fill=#1!10,
+             minimum height=14mm, minimum width=18mm, align=center, line width=0.8pt},
+  ext/.style={draw=InkSoft, dashed, rounded corners=3pt, inner sep=6pt},
+  flow/.style={->, line width=1pt, draw=InkSoft},
+  strong flow/.style={->, line width=1.6pt, draw=WmBlue},
+  data flow/.style={->, line width=1.2pt, draw=WmBlue, dash pattern=on 4pt off 2pt},
+  gate/.style={diamond, aspect=2, draw=Pass, fill=Pass!10, inner sep=1pt, font=\sffamily\scriptsize\bfseries},
+  tag/.style={font=\sffamily\bfseries\tiny, text=white, fill=#1, rounded corners=2pt, inner sep=2pt},
+  lane/.style={draw=Rule, fill=Mist, rounded corners=4pt, inner sep=8pt},
+  lane title/.style={font=\sffamily\bfseries\scriptsize, text=InkSoft, anchor=north west},
+  numbered/.style={circle, fill=WmBlue, text=white, font=\sffamily\bfseries\scriptsize, minimum size=5mm, inner sep=0pt},
+}

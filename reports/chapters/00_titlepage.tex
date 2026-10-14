@@ -1,0 +1,34 @@
+% Title page: full-bleed deep-blue background, medallion emblem, white
+% title, yellow subtitle rule, version/date/commit block. Unnumbered.
+\begin{titlepage}
+\begin{tikzpicture}[remember picture, overlay]
+  \fill[WmBlueDeep] (current page.south west) rectangle (current page.north east);
+  % Subtle dotted grid at low opacity.
+  \foreach \x in {0,1,...,20} {
+    \foreach \y in {0,1,...,28} {
+      \fill[white, opacity=0.05] ($(current page.south west) + (\x*1.05cm, \y*1.05cm)$) circle (0.6pt);
+    }
+  }
+\end{tikzpicture}
+\vspace*{2.2cm}
+\begin{center}
+% Medallion emblem: three stacked chevrons, bronze-silver-gold.
+\begin{tikzpicture}[line width=3pt, line join=round]
+  \draw[Bronze!70!white] (-1.6,0) -- (0,-0.9) -- (1.6,0);
+  \draw[Silver!70!white] (-1.6,0.55) -- (0,-0.35) -- (1.6,0.55);
+  \draw[WmYellow] (-1.6,1.1) -- (0,0.2) -- (1.6,1.1);
+\end{tikzpicture}
+\vspace{1.0cm}
+{\sffamily\bfseries\fontsize{38}{42}\selectfont\color{white} Walmart Medallion\\Data Pipeline\par}
+\vspace{0.5cm}
+{\sffamily\large\color{WmYellow} MongoDB \textrightarrow{} PostgreSQL \textrightarrow{} dbt \quad Bronze \textrightarrow{} Silver \textrightarrow{} Gold\par}
+\vspace{0.5cm}
+\textcolor{WmYellow}{\rule{0.35\textwidth}{1.6pt}}
+\vspace{1.2cm}
+{\sffamily\color{white} Analytics-Engineering Technical Report\par}
+\vspace{0.4cm}
+{\sffamily\small\color{white!80} Version \ReportVersion{} \quad\textbar\quad \ReportDate{} \quad\textbar\quad \texttt{\ReportCommit{}}\par}
+\vspace{0.3cm}
+{\sffamily\small\color{white!80} Nitin \quad\textbar\quad MIT License\par}
+\end{center}
+\end{titlepage}

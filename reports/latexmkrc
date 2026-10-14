@@ -1,0 +1,8 @@
+# LaTeX build config for the Walmart medallion technical report.
+# Engine: XeLaTeX only (fontspec + OpenType fonts). Shell-escape OFF.
+$pdf_mode = 5;
+$xelatex = 'xelatex -interaction=nonstopmode -file-line-error -halt-on-error %O %S';
+$out_dir = 'build';
+$aux_dir = 'build';
+$max_repeat = 6;
+@default_files = ('main.tex');

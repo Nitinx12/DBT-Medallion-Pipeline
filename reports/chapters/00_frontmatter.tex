@@ -1,0 +1,32 @@
+% Front matter: document control, abstract, how-to-read, TOC/LOF/LOT.
+\chapter*{Document control}
+\addcontentsline{toc}{chapter}{Document control}
+\begin{center}
+\begin{tabular}{>{\sffamily\bfseries}l >{\sffamily}l}
+\toprule
+Item & Detail \\
+\midrule
+Title & Walmart Medallion Data Pipeline --- Technical Report \\
+Version & \ReportVersion{} (from \file{pyproject.toml}) \\
+Date & \ReportDate{} \\
+Commit & \file{\ReportCommit{}} \\
+Author & Nitin \\
+Status & Final \\
+License & MIT (see \file{LICENSE}) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+\chapterlead{Abstract text summarises the finished report and is written last.}
+\todo{Write abstract, 150 words max, after all chapters are done.}
+
+\chapter*{How to read this report}
+\addcontentsline{toc}{chapter}{How to read this report}
+\chapterlead{Colour legend, notation and icons used throughout the report.}
+\todo{Write legend: layer colours, pass/fail colours, file/cmd notation.}
+
+\tableofcontents
+\listoffigures
+\listoftables

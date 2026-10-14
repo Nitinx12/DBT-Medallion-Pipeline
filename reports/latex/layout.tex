@@ -1,0 +1,45 @@
+% Geometry, headers/footers, chapter openings, floats, captions, links.
+% Class options (paper, DIV, parskip) live on \documentclass in main.tex.
+
+\linespread{1.08}
+\raggedbottom
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
+
+% --- Chapter opening: yellow number, deep-blue title, blue rule ---
+\renewcommand{\chapterlinesformat}[3]{%
+  \textcolor{WmYellow}{\fontsize{34}{34}\selectfont\sffamily\bfseries #2}%
+  \par\vspace{4pt}%
+  {\usekomafont{chapter}#3}%
+  \par\vspace{8pt}\noindent\textcolor{WmBlue}{\rule{\textwidth}{1pt}}\par\vspace{12pt}%
+}
+
+% --- Headers/footers (chapter pages stay plain automatically) ---
+\pagestyle{scrheadings}
+\clearpairofpagestyles
+\ihead{\headmark}
+\ohead{Walmart Medallion Report}
+\cfoot*{\pagemark}
+\ifoot{Walmart Medallion Data Pipeline}
+\ofoot{v\ReportVersion{} · \ReportCommit{}}
+\setkomafont{pageheadfoot}{\sffamily\footnotesize\color{InkSoft}}
+\setheadsepline{0.4pt}[\color{Rule}]
+
+% --- Float policy: prefer tbp, keep floats near their reference ---
+\renewcommand{\topfraction}{.85}
+\renewcommand{\bottomfraction}{.7}
+\renewcommand{\textfraction}{.1}
+\renewcommand{\floatpagefraction}{.75}
+
+% --- Captions: tables above, figures below (class option), coloured ---
+\captionsetup{labelfont={bf,color=WmBlue}, textfont={small,color=InkSoft}, font={sf}}
+
+% --- Hyperlinks (no ugly default boxes) ---
+\hypersetup{
+  pdftitle={Walmart Medallion Data Pipeline --- Technical Report},
+  pdfauthor={Nitin},
+  pdfsubject={MongoDB to PostgreSQL medallion ETL, dbt, Airflow, Docker},
+  pdfkeywords={medallion, dbt, PySpark, PostgreSQL, Airflow, Great Expectations},
+  colorlinks=true, linkcolor=WmBlue, urlcolor=WmBlue, citecolor=WmBlue,
+}

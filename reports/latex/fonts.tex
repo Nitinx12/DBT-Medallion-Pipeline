@@ -1,0 +1,46 @@
+% Font setup. Style A "Modern Sans": Inter body + Inter headings +
+% JetBrains Mono code. Fonts are bundled in reports/fonts/ (SIL OFL) so
+% the build never depends on machine fonts; system fonts are only a
+% fallback that warns. Math stays Latin Modern (no OpenType math bundled).
+
+% --- Sans (body + headings) ---
+% \IfFileExists tests the bundled files (relative to reports/, where the
+% build runs); \IfFontExistsTF only sees system font names, so it cannot
+% test bundled files.
+\IfFileExists{fonts/Inter-Regular.ttf}{%
+  \setsansfont{Inter}[
+    Path=fonts/, Extension=.ttf,
+    UprightFont=*-Regular, BoldFont=*-Bold,
+    ItalicFont=*-Italic, BoldItalicFont=*-BoldItalic,
+    Numbers={Lining,Proportional}]
+}{%
+  \IfFontExistsTF{Inter}{%
+    \setsansfont{Inter}[AutoFakeSlant=0.2, Numbers={Lining,Proportional}]
+  }{%
+    \setsansfont{TeX Gyre Heros}%
+  }%
+  \PackageWarning{fonts}{Bundled Inter missing, using fallback}%
+}
+\renewcommand{\familydefault}{\sfdefault}
+
+% --- Mono (code + listings) ---
+\IfFileExists{fonts/JetBrainsMono-Regular.ttf}{%
+  \setmonofont{JetBrainsMono}[
+    Path=fonts/, Extension=.ttf, Scale=MatchLowercase,
+    UprightFont=*-Regular, BoldFont=*-Bold, ItalicFont=*-Italic,
+    Ligatures=NoCommon]
+}{%
+  \setmonofont{Latin Modern Mono}[Scale=MatchLowercase]%
+  \PackageWarning{fonts}{Bundled JetBrains Mono missing, using fallback}%
+}
+
+% --- KOMA heading typography (single place for all headings) ---
+\addtokomafont{disposition}{\sffamily\bfseries}
+\setkomafont{chapter}{\sffamily\bfseries\fontsize{26}{30}\selectfont\color{WmBlueDeep}}
+\setkomafont{section}{\sffamily\bfseries\Large\color{WmBlueDeep}}
+\setkomafont{subsection}{\sffamily\bfseries\large\color{WmBlueDark}}
+\setkomafont{subsubsection}{\sffamily\bfseries\normalsize\color{WmBlueDark}}
+\setkomafont{caption}{\sffamily\small\color{InkSoft}}
+\setkomafont{captionlabel}{\sffamily\bfseries\small\color{WmBlue}}
+\setkomafont{pageheadfoot}{\sffamily\footnotesize\color{InkSoft}}
+\setkomafont{descriptionlabel}{\sffamily\bfseries\color{WmBlueDark}}

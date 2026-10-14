@@ -1,0 +1,32 @@
+% Shared pgfplots chart styles. Every chart reads reports/data/*.csv.
+% Load after pgfplots + libraries (see preamble.tex).
+% Cycle list first: wm base references it, and pgfplots validates the
+% name when the style block is read.
+\pgfplotscreateplotcyclelist{wm layers}{
+  {fill=Bronze, draw=Bronze!70!black},
+  {fill=Silver, draw=Silver!70!black},
+  {fill=Gold,   draw=Gold!70!black},
+  {fill=WmBlue, draw=WmBlueDark},
+}
+\pgfplotsset{
+  wm base/.style={
+    width=\linewidth, height=6.2cm,
+    axis line style={Rule}, tick style={Rule},
+    tick label style={font=\sffamily\footnotesize, text=InkSoft},
+    label style={font=\sffamily\small, text=Ink},
+    title style={font=\sffamily\bfseries\small, text=WmBlueDeep},
+    legend style={font=\sffamily\footnotesize, draw=none, fill=none,
+      legend columns=-1, at={(0.5,-0.22)}, anchor=north},
+    ymajorgrids, grid style={dashed, Rule!60},
+    every axis plot/.append style={line width=1.2pt},
+    enlarge x limits=0.08, clip=false,
+    nodes near coords style={font=\sffamily\scriptsize, text=Ink},
+  },
+  wm bar/.style={wm base, ybar, bar width=14pt, ymin=0, axis x line*=bottom, axis y line*=left},
+  wm hbar/.style={wm base, xbar, bar width=10pt, xmin=0, ytick=data, xmajorgrids, ymajorgrids=false},
+  wm line/.style={wm base, mark=*, mark size=2pt, smooth},
+  wm stacked/.style={wm bar, ybar stacked},
+  cycle list name=wm layers,
+}
+% Thousands separator for data labels (no separators inside the CSVs).
+\pgfkeys{/pgf/number format/.cd, use comma, 1000 sep={\,}}
