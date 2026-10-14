@@ -18,7 +18,7 @@ Version bumps happen on `release/vX.Y.Z` branches; the `vX.Y.Z` tag triggers
   XeLaTeX `scrreprt` project under `reports/` (see `reports/report.pdf`):
   semantic color system, bundled Inter/JetBrains Mono fonts, 14 TikZ
   diagrams, 8 charts generated from `reports/data/*.csv` via
-  `scripts/report/collect_metrics.py` (`make report-data`), 13 chapters
+  `reports/scripts/collect_metrics.py` (`make report-data`), 13 chapters
   plus 7 appendices, and `make report` / `report-watch` / `report-clean` /
   `report-lint` targets. Every number traces to the repo; the build is
   warning-free (zero overfull boxes, all fonts embedded).

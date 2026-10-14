@@ -194,10 +194,10 @@ clean-venv: ## Remove the virtual environment entirely (forces a full uv sync ne
 REPORT_TEX := main.tex $(wildcard reports/chapters/*.tex)
 
 report-data: ## Regenerate CSVs for report charts
-	$(PYTHON) scripts/report/collect_metrics.py
+	$(PYTHON) reports/scripts/collect_metrics.py
 
 report: report-data ## Build reports/build/main.pdf (writes buildmeta, then latexmk)
-	$(PYTHON) scripts/report/write_buildmeta.py
+	$(PYTHON) reports/scripts/write_buildmeta.py
 	latexmk -xelatex -cd -outdir=build reports/main.tex
 
 report-watch: ## Live-rebuild the report on save

@@ -51,11 +51,11 @@ dev = [
 "tests/smoke/*.py" = ["BLE001", "PLW1510"]
 [tool.pytest.ini_options]
 testpaths = ["tests/unit", "tests/smoke"]
-addopts = "-v --cov=src --cov=scripts --cov-report=term-missing"
+addopts = "-v --cov=src --cov=scripts --cov=reports/scripts --cov-report=term-missing"
 
 [tool.coverage.run]
-source = ["src", "scripts"]
-omit = ["src/*/__pycache__/*", "scripts/__pycache__/*"]
+source = ["src", "scripts", "reports/scripts"]
+omit = ["src/*/__pycache__/*", "scripts/__pycache__/*", "reports/scripts/__pycache__/*"]
 
 # Scripts layout (flattened 2026-10): flat scripts/*.py + scripts/*.sh;
-# pipeline runtime lives in src/jobs/.
+# pipeline runtime lives in src/jobs/, report collectors in reports/scripts/.

@@ -1,9 +1,10 @@
 area,files,lines
-scripts,19,3612
 sql,27,3229
-tests,34,3126
+scripts,17,3192
+tests,34,3137
 dashboard,19,3038
 src,10,2022
 dbt,29,1898
 gx,9,1482
+reports,2,430
 airflow,2,335

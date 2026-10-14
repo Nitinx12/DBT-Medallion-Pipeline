@@ -1,11 +1,11 @@
-"""Unit tests for scripts/report/collect_metrics.py (fixture tree, no live DB)."""
+"""Unit tests for reports/scripts/collect_metrics.py (fixture tree, no live DB)."""
 
 from __future__ import annotations
 
 import csv
 from pathlib import Path
 
-from scripts.report.collect_metrics import main
+from reports.scripts.collect_metrics import main
 
 
 def _write(path: Path, text: str) -> None:
@@ -51,7 +51,17 @@ def _fixture_root(tmp_path: Path) -> Path:
         "revenue_trend_chart(df)\ndonut_chart(df)\n"
         "q = 'FROM fact_order_items JOIN dim_orders'\n",
     )
-    for area in ("src", "scripts", "dashboard", "airflow", "dbt", "gx", "tests", "sql"):
+    for area in (
+        "src",
+        "scripts",
+        "dashboard",
+        "airflow",
+        "dbt",
+        "gx",
+        "tests",
+        "sql",
+        "reports",
+    ):
         _write(root / area / "mod.py", "x = 1\ny = 2\n")
     _write(
         root / "tests/unit/test_x.py",
@@ -123,6 +133,7 @@ def test_collect_metrics_writes_all_csvs(tmp_path: Path) -> None:
         "gx",
         "tests",
         "sql",
+        "reports",
     }
 
 

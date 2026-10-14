@@ -2,7 +2,7 @@
 \chapterlead{Every chart below is generated from \file{reports/data/*.csv}; nothing is hand-drawn from memory.}
 
 \begin{glance}
-\item Component, test and row-count CSVs come from \cmd{uv run python scripts/report/collect_metrics.py}.
+\item Component, test and row-count CSVs come from \cmd{uv run python reports/scripts/collect_metrics.py}.
 \item Durations come from the newest \file{logs/pipeline_*.log}; unknown cells stay blank.
 \item Bronze counts of one row per table are the seeded snapshot recorded in the contracts, not production volumes.
 \end{glance}

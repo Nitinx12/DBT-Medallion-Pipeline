@@ -1,7 +1,7 @@
 """Collect repo-derived metrics into reports/data/*.csv for the LaTeX report.
 
 Usage:
-    uv run python scripts/report/collect_metrics.py [--root PATH] [--out-dir PATH]
+    uv run python reports/scripts/collect_metrics.py [--root PATH] [--out-dir PATH]
 
 Every number comes from the repo tree (file counts, YAML fields, log
 timestamps). The script never contacts live databases and never invents
@@ -32,7 +32,17 @@ import yaml
 
 DEFAULT_ROOT = Path(__file__).resolve().parent.parent.parent
 LAYERS = ("bronze", "silver", "gold")
-LOC_AREAS = ("src", "scripts", "dashboard", "airflow", "dbt", "gx", "tests", "sql")
+LOC_AREAS = (
+    "src",
+    "scripts",
+    "dashboard",
+    "airflow",
+    "dbt",
+    "gx",
+    "tests",
+    "sql",
+    "reports",
+)
 LOC_EXTS = {".py", ".sql", ".yml", ".yaml", ".sh", ".ps1"}
 # Dependency and generated trees are not project code.
 LOC_SKIP_DIRS = {
