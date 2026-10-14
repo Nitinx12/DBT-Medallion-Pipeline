@@ -2,12 +2,45 @@
   {
     "_id": "store-1",
     "store_id": 1,
-    "store_name": "Downtown Store",
+    "store_name": "Toronto Store 1",
     "city": "Toronto",
     "province": "ON",
     "country": "Canada",
     "is_active": "Y",
-    "created_timestamp": "2025-01-01 09:00:00",
-    "updated_timestamp": "2025-01-02 09:00:00"
+    "created_timestamp": "2025-12-20 08:00:00",
+    "updated_timestamp": "2025-12-20 09:00:00"
+  },
+  {
+    "_id": "store-2",
+    "store_id": 2,
+    "store_name": "Austin Store 2",
+    "city": "Austin",
+    "province": "TX",
+    "country": "United States",
+    "is_active": "Y",
+    "created_timestamp": "2025-06-01 11:00:00",
+    "updated_timestamp": "2025-06-01 11:00:00"
+  },
+  {
+    "_id": "store-3",
+    "store_id": 3,
+    "store_name": "Chicago Store 3",
+    "city": "Chicago",
+    "province": "IL",
+    "country": "Canada",
+    "is_active": "Y",
+    "created_timestamp": "2025-03-16 09:00:00",
+    "updated_timestamp": "2025-03-16 18:00:00"
+  },
+  {
+    "_id": "store-4",
+    "store_id": 4,
+    "store_name": "Vancouver Store 4",
+    "city": "Vancouver",
+    "province": "BC",
+    "country": "United States",
+    "is_active": "N",
+    "created_timestamp": "2025-10-28 09:00:00",
+    "updated_timestamp": "2025-10-28 17:00:00"
   }
 ]

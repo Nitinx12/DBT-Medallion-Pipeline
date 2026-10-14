@@ -13,6 +13,13 @@ Version bumps happen on `release/vX.Y.Z` branches; the `vX.Y.Z` tag triggers
 
 ### Added
 
+- **Richer CI fixtures.** `tests/fixtures/generate_fixtures.py`
+  (deterministic seed) now produces multi-row bronze fixtures (4 stores,
+  8 employees, 25 customers, 20 products, 30 orders, ~46 lines) that pass
+  every gate, replacing the previous 1-row-per-table set. Covered by
+  `tests/unit/test_fixtures.py` invariant tests; verified end to end
+  (seed, dbt silver/gold, all SQL suites, GX 23/23).
+
 - **Rebuilt technical report.** Replaced the `article`-class
   `reports/report.tex` (preserved at `reports/legacy/report_v1.tex`) with a
   XeLaTeX `scrreprt` project under `reports/` (see `reports/report.pdf`):
