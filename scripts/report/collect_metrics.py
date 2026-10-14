@@ -34,6 +34,16 @@ DEFAULT_ROOT = Path(__file__).resolve().parent.parent.parent
 LAYERS = ("bronze", "silver", "gold")
 LOC_AREAS = ("src", "scripts", "dashboard", "airflow", "dbt", "gx", "tests", "sql")
 LOC_EXTS = {".py", ".sql", ".yml", ".yaml", ".sh", ".ps1"}
+# Dependency and generated trees are not project code.
+LOC_SKIP_DIRS = {
+    "dbt_packages",
+    "target",
+    "logs",
+    "__pycache__",
+    ".venv",
+    "node_modules",
+    "build",
+}
 
 # Canonical 8 stages: number, display name, tool tag shown in the report.
 STAGES: tuple[tuple[int, str, str], ...] = (
@@ -106,7 +116,13 @@ def loc_by_area(root: Path) -> list[dict[str, object]]:
     rows = []
     for area in LOC_AREAS:
         area_dir = _require(root / area, f"source area {area}")
-        files = [p for p in area_dir.rglob("*") if p.is_file() and p.suffix in LOC_EXTS]
+        files = [
+            p
+            for p in area_dir.rglob("*")
+            if p.is_file()
+            and p.suffix in LOC_EXTS
+            and not any(part in LOC_SKIP_DIRS for part in p.parts)
+        ]
         lines = 0
         for path in files:
             try:
@@ -298,7 +314,9 @@ def dashboard_pages(root: Path) -> list[dict[str, object]]:
             {
                 "page": page.stem,
                 "charts": len(CHART_CALL.findall(text)),
-                "source_tables": ",".join(sorted(tables)),
+                # Semicolon join: pgfplotstable splits quoted comma lists
+                # into phantom columns, while LaTeX still breaks lines here.
+                "source_tables": "; ".join(sorted(tables)),
             }
         )
     return rows

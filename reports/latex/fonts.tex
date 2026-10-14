@@ -7,9 +7,12 @@
 % \IfFileExists tests the bundled files (relative to reports/, where the
 % build runs); \IfFontExistsTF only sees system font names, so it cannot
 % test bundled files.
-\IfFileExists{fonts/Inter-Regular.ttf}{%
+% Bundled files: Inter v3 static OTF (full charset, includes arrows and
+% tabular figures) plus JetBrains Mono TTF. Names below must match
+% reports/fonts/ exactly; the build warns and falls back without them.
+\IfFileExists{fonts/Inter-Regular.otf}{%
   \setsansfont{Inter}[
-    Path=fonts/, Extension=.ttf,
+    Path=fonts/, Extension=.otf,
     UprightFont=*-Regular, BoldFont=*-Bold,
     ItalicFont=*-Italic, BoldItalicFont=*-BoldItalic,
     Numbers={Lining,Proportional}]

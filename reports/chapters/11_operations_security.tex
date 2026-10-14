@@ -1,3 +1,22 @@
 \chapter{Operations and security}
 \chapterlead{Health checks, secret scanning, backups and least privilege.}
-\todo{Write chapter content.}
+
+\begin{glance}
+\item Health and security scripts are read-only and never print secrets.
+\item The public dashboard connects as least-privilege \file{dashboard_ro}.
+\item Demo data is PII-scrubbed; logs rotate before they grow.
+\end{glance}
+
+\section{Operate}
+
+\file{scripts/run_health_check.py} probes Postgres, Mongo, PySpark, Docker, Compose, the Airflow API, the newest pipeline log and git state, then renders \file{HEALTHY}, \file{HEALTHY WITH WARNINGS} or \file{ACTION NEEDED}; only \file{FAIL} exits non-zero, with \cmd{--quick} skipping Spark. \file{scripts/monitor_logs.sh} summarizes or prunes \file{logs/} (newest always kept), \file{scripts/backup.sh} dumps and restores per schema with \file{pg_dump}/\file{pg_restore}, and \file{scripts/db_shell.sh} opens psql with the right search path. Every logger writes console plus a daily file through rotating 5~MB $\times$~5 handlers, so a failed collection can be diagnosed three ways (console, file, \file{etl_logs}) without rerunning.
+
+\section{Secure}
+
+\file{scripts/run_security_check.py} scans tracked text files for private keys, cloud tokens, password-bearing URIs and hardcoded secrets, reporting paths and lines but never values, then checks env hygiene, Airflow defaults, Dockerfile users, lockfiles and CI scanning. \file{sql/security/dashboard_readonly_role.sql} creates \file{dashboard_ro} with usage on gold plus select on present and future tables, so the public app never holds owner credentials. \file{scripts/seed_demo_db.py} copies gold to a separate demo database with names, emails and phones anonymized. \file{.env} and \file{secrets.toml} are git-ignored; only dummy-value examples are committed, guarded by the private-key pre-commit hook.
+
+\begin{keybox}
+\item Read-only auditing plus least-privilege access beats post-incident cleanup.
+\item Three independent log sinks mean failures are explainable after the fact.
+\item No credential ever appears in code, docs, logs or this report.
+\end{keybox}

@@ -1,3 +1,51 @@
 \chapter{Dashboard}
-\chapterlead{Seven pages on one shared gold join graph.}
-\todo{Write chapter content.}
+\chapterlead{Seven pages on one shared gold join graph, cached and themed.}
+
+\begin{glance}
+\item Home plus six numbered pages read gold through a single \file{BASE_FROM} graph.
+\item All SQL lives in \file{helpers/queries.py}; pages stay thin by rule.
+\item Walmart theme, period-over-period KPIs and a data-trust banner.
+\end{glance}
+
+\section{Layering}
+
+\Cref{fig:dashboard-arch} traces a request; the rules below keep the layers honest.
+
+\begin{figure}[tbp]
+\centering
+\input{figures/tikz/11_dashboard_arch}
+\caption{Dashboard data path with cache TTLs. Takeaway: one join graph, one SQL file, one theme.}
+\label{fig:dashboard-arch}
+\end{figure}
+
+Pages import only from \file{dashboard.lib.queries} (a re-export shim); figure builders live in \file{lib/charts.py}; shared widgets in \file{helpers/components.py}. \file{Filters} is a frozen dataclass so it hashes as a \file{st.cache_data} key: filter options cache 3600~s, data queries 60--300~s. Every query aggregates in Postgres and filters soft-deletes; the only bounded raw pull is the 200-row recent-orders sample. \file{end_date} is an exclusive upper bound, empty selections match nothing and render \file{empty_state}, and all HTML passes through \file{_safe_html}.
+
+\section{Pages}
+
+\Cref{tab:dashboard-pages} inventories the seven pages; each row follows the layering above.
+
+\begin{center}
+\begin{tabular}{l >{\raggedright\arraybackslash}p{10cm}}
+\toprule
+Page & Content \\
+\midrule
+Home & KPI cards with prior-period deltas, sparklines, freshness badge \\
+1\_Sales & Revenue trend, store and payment mix, day-hour heatmap \\
+2\_Products & Top products, brand bars, treemap, pareto, bubble \\
+3\_Customers & RFM scatter, cohort heatmap, top customers, order search \\
+4\_Categories & Sunburst, status funnel, share area \\
+5\_Geo & Store map with click-to-filter (synthetic coordinates) plus province bars \\
+6\_Data\_Health & Table counts, pipeline status from bronze control tables \\
+\bottomrule
+\end{tabular}
+\captionof{table}{Dashboard pages. Source: \file{dashboard/pages/*.py}.}
+\label{tab:dashboard-pages}
+\end{center}
+
+Geo coordinates are synthetic state-capital points, not real addresses, and are labelled as such. Deployment reads \file{st.secrets} through \file{lib/db.py} on Streamlit Cloud and \file{.env} locally; \file{requirements.txt} stays minimal and databricks-free, guarded by the CI dashboard-smoke job. Entry point is \file{dashboard/home.py}; any \file{app.py} reference is stale.
+
+\begin{keybox}
+\item One join graph means every page agrees on what revenue means.
+\item Thin pages plus cached aggregates keep interactions fast without a semantic layer.
+\item Synthetic geo and secrets discipline are stated in the open, not discovered later.
+\end{keybox}

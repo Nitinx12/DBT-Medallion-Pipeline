@@ -1,14 +1,14 @@
-% Docker images and the local compose stack.
-\begin{tikzpicture}[node distance=7mm and 10mm]
-  \node[box=DockerBlue] (pipe) {\texttt{Dockerfile.pipeline}\\\scriptsize python:3.12 + JDK 17\\\scriptsize CMD \texttt{main.py}};
-  \node[box=DockerBlue, below=of pipe] (air) {\texttt{Dockerfile.airflow}\\\scriptsize airflow:3.3.0 + JDK 17};
-  \node[box, right=of pipe] (meta) {metadata DB\\\scriptsize postgres:16};
-  \node[box, right=of meta] (api) {apiserver\\\scriptsize :8080};
-  \node[box, right=of api] (mig) {migrate};
-  \node[box, right=of mig] (sch) {scheduler};
+% Docker images and the local compose stack, in two rows.
+\begin{tikzpicture}[node distance=7mm and 8mm]
+  \node[box=DockerBlue, minimum width=34mm] (pipe) {\texttt{Dockerfile.pipeline}\\\scriptsize py:3.12 + JDK 17\\\scriptsize CMD \texttt{main.py}};
+  \node[box=DockerBlue, minimum width=34mm, right=of pipe] (air) {\texttt{Dockerfile.airflow}\\\scriptsize airflow:3.3.0 + JDK 17};
+  \node[box, minimum width=24mm, below=of pipe] (meta) {metadata DB\\\scriptsize postgres:16};
+  \node[box, minimum width=24mm, right=of meta] (api) {apiserver\\\scriptsize :8080};
+  \node[box, minimum width=24mm, right=of api] (mig) {migrate};
+  \node[box, minimum width=24mm, right=of mig] (sch) {scheduler};
   \draw[flow] (air) -- (meta);
   \draw[flow] (meta) -- (api);
   \draw[flow] (api) -- (mig);
   \draw[flow] (mig) -- (sch);
-  \draw[data flow] (pipe) -- (meta);
+  \draw[data flow] (pipe) |- (meta);
 \end{tikzpicture}

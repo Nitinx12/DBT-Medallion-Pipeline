@@ -1,3 +1,89 @@
 \chapter{Bronze and extraction}
-\chapterlead{How MongoDB collections become raw bronze tables.}
-\todo{Write chapter content.}
+\chapterlead{Six MongoDB collections become six raw Postgres tables, incrementally and auditably.}
+
+\begin{glance}
+\item \file{src/jobs/extract.py} is the only file that touches MongoDB.
+\item Collections are auto-discovered; the watermark column follows a fixed priority.
+\item First load appends; later loads upsert through a staging table keyed on \file{_id}.
+\end{glance}
+
+\section{Source tables}
+
+\Cref{tab:bronze-sources} lists the six mirrors; collection discovery below explains why the list never hard-codes them.
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+MongoDB collection & \layer{bronze} table \\
+\midrule
+\file{customers} & \file{bronze.customers} \\
+\file{orders} & \file{bronze.orders} \\
+\file{order_items} & \file{bronze.order_items} \\
+\file{products} & \file{bronze.products} \\
+\file{stores} & \file{bronze.stores} \\
+\file{employees} & \file{bronze.employees} \\
+\bottomrule
+\end{tabular}
+\captionof{table}{Bronze mirrors one collection each. Source: \file{dbt/models/bronze/source.yml}.}
+\label{tab:bronze-sources}
+\end{center}
+
+\file{discover_collections()} lists collection names and drops anything starting with \file{system.}; no list is ever hard-coded, and \cmd{--tables} filters for ad-hoc runs.
+
+\section{Watermark rule}
+
+Each collection is sampled once and the first present candidate wins:
+
+\begin{center}
+\file{updated_timestamp} $\succ$ \file{updated_at} $\succ$ \file{created_timestamp} $\succ$ \file{created_at}
+\end{center}
+
+\file{updated_*} outranks \file{created_*} because mutated documents (an order moving to \file{Cancelled}) must re-sync, not just new inserts. The constant lives in \file{src/jobs/extract.py} as \file{INCREMENTAL_COLUMN_CANDIDATES} (lines~151--156). Without any candidate the collection reloads fully with a warning.
+
+The Spark read filters server-side with a string comparison, which is intentional: the source stores timestamps as \file{YYYY-MM-DD HH:MM:SS} strings, and MongoDB never matches across BSON types in \file{\$gt}.
+
+\begin{wmlisting}{src/jobs/extract.py (excerpt)}{wm py}
+watermark_str = since.strftime("%Y-%m-%d %H:%M:%S")
+pipeline = json.dumps(
+    [{"$match": {incremental_column: {"$gt": watermark_str}}}]
+)
+reader = reader.option("aggregation.pipeline", pipeline)
+\end{wmlisting}
+
+\section{Upsert mechanics}
+
+\Cref{fig:extract-flow} orients the steps below; each path through it ends in validation.
+
+\file{_id}, cast to string by \file{sanitize_for_postgres}, is the merge key. A unique index on \file{_id} is ensured first; if creation fails the run falls back to plain append with a warning rather than corrupting data. Otherwise each load writes a scratch staging table (\file{_stg_} plus the collection name) with \file{mode("overwrite")}, then merges:
+
+\begin{wmlisting}{src/jobs/extract.py: merge\_staging\_into\_target (excerpt)}{wm sql}
+WITH upsert AS (
+    INSERT INTO "{POSTGRES_SCHEMA}"."{collection}" ({quoted_cols})
+    SELECT {quoted_cols} FROM "{POSTGRES_SCHEMA}"."{staging_table}"
+    ON CONFLICT ("{PRIMARY_KEY_COLUMN}") DO UPDATE SET {set_clause}
+    RETURNING (xmax = 0) AS inserted
+)
+SELECT
+    count(*) FILTER (WHERE inserted)     AS rows_inserted,
+    count(*) FILTER (WHERE NOT inserted) AS rows_updated
+FROM upsert
+\end{wmlisting}
+
+Struct, array and map columns serialize to JSON via \file{to_json()} (plain JDBC has no struct type); flattened names appear in the final Rich report.
+
+\begin{figure}[tbp]
+\centering
+\input{figures/tikz/04_extract_internals}
+\caption{Extractor flowchart from discovery to report. Takeaway: every path ends in validation, and control tables record what happened.}
+\label{fig:extract-flow}
+\end{figure}
+
+\section{Control tables and CLI}
+
+Both live beside bronze collections: \file{etl_watermarks} (one row per collection: incremental column, last value, run mode, counts) upserted on \file{table_name}, and \file{etl_logs} (one audit row per collection per run, best-effort). \file{validate_collection} recounts the target and expects \file{before + inserted}; any \file{FAILED} collection exits the process non-zero. CLI flags: \cmd{--tables}, \cmd{--full-refresh} (truncate first), \cmd{--dry-run}, \cmd{--watermark-column}.
+
+\begin{keybox}
+\item Auto-discovery plus watermark upserts keep bronze fresh without re-copying.
+\item String pushdown matches the source format; the merge counts inserts versus updates exactly.
+\item Watermarks and logs make every run resumable and auditable.
+\end{keybox}

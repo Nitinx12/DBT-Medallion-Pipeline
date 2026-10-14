@@ -1,3 +1,28 @@
 \chapter{Command cheat-sheet}
-\chapterlead{The commands that run this repo, nothing more.}
-\todo{Write command reference.}
+\chapterlead{The commands that run this repo, verified against \file{AGENTS.md} and the Makefile.}
+
+\Cref{tab:cheatsheet} is the whole appendix: one table, no prose needed.
+
+\begin{center}
+\begin{tabular}{l >{\raggedright\arraybackslash}p{11cm}}
+\toprule
+Task & Command \\
+\midrule
+Setup & \cmd{uv venv \&\& uv sync} \\
+Full pipeline & \cmd{make data-pipeline} \\
+Windows CMD & \cmd{run_pipeline.bat} \\
+PowerShell & \texttt{.\textbackslash pipeline\textbackslash run\_pipeline.ps1} \\
+Docker & \cmd{uv run main.py} \\
+Static checks & \cmd{make static-checks} \\
+Unit tests & \cmd{make unit-test} \\
+All tests & \cmd{uv run pytest} \\
+SQL suite & \cmd{uv run python src/jobs/sql_test.py tests/data-quality/silver} \\
+GX & \cmd{uv run python -m gx.run --layer all} \\
+Contracts drift & \cmd{uv run python scripts/run_update_contract.py --check-only} \\
+Dashboard & \cmd{uv run streamlit run dashboard/home.py} \\
+Report & \cmd{make report} \\
+\bottomrule
+\end{tabular}
+\captionof{table}{Cheat-sheet.}
+\label{tab:cheatsheet}
+\end{center}

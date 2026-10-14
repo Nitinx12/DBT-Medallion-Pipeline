@@ -1,3 +1,47 @@
 \chapter{Sample data contract}
-\chapterlead{One annotated contract showing human versus machine fields.}
-\todo{Add verified contract YAML excerpt.}
+\chapterlead{\file{contracts/silver/orders.yml}: human fields editable, machine fields synced.}
+
+\begin{wmlisting}{contracts/silver/orders.yml, lines 1--45 (verified)}{wm yaml}
+apiVersion: 1.0.0
+kind: DataContract
+metadata:
+  name: silver.orders
+  layer: silver
+  version: 1.0.0
+  status: active
+  owner: analytics-engineering
+  domain: retail-warehouse
+  description: Deduped orders, one row per order_id. Payment_method normalized to
+    FK.
+dataset:
+  server: postgres-prod
+  database: walmart_db
+  schema: silver
+  table: orders
+  grain: order_id unique, NOT NULL
+  upstream:
+  - bronze.orders
+  - silver.stores
+  - silver.customers
+  - silver.payment_methods
+  dbtModel: dbt/models/silver/orders.sql
+  loadStrategy: incremental merge on order_id with 3-day lookback
+  row_count: 10000
+  column_count_contract: 11
+  column_count_observed: 11
+  table_exists: true
+  last_observed_at: '2026-10-13T14:51:42+00:00'
+columns:
+- name: order_id
+  data_type: INTEGER
+  nullable: true
+  unique: true
+  primary_key: true
+  transformation: TRIM(order_id::VARCHAR)::INT
+  tests:
+  - not_null
+  - unique
+  observed_data_type: INTEGER
+\end{wmlisting}
+
+Editable: \file{description}, \file{transformation}, \file{tests}. Synced: \file{row_count}, \file{last_observed_at}, \file{observed_*} and counts. The full file runs 208~lines; the remaining columns follow the same shape.

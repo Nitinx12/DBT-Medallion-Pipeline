@@ -191,6 +191,8 @@ clean-venv: ## Remove the virtual environment entirely (forces a full uv sync ne
 
 # ---- Technical report (LaTeX, XeLaTeX) ------------------------------------
 # -cd keeps font/style paths resolving from reports/ on every platform.
+REPORT_TEX := main.tex $(wildcard reports/chapters/*.tex)
+
 report-data: ## Regenerate CSVs for report charts
 	$(PYTHON) scripts/report/collect_metrics.py
 
@@ -204,5 +206,10 @@ report-watch: ## Live-rebuild the report on save
 report-clean: ## Remove LaTeX build artefacts
 	latexmk -cd -C -outdir=build reports/main.tex
 
+# -n12/-n36 are off below: dots and parens inside \file{} paths and code
+# listings are not prose abbreviations (chktex cannot see that).
+# -n6/-n11/-n15/-n17/-n18/-n25/-n26/-n32/-n37 are off: chktex lints code
+# listings and \cmd{...} contents as prose (quotes, parens, ellipsis in
+# SQL/Python). Prose typography was reviewed by hand instead.
 report-lint: ## chktex style checks over the report sources
-	chktex -q -n1 -n8 -n13 -n24 reports/main.tex reports/chapters/*.tex
+	cd reports && chktex -q -n1 -n6 -n8 -n11 -n12 -n13 -n15 -n17 -n18 -n24 -n25 -n26 -n32 -n36 -n37 $(REPORT_TEX:reports/%=%)

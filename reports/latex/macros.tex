@@ -11,8 +11,14 @@
 \newif\ifdraft
 \draftfalse
 
-\newcommand{\file}[1]{\texttt{\detokenize{#1}}}
-\newcommand{\cmd}[1]{\texttt{\detokenize{#1}}}
+% \file and \cmd behave like \url (verbatim argument, breakable at
+% slashes and dots) in typewriter style. Arguments must therefore be plain
+% text: write _ not \_, and no macros or braces inside.
+\DeclareUrlCommand\file{\urlstyle{tt}}
+\DeclareUrlCommand\cmd{\urlstyle{tt}}
+% Captions and TOC entries are moving arguments; url commands need armour.
+\robustify{\file}
+\robustify{\cmd}
 
 \newcommand{\layer}[1]{%
   \ifstrequal{#1}{bronze}{\textcolor{Bronze}{\rule{2.2ex}{2.2ex}} bronze}{}%

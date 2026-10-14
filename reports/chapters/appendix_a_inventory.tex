@@ -1,3 +1,58 @@
 \chapter{File inventory}
-\chapterlead{Every tracked file, its purpose and its owner area.}
-\todo{Generate longtable from the repo tree.}
+\chapterlead{The tracked tree grouped by area; generated from \cmd{git ls-files}.}
+
+\begin{center}
+\begin{longtable}{>{\ttfamily\scriptsize\raggedright\arraybackslash}p{5.2cm} >{\sffamily\scriptsize\raggedright\arraybackslash}p{6.4cm} >{\sffamily\scriptsize}l}
+\toprule
+Path & Purpose & Area \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+main.py & Docker pipeline entrypoint & pipeline \\
+run\_pipeline.bat & Root CMD runner & pipeline \\
+pipeline/run\_pipeline.ps1 & Canonical PS runner & pipeline \\
+Makefile & Portable task runner & build \\
+pyproject.toml, uv.lock & Deps source of truth & build \\
+src/utils/engine.py & Validated config & runtime \\
+src/utils/connection.py & Cached factories & runtime \\
+src/utils/logger.py & Console+file logging & runtime \\
+src/jobs/extract.py & Mongo to bronze & runtime \\
+src/jobs/sql\_test.py & SQL gate runner & quality \\
+src/jobs/run\_dbt\_models.py & dbt helper & runtime \\
+src/jobs/ci\_seed\_bronze.py & CI fixture loader & quality \\
+scripts/run\_*.py & Ops wrappers (7) & ops \\
+scripts/*.sh & Shell helpers (7) & ops \\
+scripts/report/*.py & Report collectors & report \\
+dbt/dbt\_project.yml, profiles.yml & Project + targets & dbt \\
+dbt/models/bronze/source.yml & Source declarations & dbt \\
+dbt/models/silver/*.sql (9) & Clean models & dbt \\
+dbt/models/silver/schema.yml & Silver tests & quality \\
+dbt/models/gold/*.sql (8) & Dims + fact & dbt \\
+dbt/models/gold/schema.yml & Gold tests & quality \\
+dbt/tests/generic/*.sql (3) & Reusable tests & quality \\
+contracts/*/*.yml (25) & Table contracts & quality \\
+gx/run.py, context.py & GX runner + context & quality \\
+gx/suites/*.py (3) & Layer validations & quality \\
+tests/data-quality/*/*.sql (19) & SQL checks & quality \\
+tests/unit/*.py (6) & Unit tests & quality \\
+tests/smoke/*.py (5) & Smoke tests & quality \\
+tests/fixtures/bronze/*.json (6) & Offline fixtures & quality \\
+dashboard/home.py, pages/ (7) & Streamlit app & app \\
+dashboard/lib/, helpers/ & Queries, charts, theme & app \\
+dashboard/requirements.txt & Cloud deps & app \\
+airflow/dags/*.py (2) & ETL + health DAGs & orchestration \\
+docker/Dockerfile.* (2) & Images & ops \\
+docker/compose.yml & Local stack & ops \\
+sql/analytics/*.sql (16) & BI queries & app \\
+sql/functions, triggers, procedure & Server logic & app \\
+sql/security/*.sql & Readonly role & ops \\
+jars/*.jar (6) & Spark connectors & runtime \\
+docs/*.md (14) & Deep dives & docs \\
+reports/main.tex, latex/, chapters/ & This report & report \\
+reports/figures/tikz/*.tex (14) & Diagrams & report \\
+reports/data/*.csv (8) & Chart data & report \\
+.github/workflows/*.yml (8) & CI/CD & ops \\
+\bottomrule
+\end{longtable}
+\end{center}

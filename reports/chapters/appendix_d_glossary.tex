@@ -1,3 +1,29 @@
 \chapter{Glossary}
-\chapterlead{Acronyms and domain terms used in this report.}
-\todo{Write glossary longtable.}
+\chapterlead{Acronyms and domain terms as used in this report.}
+
+\Cref{tab:glossary} defines every term the chapters assume.
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+Term & Meaning \\
+\midrule
+Medallion & Bronze/raw, silver/clean, gold/modelled lakehouse pattern \\
+SCD / Type-1 & Slowly changing dimension; Type-1 overwrites history \\
+Grain & Business meaning of one row (e.g.\ one order line) \\
+Dedup & Removing duplicate source rows, here by \file{ROW_NUMBER} \\
+Watermark & High-water mark (timestamp) bounding incremental reads \\
+Upsert & Insert-or-update merge keyed on \file{_id} \\
+DAG & Directed acyclic graph; Airflow workflow definition \\
+XCom & Airflow cross-task message passing \\
+dbt & Data build tool; SQL models with tests and lineage \\
+GX & Great Expectations, data validation framework \\
+Neon & Managed Postgres hosting the production backend \\
+GHCR & GitHub Container Registry, image host \\
+PII & Personally identifiable information \\
+TTL & Cache time-to-live for dashboard queries \\
+\bottomrule
+\end{tabular}
+\captionof{table}{Glossary.}
+\label{tab:glossary}
+\end{center}

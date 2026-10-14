@@ -11,6 +11,7 @@
 \pgfplotsset{
   wm base/.style={
     width=\linewidth, height=6.2cm,
+    table/col sep=comma,
     axis line style={Rule}, tick style={Rule},
     tick label style={font=\sffamily\footnotesize, text=InkSoft},
     label style={font=\sffamily\small, text=Ink},
@@ -23,7 +24,7 @@
     nodes near coords style={font=\sffamily\scriptsize, text=Ink},
   },
   wm bar/.style={wm base, ybar, bar width=14pt, ymin=0, axis x line*=bottom, axis y line*=left},
-  wm hbar/.style={wm base, xbar, bar width=10pt, xmin=0, ytick=data, xmajorgrids, ymajorgrids=false},
+  wm hbar/.style={wm base, width=0.72\linewidth, xbar, bar width=10pt, xmin=0, ytick=data, xmajorgrids, ymajorgrids=false},
   wm line/.style={wm base, mark=*, mark size=2pt, smooth},
   wm stacked/.style={wm bar, ybar stacked},
   cycle list name=wm layers,

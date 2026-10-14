@@ -1,3 +1,40 @@
 \chapter{Executive summary}
-\chapterlead{Problem, solution and headline numbers in two pages.}
-\todo{Write after all chapters are done.}
+\chapterlead{A batch incremental warehouse with triple-checked gates, running one stage list on every platform.}
+
+\begin{glance}
+\item Problem: operational MongoDB cannot serve typed, historical analytics directly.
+\item Solution: watermark extraction, dbt medallion layers, gates at every hand-off.
+\item Proof: 17 models, 214 checks, 25 contracts, 8 stages, 7 CI jobs, measured durations.
+\end{glance}
+
+\section{Problem and solution}
+
+Analytics needs typed history and dimensions; MongoDB stays write-optimized. The pipeline bridges them: PySpark extraction with watermark upserts lands raw bronze, nine dbt models clean it into silver, eight models star it into gold, and a Streamlit app serves seven pages from one shared join graph. Three independent quality systems (dbt tests, SQL suite, Great Expectations) gate each hand-off, and per-table contracts record the agreed shape against the live database.
+
+\section{Headline numbers}
+
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+Measure & Count \\
+\midrule
+dbt models (silver + gold) & 17 \\
+Quality checks (dbt + SQL + GX) & 214 \\
+Data contracts & 25 \\
+Pipeline stages & 8 \\
+Runners (ps1, bat, Docker, Airflow, Make) & 5 \\
+CI jobs & 7 \\
+Dashboard pages & 7 \\
+\bottomrule
+\end{tabular}
+\captionof{table}{Headline numbers; each is regenerated from the repo by the metrics collector.}
+\label{tab:headlines}
+\end{center}
+
+The stack is Python with \file{uv}, PySpark~3.5, PostgreSQL~16, dbt Core, Airflow~3.3, Great Expectations~1.x and Docker, all pinned in \file{uv.lock}. \Cref{fig:arch-overview} shows the hero flow; the chapters that follow prove each number in \cref{tab:headlines}.
+
+\begin{keybox}
+\item One warehouse, one stage list, three quality systems, five runners.
+\item Every number in this report traces to a repo file or generated CSV.
+\item Read Chapters~2--7 for the build, 9--11 for the surroundings, 12 for the measurements.
+\end{keybox}

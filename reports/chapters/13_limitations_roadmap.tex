@@ -1,3 +1,42 @@
 \chapter{Limitations and roadmap}
-\chapterlead{Honest gaps first, then what comes next.}
-\todo{Write chapter content.}
+\chapterlead{What the system does not do yet, stated plainly, then what comes next.}
+
+\begin{glance}
+\item Batch only, Type-1 only, synthetic demo geography.
+\item Two honest inconsistencies are documented, not hidden.
+\item The refresh cron and Data Docs publishing wait on operations, not code.
+\end{glance}
+
+\section{Limitations}
+
+\Cref{tab:limits} names each limit; the paragraphs below own up to the inconsistencies.
+
+\begin{center}
+\begin{tabular}{>{\raggedright\arraybackslash}p{3.8cm} >{\raggedright\arraybackslash}p{10.0cm}}
+\toprule
+Area & Limitation \\
+\midrule
+Freshness & Batch incremental only; no streaming or CDC. \\
+History & Type-1 everywhere; silver keeps no SCD2 snapshots. \\
+Geography & Store coordinates are synthetic state-capital points. \\
+Employees & Modelled to silver only; no headcount analytics. \\
+Refresh & Neon gold refresh cron is commented out until secrets land. \\
+Docs & GX Data Docs are not published from checkpoints. \\
+PII & No column masking; demo seeding scrubs instead. \\
+\bottomrule
+\end{tabular}
+\captionof{table}{Known limits. Each has a roadmap item below.}
+\label{tab:limits}
+\end{center}
+
+Two inconsistencies deserve honesty. First, some docs say \file{docker/Dockerfile} while the files are \file{Dockerfile.pipeline} and \file{Dockerfile.airflow}; the files win. Second, banners print \file{STEP n / 7} for eight stages because numbering starts at zero; the count is stages minus one, not an off-by-one in the runner. Third, GX asserts non-null FK ids while dbt relationships permit nulls (see Chapter~7); until product decides whether unknown lookups are legitimate, both stay as they are.
+
+\section{Roadmap}
+
+Near term: enable the Neon refresh cron, publish Data Docs, resolve the null-FK question, add bronze \file{schema.yml} depth. Medium term: dbt snapshots for customer and store history, BSON-date migration for native watermark pushdown, column masking for external gold access. Long term: change-stream CDC for near-real-time bronze.
+
+\begin{keybox}
+\item Limits are scoped and each maps to a concrete next step.
+\item Inconsistencies are documented where users will trip over them.
+\item Nothing on the roadmap requires re-architecture, only iteration.
+\end{keybox}

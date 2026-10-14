@@ -1,6 +1,7 @@
 % Gold star schema ERD: fact_order_items at the centre, dims around it.
-\begin{tikzpicture}[node distance=8mm and 8mm]
-  \node[gold box, minimum width=34mm] (fact) {\textbf{\texttt{fact\_order\_items}}\\\scriptsize \texttt{order\_item\_id} PK};
+% Natural node widths (no forced minimums) keep the grid in the text block.
+\begin{tikzpicture}[node distance=6mm and 6mm]
+  \node[gold box] (fact) {\textbf{\texttt{fact\_order\_items}}\\\scriptsize \texttt{order\_item\_id} PK};
   \node[gold box, above=of fact] (do) {\texttt{dim\_orders}\\\scriptsize \texttt{order\_id} PK};
   \node[gold box, left=of fact] (dp) {\texttt{dim\_products}\\\scriptsize \texttt{product\_id} PK};
   \node[gold box, right=of fact] (dc) {\texttt{dim\_customers}\\\scriptsize \texttt{customer\_id} PK};

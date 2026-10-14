@@ -1,3 +1,11 @@
 \chapter{Full entity-relationship diagram}
-\chapterlead{Every gold table, key and relationship on one landscape page.}
-\todo{Add landscape ERD figure.}
+\chapterlead{Every gold key and relationship on one landscape page.}
+
+\begin{landscape}
+\begin{figure}[tbp]
+\centering
+\input{figures/tikz/06_gold_star_schema}
+\caption{Gold ERD, repeated large for reference. The fact joins dims on surrogate and natural keys; products snowflake into brands and categories. Source: \file{dbt/models/gold/*.sql}.}
+\label{fig:erd-full}
+\end{figure}
+\end{landscape}

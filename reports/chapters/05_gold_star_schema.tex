@@ -1,3 +1,47 @@
 \chapter{Gold star schema}
-\chapterlead{Seven dimensions and one fact, Type-1, analytics-ready.}
-\todo{Write chapter content.}
+\chapterlead{Seven dimensions and one fact, Type-1, ready for BI.}
+
+\begin{glance}
+\item One fact (\file{fact_order_items}, line-item grain) surrounded by seven dims.
+\item Dimensions rebuild fully each run; only the fact merges incrementally.
+\item \file{employees} deliberately has no dimension.
+\end{glance}
+
+\section{Schema}
+
+\Cref{fig:gold-erd} draws the joins; \cref{tab:gold-models} states each grain. Appendix~E enlarges the diagram in \cref{fig:erd-full}.
+
+\begin{figure}[tbp]
+\centering
+\input{figures/tikz/06_gold_star_schema}
+\caption{Gold ERD. Arrows are FK reads at build time. Takeaway: every analytic path joins through the fact or \file{dim_orders}.}
+\label{fig:gold-erd}
+\end{figure}
+
+\begin{center}
+\begin{tabular}{>{\raggedright\arraybackslash}p{4.6cm} >{\raggedright\arraybackslash}p{9.6cm}}
+\toprule
+Model & Grain \\
+\midrule
+\file{dim_stores}, \file{dim_customers} & One row per store / customer (merge) \\
+\file{dim_products} & One row per product, keeps brand/category FKs (merge) \\
+\file{dim_brands}, \file{dim_categories}, \file{dim_payment_methods} & One row per lookup value (append) \\
+\file{dim_orders} & One row per order header, keeps store/customer/payment FKs (merge) \\
+\file{fact_order_items} & One row per order line; FKs to dims (merge on \file{order_item_id}) \\
+\bottomrule
+\end{tabular}
+\captionof{table}{Gold models and grains. Source: \file{dbt/models/gold/*.sql}.}
+\label{tab:gold-models}
+\end{center}
+
+\section{Design decisions}
+
+\file{fact_order_items} is the only incremental gold model, with the same 3-day lookback as silver for late lines. Dimensions full-refresh because rebuilding from silver is cheap at this scale and avoids SCD bookkeeping where history is not needed; policy is Type-1 everywhere (overwrite). Every table stamps \file{gold_loaded_at = CURRENT_TIMESTAMP} for lineage. The star snowflakes only at products into brands and categories, which the brand/category reports read directly.
+
+\file{employees} stops at silver: headcount analytics is out of scope, so no \file{dim_employees} exists (also recorded in \file{gx/suites/gold_suites.py}). Order-header measures such as \file{total_amount} live on \file{dim_orders}; there is no \file{fact_orders}. Gold is gated by \file{dbt test --select gold} plus the seven standalone checks in \file{tests/data-quality/gold/}.
+
+\begin{keybox}
+\item Type-1 full-refresh dims plus one incremental fact is the cheapest correct shape at this scale.
+\item Grain statements above are the contract; row-count parity tests enforce them.
+\item No employees dimension is a decision, not an omission.
+\end{keybox}

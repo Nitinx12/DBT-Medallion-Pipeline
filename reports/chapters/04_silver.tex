@@ -1,3 +1,66 @@
 \chapter{Silver}
-\chapterlead{Nine typed, deduplicated, FK-resolved models.}
-\todo{Write chapter content.}
+\chapterlead{Nine models turn raw bronze into typed, deduplicated, FK-resolved tables.}
+
+\begin{glance}
+\item All silver models are incremental: \file{merge} on natural keys, \file{append} for lookups.
+\item A 3-day lookback plus \file{ROW_NUMBER} dedupe absorbs late-arriving updates.
+\item Lookup tables (\file{brands}, \file{categories}, \file{payment_methods}) resolve text to surrogate keys.
+\end{glance}
+
+\section{Model map}
+
+\Cref{fig:silver-deps} shows the dependency shape; \cref{tab:silver-models} names every model with its merge key.
+
+\begin{figure}[tbp]
+\centering
+\input{figures/tikz/05_silver_models}
+\caption{Silver dependencies. Lookup models distil bronze text columns; entity models merge and join them. Takeaway: FK resolution happens here, once.}
+\label{fig:silver-deps}
+\end{figure}
+
+\begin{center}
+\begin{tabular}{>{\raggedright\arraybackslash}p{4.8cm} >{\raggedright\arraybackslash}p{4.2cm} >{\raggedright\arraybackslash}p{5.2cm}}
+\toprule
+Model & Reads & Merge key / strategy \\
+\midrule
+\file{customers} & bronze customers & \file{customer_id}, merge \\
+\file{employees} & bronze employees & \file{employee_id}, merge \\
+\file{stores} & bronze stores & \file{store_id}, merge \\
+\file{orders} & bronze orders + payment\_methods & \file{order_id}, merge \\
+\file{order_items} & bronze order\_items & \file{order_item_id}, merge \\
+\file{products} & bronze products + brands + categories & \file{product_id}, merge \\
+\file{brands} & bronze products.brand & append, surrogate \file{brand_id} \\
+\file{categories} & bronze products.category & append, surrogate \file{category_id} \\
+\file{payment_methods} & bronze orders.payment\_method & append, surrogate id \\
+\bottomrule
+\end{tabular}
+\captionof{table}{The nine silver models. Source: \file{dbt/models/silver/*.sql}.}
+\label{tab:silver-models}
+\end{center}
+
+\section{Cleaning patterns}
+
+Entity models dedupe with \file{ROW_NUMBER() PARTITION BY} natural key ordered by \file{updated_timestamp DESC, created_timestamp DESC, _id DESC}, cast text to \file{INT}/\file{NUMERIC}/\file{TIMESTAMP}, normalize phones to \file{+1-XXX-XXX-XXXX} (splitting \file{phone_extension} on \file{x}), map \file{Y} to boolean, and concat names. Lookup models distil distinct normalized values with stable surrogates:
+
+\begin{wmlisting}{dbt/models/silver/brands.sql (excerpt)}{wm jinja}
+{{ config(
+    materialized='incremental',
+    incremental_strategy='append'
+) }}
+
+WITH source_brands AS (
+
+    SELECT DISTINCT INITCAP(TRIM(brand::VARCHAR)) AS brand_name
+    FROM {{ source('bronze', 'products') }}
+    WHERE
+        brand IS NOT NULL
+        AND TRIM(brand::VARCHAR) <> ''
+\end{wmlisting}
+
+\file{products} and \file{orders} LEFT JOIN their lookups on the normalized text, turning denormalized strings into nullable FK ids. Tests in \file{dbt/models/silver/schema.yml} pin the contracts: unique plus not-null PKs, nullable-aware relationships, non-negative ranges, an email regex (warning) and the \file{line_amount = round(quantity * unit_price, 2)} expression (error).
+
+\begin{keybox}
+\item Silver is the single place where source quirks get fixed; gold and the dashboard assume clean input.
+\item Incremental merge plus lookback keeps reruns cheap and late data correct.
+\item Nine standalone SQL checks in \file{tests/data-quality/silver/} re-verify the same ground outside dbt.
+\end{keybox}

@@ -1,3 +1,54 @@
 \chapter{Architecture}
-\chapterlead{End-to-end flow, layer responsibilities and infrastructure.}
-\todo{Write chapter content.}
+\chapterlead{One warehouse, three layers, five runners: the whole system on two pages.}
+
+\begin{glance}
+\item MongoDB (operational) \textrightarrow{} PostgreSQL \file{walmart_db} (bronze \textrightarrow{} silver \textrightarrow{} gold) \textrightarrow{} dashboard and reports.
+\item Every layer hand-off is a quality gate; a failed gate stops the run.
+\item The same eight stages run on Windows, in Docker, on Airflow and from Make.
+\end{glance}
+
+\section{End-to-end flow}
+
+\begin{figure}[tbp]
+\centering
+\input{figures/tikz/01_architecture_overview}
+\caption{System overview. Raw data flows left to right; quality gates sit between layers; Airflow schedules runs above. Takeaway: no path reaches gold without passing a gate.}
+\label{fig:arch-overview}
+\end{figure}
+
+\Cref{fig:arch-overview} shows the complete path. \file{src/jobs/extract.py} copies each MongoDB collection into its own \layer{bronze} table inside PostgreSQL~16. Two dbt selections promote the data: nine \layer{silver} models clean and type it, eight \layer{gold} models shape it into a star schema. Consumers (Streamlit dashboard, \file{sql/analytics}, \file{reports/}) read gold only.
+
+\section{Layer responsibilities}
+
+\Cref{fig:layers} compresses the contract in \cref{tab:layers} to one glance; the table states it precisely.
+
+\begin{figure}[tbp]
+\centering
+\input{figures/tikz/02_medallion_layers}
+\caption{What each layer holds and guarantees, with one example transformation each. Takeaway: cleaning happens once in silver, never in consumers.}
+\label{fig:layers}
+\end{figure}
+
+\begin{center}
+\begin{tabular}{l >{\raggedright\arraybackslash}p{6.4cm} >{\raggedright\arraybackslash}p{5.4cm}}
+\toprule
+Layer & Holds & Guarantee \\
+\midrule
+\layer{bronze} & Raw 1:1 mirror of MongoDB, plus \file{etl_watermarks} and \file{etl_logs} & Source fidelity; \file{_id} unique \\
+\layer{silver} & Nine typed, trimmed, deduplicated models & One clean row per source document \\
+\layer{gold} & Seven dimensions plus \file{fact_order_items} & Analytics-ready star, Type-1 \\
+\bottomrule
+\end{tabular}
+\captionof{table}{Medallion layer contract. Source: \file{docs/architecture.md}.}
+\label{tab:layers}
+\end{center}
+
+\section{Infrastructure view}
+
+Postgres is \file{walmart_db}; schema names default to \file{bronze}/\file{silver}/\file{gold} through \file{POSTGRES_SCHEMA_*} in \file{.env}, read once by \file{src/utils/engine.py}. All runners set \file{PYTHONPATH} to the project root so \file{src.*} resolves identically. The localhost rule (\file{docs/architecture.md}): \file{.env} keeps \file{localhost} for local \cmd{uv run}; only containers rewrite to \file{host.docker.internal} in the DAG preamble and entrypoint. \file{.env} itself is never edited.
+
+\begin{keybox}
+\item Bronze mirrors, silver cleans, gold models; consumers read gold only.
+\item Gates between layers fail the run; nothing half-promoted ever lands downstream.
+\item One \file{.env}, validated once, shared by every runner and the app.
+\end{keybox}

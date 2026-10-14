@@ -1,3 +1,53 @@
 \chapter{Data contracts}
 \chapterlead{One YAML per table; humans describe, the database decides.}
-\todo{Write chapter content.}
+
+\begin{glance}
+\item 8 bronze plus 9 silver plus 8 gold contracts cover every modeled table.
+\item Human fields (\file{description}, \file{transformation}, \file{tests}) are hand-edited; machine fields are synced.
+\item Drift workflow: \cmd{--check-only} gate, then sync, then \cmd{--fix-types} adoption.
+\end{glance}
+
+\section{Anatomy}
+
+\Cref{fig:contract-loop} shows where the anatomy below participates: human fields enter left, machine fields exit right.
+
+\begin{figure}[tbp]
+\centering
+\input{figures/tikz/08_contract_lifecycle}
+\caption{Contract lifecycle. The CI gate runs \cmd{--check-only} and blocks on drift. Takeaway: contracts stay truthful because the database rewrites them.}
+\label{fig:contract-loop}
+\end{figure}
+
+Each file opens with identity (\file{apiVersion}, \file{kind: DataContract}, \file{metadata} with layer, owner, domain), then \file{dataset} (server, database, schema, table, grain, upstream list, dbt model, load strategy) and a \file{columns} list where every column carries its human contract:
+
+\begin{wmlisting}{contracts/silver/orders.yml (excerpt, verified)}{wm yaml}
+metadata:
+  name: silver.orders
+  description: Deduped orders, one row per order_id. Payment_method normalized to
+    FK.
+dataset:
+  table: orders
+  grain: order_id unique, NOT NULL
+  upstream:
+  - bronze.orders
+  - silver.payment_methods
+columns:
+- name: order_id
+  data_type: INTEGER
+  transformation: TRIM(order_id::VARCHAR)::INT
+  tests:
+  - not_null
+  - unique
+\end{wmlisting}
+
+Machine fields sit alongside: \file{row_count}, \file{last_observed_at}, per-column \file{observed_data_type}, null and distinct counts, and \file{sync_status}. \file{quality.enforcedBy} points at the exact \file{schema.yml}, data-quality SQL and GX validation enforcing the contract. A full annotated sample is Appendix~F.
+
+\section{Sync discipline}
+
+\cmd{uv run python scripts/run_update_contract.py --check-only} reports drift and exits 1 without writing; the plain run syncs counts, types and stats; \cmd{--fix-types} adopts observed database types into the contract. \cmd{--table} and \cmd{--layer} scope the run, \cmd{--no-create} skips new files. Never hand-edit a machine field: the next sync overwrites it, and review cannot tell intent from observation afterward.
+
+\begin{keybox}
+\item Contracts are executable documentation: tests enforce them, the sync proves them.
+\item The human/machine split keeps reviews meaningful and automation safe.
+\item Eight, nine and eight files match the modeled tables exactly; a new table needs a new contract.
+\end{keybox}

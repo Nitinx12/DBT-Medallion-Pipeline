@@ -1,23 +1,20 @@
-% Silver model dependency graph: brands/categories/payment_methods feed
-% products/orders; the rest map bronze tables one to one.
-\begin{tikzpicture}[node distance=7mm and 9mm]
-  \node[bronze box] (bp) {\texttt{bronze.products}};
-  \node[bronze box, below=of bp] (bo) {\texttt{bronze.orders}};
-  \node[silver box, right=of bp] (br) {\texttt{brands}};
-  \node[silver box, below=of br] (ca) {\texttt{categories}};
-  \node[silver box, below=of ca] (pm) {\texttt{payment\_methods}};
-  \node[silver box, right=of br] (pr) {\texttt{products}};
-  \node[silver box, right=of pm] (or) {\texttt{orders}};
-  \node[silver box, below=of or] (oi) {\texttt{order\_items}};
-  \node[silver box, above=of br] (cu) {\texttt{customers}};
-  \node[silver box, above=of pr] (st) {\texttt{stores}};
-  \node[silver box, above=of or] (em) {\texttt{employees}};
+% Silver model dependency graph: bronze text columns feed lookups, which
+% feed entity models. One-to-one models are listed in the note.
+\begin{tikzpicture}[node distance=6mm and 8mm]
+  \node[bronze box, minimum width=26mm] (bp) {\texttt{bronze.products}};
+  \node[bronze box, minimum width=26mm, below=of bp] (bo) {\texttt{bronze.orders}};
+  \node[silver box, minimum width=24mm, right=of bp] (br) {\texttt{brands}};
+  \node[silver box, minimum width=24mm, below=of br] (ca) {\texttt{categories}};
+  \node[silver box, minimum width=24mm, below=of ca] (pm) {\texttt{payment\_methods}};
+  \node[silver box, minimum width=24mm, right=of br] (pr) {\texttt{products}};
+  \node[silver box, minimum width=24mm, right=of pm] (or) {\texttt{orders}};
+  \node[silver box, minimum width=24mm, below=of or] (oi) {\texttt{order\_items}};
   \draw[flow] (bp) -- (br);
   \draw[flow] (bp) -- (ca);
   \draw[flow] (bo) -- (pm);
   \draw[flow] (br) -- (pr);
   \draw[flow] (ca) -- (pr);
   \draw[flow] (pm) -- (or);
-  \node[font=\sffamily\scriptsize, text=InkSoft, below=of oi]
-    {\texttt{customers}, \texttt{employees}, \texttt{stores}, \texttt{order\_items} map one to one};
+  \node[font=\sffamily\scriptsize, text=InkSoft, below=of oi, text width=120mm, align=center]
+    {\texttt{customers}, \texttt{employees}, \texttt{stores} and \texttt{order\_items} map their bronze tables one to one};
 \end{tikzpicture}

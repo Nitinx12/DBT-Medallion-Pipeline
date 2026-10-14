@@ -1,3 +1,21 @@
 \chapter{Environment variable reference}
-\chapterlead{Names only. Values live in local .env files and secrets.}
-\todo{Write env var reference from .env.example key names.}
+\chapterlead{Names only, from \file{.env.example}; values live in local files and secrets.}
+
+\begin{center}
+\begin{longtable}{>{\ttfamily\small}l >{\sffamily\small}l}
+\toprule
+Variable & Purpose \\
+\midrule
+\endhead
+POSTGRES\_HOST, POSTGRES\_PORT & Warehouse host and port \\
+POSTGRES\_DATABASE & Database name (\file{walmart_db}) \\
+POSTGRES\_USERNAME, POSTGRES\_PASSWORD & Owner credentials (never committed) \\
+POSTGRES\_SSLMODE, POSTGRES\_CHANNEL\_BINDING & TLS for managed providers \\
+POSTGRES\_SCHEMA\_BRONZE/SILVER/GOLD & Layer schema names \\
+MONGO\_URI, MONGO\_DB & Source connection and database \\
+PYSPARK\_PYTHON, PYSPARK\_DRIVER\_PYTHON & Spark worker interpreter \\
+DATABRICKS\_HOST/PATH/TOKEN & Databricks SQL warehouse (optional) \\
+DATABRICKS\_CATALOG/SCHEMA & Sync target namespace \\
+\bottomrule
+\end{longtable}
+\end{center}

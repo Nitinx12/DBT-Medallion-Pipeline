@@ -9,7 +9,7 @@ Item & Detail \\
 Title & Walmart Medallion Data Pipeline --- Technical Report \\
 Version & \ReportVersion{} (from \file{pyproject.toml}) \\
 Date & \ReportDate{} \\
-Commit & \file{\ReportCommit{}} \\
+Commit & \texttt{\ReportCommit{}} \\
 Author & Nitin \\
 Status & Final \\
 License & MIT (see \file{LICENSE}) \\
@@ -19,13 +19,13 @@ License & MIT (see \file{LICENSE}) \\
 
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
-\chapterlead{Abstract text summarises the finished report and is written last.}
-\todo{Write abstract, 150 words max, after all chapters are done.}
+A MongoDB e-commerce database is mirrored into PostgreSQL and curated through bronze (raw), silver (typed, nine models) and gold (star schema, seven dimensions plus one fact) layers. One fixed eight-stage pipeline with fail-fast gates runs identically on Windows, Docker, Airflow and Make. Quality is triple-checked per layer by dbt tests, a standalone SQL suite and Great Expectations, with per-table data contracts synced to the live database. A seven-page Streamlit dashboard serves gold; CI replays the pipeline against live Postgres. This report documents the architecture, stages, models, gates, app, operations and measured metrics of pipeline version \ReportVersion{}.
 
 \chapter*{How to read this report}
 \addcontentsline{toc}{chapter}{How to read this report}
 \chapterlead{Colour legend, notation and icons used throughout the report.}
-\todo{Write legend: layer colours, pass/fail colours, file/cmd notation.}
+
+Layer colours never vary: \layer{bronze} marks raw bronze content, \layer{silver} cleansed silver, \layer{gold} modelled gold. Status colours mark outcomes: \textcolor{Pass}{green} pass, \textcolor{Warn}{amber} warning, \textcolor{Fail}{red} failure. \file{monospace} names a file, path or identifier; \cmd{monospace} names a command to run. Numbered circles (\stage{0}{}) name pipeline stages. Every chapter opens with a lead and an at-a-glance box and closes with key takeaways; captions state the takeaway first and the CSV or file source last.
 
 \tableofcontents
 \listoffigures

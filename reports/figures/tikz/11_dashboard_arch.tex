@@ -1,14 +1,14 @@
 % Dashboard layering: pages, lib shim, helpers SQL, shared join graph, gold.
-\begin{tikzpicture}[node distance=8mm and 12mm]
-  \node[box=StreamlitRed] (pages) {7 pages\\\scriptsize home + 1--6};
-  \node[box, right=of pages] (lib) {\texttt{lib/}\\\scriptsize shim + filters + charts};
-  \node[box, right=of lib] (help) {\texttt{helpers/queries.py}\\\scriptsize all gold SQL};
-  \node[box=PgBlue, right=of help] (base) {\texttt{BASE\_FROM}\\\scriptsize fact $\bowtie$ 7 dims};
-  \node[gold box, right=of base] (gold) {Gold\\\scriptsize star schema};
+\begin{tikzpicture}[node distance=7mm and 8mm]
+  \node[box=StreamlitRed, minimum width=22mm] (pages) {7 pages\\\scriptsize home + 1--6};
+  \node[box, minimum width=22mm, right=of pages] (lib) {\texttt{lib/}\\\scriptsize shim, filters, charts};
+  \node[box, minimum width=22mm, right=of lib] (help) {\texttt{helpers/}\\\scriptsize all gold SQL};
+  \node[box=PgBlue, minimum width=22mm, right=of help] (base) {\texttt{BASE\_FROM}\\\scriptsize fact + 7 dims};
+  \node[gold box, minimum width=22mm, right=of base] (gold) {Gold\\\scriptsize star schema};
   \draw[strong flow] (pages) -- (lib);
   \draw[strong flow] (lib) -- (help);
   \draw[strong flow] (help) -- (base);
   \draw[strong flow] (base) -- (gold);
   \node[tag=WmBlue, above=of lib] {TTL 60/300 s};
-  \node[tag=WmBlue, above=of help] {TTL 3600 s options};
+  \node[tag=WmBlue, above=of help] {TTL 3600 s};
 \end{tikzpicture}

@@ -7,10 +7,16 @@
   fonttitle=\sffamily\bfseries\small, fontupper=\sffamily\small,
 }}
 
+% glance and keybox hold \item bullets, so they open an itemize
+% automatically; the other boxes hold plain prose.
 \newtcolorbox{glance}{wm box base, colback=WmYellowSoft, colframe=WmYellow,
-  coltitle=WmBlueDeep, title={\faEye{} At a glance}}
+  coltitle=WmBlueDeep, title={\faEye{} At a glance},
+  before upper={\begin{itemize}[leftmargin=1.2em, itemsep=2pt]},
+  after upper={\end{itemize}}}
 \newtcolorbox{keybox}{wm box base, colback=WmBlueLight, colframe=WmBlue,
-  coltitle=WmBlueDeep, title={\faLightbulb{} Key takeaways}}
+  coltitle=WmBlueDeep, title={\faLightbulb{} Key takeaways},
+  before upper={\begin{itemize}[leftmargin=1.2em, itemsep=2pt]},
+  after upper={\end{itemize}}}
 \newtcolorbox{notebox}{wm box base, colback=Info!6, colframe=Info,
   coltitle=WmBlueDeep, title={\faInfoCircle{} Note}}
 \newtcolorbox{warnbox}{wm box base, colback=Warn!8, colframe=Warn,

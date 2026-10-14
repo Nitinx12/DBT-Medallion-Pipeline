@@ -1,3 +1,45 @@
 \chapter{Data quality}
-\chapterlead{Defense in depth: dbt tests, SQL suite and Great Expectations.}
-\todo{Write chapter content.}
+\chapterlead{Three independent systems check the same warehouse three different ways.}
+
+\begin{glance}
+\item dbt tests are blocking per-model contracts and the only declarative FK check.
+\item The SQL suite sweeps whole schemas and owns business aggregates plus promotion parity.
+\item Great Expectations runs engine-independent value checks with load-timestamp signals.
+\end{glance}
+
+\section{Defense in depth}
+
+\Cref{fig:dq-defense} maps systems to layers; the counts and unique capabilities follow.
+
+\begin{figure}[tbp]
+\centering
+\input{figures/tikz/07_dq_defense}
+\caption{Which system checks what per layer. Overlap is deliberate redundancy across runners. Takeaway: each column catches something the others cannot.}
+\label{fig:dq-defense}
+\end{figure}
+
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+Layer & dbt tests & SQL checks & GX validations \\
+\midrule
+\layer{bronze} & 0 (sources declared) & 3 & 6 \\
+\layer{silver} & per-model schema & 9 & 9 \\
+\layer{gold} & per-model schema & 7 & 8 \\
+\bottomrule
+\end{tabular}
+\captionof{table}{Check counts by layer and system. Sources: \file{dbt/models/*/schema.yml}, \file{tests/data-quality/}, \file{gx/suites/}.}
+\label{tab:dq-counts}
+\end{center}
+
+\section{What each system uniquely catches}
+
+dbt \file{schema.yml} tests run with each build: unique plus not-null keys, nullable-aware relationships (a \file{where} clause exempts legitimate null FKs), accepted ranges on amounts and the \file{line_amount} expression. The standalone SQL suite (\file{src/jobs/sql_test.py} over \file{tests/data-quality/}) does what dbt cannot express generically: schema-wide duplicate, null, format, negative, range and spacing sweeps, hardcoded domain allows (countries, payment methods, order statuses), six business rules including \file{order total = SUM(lines)}, and the silver-to-gold row-count parity check, which is the only test proving promotion completeness. GX (\cmd{python -m gx.run --layer all}) validates value distributions without dbt, adds \file{silver_loaded_at}/\file{gold_loaded_at} presence as a load-job signal, and exits 1 on data failure versus 2 on build error.
+
+Known tension, stated honestly: GX asserts FK ids \file{NotNull} while dbt relationships deliberately permit nulls. If unknown-brand products are legitimate, the GX suites need relaxing, not the models. Conventions: a \file{SELECT} returning rows fails, a \file{DO} block raising fails, and GX runs every requested layer unless \cmd{--fail-fast} is passed.
+
+\begin{keybox}
+\item Three systems, three blind spots covered: declarative FKs, business aggregates with parity, runner-independent values.
+\item Counts in \cref{tab:dq-counts} are regenerated from the repo; rerun the collector after model changes.
+\item The GX-versus-dbt null-FK tension is open and documented, not silently resolved.
+\end{keybox}

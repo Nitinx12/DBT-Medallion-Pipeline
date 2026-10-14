@@ -1,3 +1,58 @@
 \chapter{CI, CD and Docker}
-\chapterlead{Seven CI jobs, two images, two publish paths.}
-\todo{Write chapter content.}
+\chapterlead{Seven CI jobs gate merges; two images ship; releases cut on tags.}
+
+\begin{glance}
+\item \file{ci.yml} runs lint, three test jobs, DAG integrity, Docker build and a live-Postgres integration.
+\item CD publishes rolling tags on green main; release publishes semver on tags; refresh is manual until Neon is ready.
+\item Two images (pipeline runner, Airflow stack) plus a local Compose file.
+\end{glance}
+
+\section{CI}
+
+\Cref{fig:cicd} graphs the jobs; \cref{tab:ci-jobs} states each gate.
+
+\begin{figure}[tbp]
+\centering
+\input{figures/tikz/12_cicd_graph}
+\caption{CI job DAG and publish triggers. Takeaway: everything expensive waits on lint; integration replays the pipeline order against live Postgres.}
+\label{fig:cicd}
+\end{figure}
+
+\begin{center}
+\begin{tabular}{l >{\raggedright\arraybackslash}p{11cm}}
+\toprule
+Job & Gate \\
+\midrule
+lint & Ruff check plus format, SQLFluff on \file{dbt/models sql/ tests/} \\
+dashboard-smoke & Dashboard-only install, assert no databricks, import check \\
+unit-tests & \cmd{pytest tests/unit} (30 tests, mocked) \\
+smoke-tests & Imports, layout, CLIs, DAG structure (16 tests) \\
+dag-integrity & Constraints-pinned Airflow, DagBag import plus cycle check \\
+docker-build & Both Dockerfiles, no push \\
+integration & Seed bronze from fixtures, then bronze checks, dbt silver, silver checks, dbt gold, gold checks, GX all \\
+\bottomrule
+\end{tabular}
+\captionof{table}{CI jobs. Source: \file{.github/workflows/ci.yml}.}
+\label{tab:ci-jobs}
+\end{center}
+
+\file{dbt.yml} gives cheap parse-only feedback on \file{dbt/**} changes. \file{cd.yml} pushes rolling plus SHA tags after green main; \file{release.yml} validates semver tags and publishes both images with a GitHub Release; \file{refresh.yml} rebuilds Neon gold on demand (cron commented out until secrets land). Pre-commit mirrors lint locally with the Conventional Commits hook.
+
+\section{Docker}
+
+\Cref{fig:docker} places the images beside the stack they serve.
+
+\begin{figure}[tbp]
+\centering
+\input{figures/tikz/13_docker_compose}
+\caption{Images and Compose services. Takeaway: one image runs the pipeline, the other schedules it, Compose wires them locally.}
+\label{fig:docker}
+\end{figure}
+
+\file{Dockerfile.pipeline} (Python~3.12-slim plus JDK~17, \cmd{uv sync --frozen}, \file{dbt deps}, entrypoint script, default \cmd{uv run main.py}) is the standalone runner published to GHCR. \file{Dockerfile.airflow} (Airflow~3.3.0 plus JDK~17, repo mounted, no code copy) backs \file{compose.yml}: metadata Postgres, API server on 8080, migrate and scheduler on LocalExecutor. The entrypoint requires Postgres vars, rewrites localhost to \file{host.docker.internal} and TCP-waits for the database before exec.
+
+\begin{keybox}
+\item CI replays production order, so a green main means the pipeline logic is proven, not just linted.
+\item Publish paths do not overlap: rolling tags from merges, semver from tags, Neon refresh by hand.
+\item JDK~17 is pinned deliberately; the Mongo connector is untested on JDK~21.
+\end{keybox}

@@ -1,6 +1,8 @@
 % Walmart Medallion Data Pipeline --- Technical Report.
 % Engine: XeLaTeX only. Build with `make report` (latexmk, outdir=build).
-\documentclass[paper=a4, fontsize=10.5pt, DIV=calc, parskip=half-,
+% DIV=12 gives ~26 mm side margins (~157 mm text block) on A4; DIV=calc
+% collapses to ~120 mm at 10.5 pt, which starves figures and tables.
+\documentclass[paper=a4, fontsize=10.5pt, DIV=12, parskip=half-,
   headings=small, numbers=noenddot, bibliography=totoc,
   captions=tableheading, twoside=false]{scrreprt}
 

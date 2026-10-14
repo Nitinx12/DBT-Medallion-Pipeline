@@ -1,27 +1,25 @@
-% Eight numbered stages 0-7 as a horizontal chain with tool tags and a
-% fail-fast exit arrow.
-\begin{tikzpicture}[node distance=6mm and 7mm]
+% Eight numbered stages 0-7 as a vertical chain with tool tags and a
+% fail-fast exit arrow. Vertical so the full chain fits the text block.
+\begin{tikzpicture}[node distance=5mm and 8mm]
   \node[numbered] (s0) {0};
-  \node[box, right=of s0] (b0) {Preflight\\scriptsize \texttt{pyspark} 3.5};
-  \node[numbered, right=of b0] (s1) {1};
-  \node[box, right=of s1] (b1) {Extract\\scriptsize Mongo \textrightarrow{} bronze};
-  \node[numbered, right=of b1] (s2) {2};
-  \node[box, right=of s2] (b2) {Bronze tests\\scriptsize 3 SQL};
-  \node[numbered, right=of b2] (s3) {3};
-  \node[box, right=of s3] (b3) {dbt silver\\scriptsize run + test};
-  \foreach \a/\b in {s0/b0,b0/s1,s1/b1,b1/s2,s2/b2,b2/s3,s3/b3}
+  \node[box, minimum width=52mm, right=of s0] (b0) {Preflight --- \texttt{pyspark} 3.5};
+  \node[numbered, below=of s0] (s1) {1};
+  \node[box, minimum width=52mm, right=of s1] (b1) {Extract --- Mongo \textrightarrow{} bronze};
+  \node[numbered, below=of s1] (s2) {2};
+  \node[box, minimum width=52mm, right=of s2] (b2) {Bronze tests --- 3 SQL};
+  \node[numbered, below=of s2] (s3) {3};
+  \node[box, minimum width=52mm, right=of s3] (b3) {dbt silver --- run + test};
+  \node[numbered, below=of s3] (s4) {4};
+  \node[box, minimum width=52mm, right=of s4] (b4) {Silver tests --- 9 SQL};
+  \node[numbered, below=of s4] (s5) {5};
+  \node[box, minimum width=52mm, right=of s5] (b5) {dbt gold --- run + test};
+  \node[numbered, below=of s5] (s6) {6};
+  \node[box, minimum width=52mm, right=of s6] (b6) {Gold tests --- 7 SQL};
+  \node[numbered, below=of s6] (s7) {7};
+  \node[box, minimum width=52mm, right=of s7] (b7) {GX tests --- all layers};
+  \foreach \a/\b in {s0/b0,b0/s1,s1/b1,b1/s2,s2/b2,b2/s3,s3/b3,b3/s4,
+    s4/b4,b4/s5,s5/b5,b5/s6,s6/b6,b6/s7,s7/b7}
     \draw[strong flow] (\a) -- (\b);
-  \node[numbered, below=9mm of s1] (s4) {4};
-  \node[box, right=of s4] (b4) {Silver tests\\scriptsize 9 SQL};
-  \node[numbered, right=of b4] (s5) {5};
-  \node[box, right=of s5] (b5) {dbt gold\\scriptsize run + test};
-  \node[numbered, right=of b5] (s6) {6};
-  \node[box, right=of s6] (b6) {Gold tests\\scriptsize 7 SQL};
-  \node[numbered, right=of b6] (s7) {7};
-  \node[box, right=of s7] (b7) {GX tests\\scriptsize all layers};
-  \draw[strong flow] (b3) |- (s4);
-  \foreach \a/\b in {s4/b4,b4/s5,s5/b5,b5/s6,s6/b6,b6/s7,s7/b7}
-    \draw[strong flow] (\a) -- (\b);
-  \draw[->, line width=1.4pt, draw=Fail] (b7.south) -- ++(0,-8mm)
-    node[below, font=\sffamily\scriptsize\bfseries, text=Fail] {fail fast: first failure stops the run};
+  \draw[->, line width=1.4pt, draw=Fail] (b7.east) -- ++(10mm,0)
+    node[right, font=\sffamily\scriptsize\bfseries, text=Fail] {fail fast};
 \end{tikzpicture}

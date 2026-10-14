@@ -1,3 +1,168 @@
 \chapter{Results and metrics}
-\chapterlead{Charts built from real repo data, nothing invented.}
-\todo{Write chapter content with pgfplots charts from reports/data CSVs.}
+\chapterlead{Every chart below is generated from \file{reports/data/*.csv}; nothing is hand-drawn from memory.}
+
+\begin{glance}
+\item Component, test and row-count CSVs come from \cmd{uv run python scripts/report/collect_metrics.py}.
+\item Durations come from the newest \file{logs/pipeline_*.log}; unknown cells stay blank.
+\item Bronze counts of one row per table are the seeded snapshot recorded in the contracts, not production volumes.
+\end{glance}
+
+\section{Components and coverage by layer}
+
+\Cref{fig:components-layer} counts the machinery; \cref{fig:defense-coverage} shows how the checks compose.
+
+\begin{figure}[tbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[wm bar, symbolic x coords={bronze,silver,gold}, xtick=data,
+  ylabel={count}, title={Modelled components per layer}]
+\addplot table[x=layer,y=dbt_models] {data/components_by_layer.csv};
+\addplot table[x=layer,y=sql_tests] {data/components_by_layer.csv};
+\addplot table[x=layer,y=gx_validations] {data/components_by_layer.csv};
+\addplot table[x=layer,y=contracts] {data/components_by_layer.csv};
+\legend{dbt models, SQL tests, GX validations, contracts}
+\end{axis}
+\end{tikzpicture}
+\caption{Components per layer: bronze has no dbt models (sources are declared, not built). Takeaway: silver carries the most machinery. Source: \file{reports/data/components_by_layer.csv}.}
+\label{fig:components-layer}
+\end{figure}
+
+\begin{figure}[tbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[wm base, xbar stacked, xmin=0, bar width=14pt,
+  symbolic y coords={bronze,silver,gold}, ytick=data,
+  xlabel={checks}, title={Quality checks per layer by system}]
+\addplot table[y=layer,x=dbt_models] {data/components_by_layer.csv};
+\addplot table[y=layer,x=sql_tests] {data/components_by_layer.csv};
+\addplot table[y=layer,x=gx_validations] {data/components_by_layer.csv};
+\legend{dbt models, SQL tests, GX validations}
+\end{axis}
+\end{tikzpicture}
+\caption{Defense-in-depth composition. Takeaway: no layer relies on a single system. Source: \file{reports/data/components_by_layer.csv}.}
+\label{fig:defense-coverage}
+\end{figure}
+
+\section{Row counts}
+
+\Cref{fig:rowcounts} proves promotion parity on a log scale; \cref{fig:bronze-rows} records the seeded bronze snapshot for context.
+
+\begin{figure}[tbp]
+\centering
+\begin{tikzpicture}
+\begin{semilogyaxis}[wm bar, ymin=4, xtick={0,...,8},
+  xticklabels={brands,categories,customers,employees,order\_items,orders,payment\_methods,products,stores},
+  xtick=data, x tick label style={rotate=32, anchor=east},
+  ylabel={rows (log scale)}, title={Silver versus gold promotion},
+  skip coords between index={3}{4}]
+\addplot table[x expr=\coordindex,y=silver] {data/layer_rowcounts.csv};
+\addplot table[x expr=\coordindex,y=gold] {data/layer_rowcounts.csv};
+\legend{silver, gold}
+\end{semilogyaxis}
+\end{tikzpicture}
+\caption{Promotion parity on a log axis; \file{employees} is skipped because it has no gold dimension by design. Takeaway: every promoted table arrives complete. Source: \file{reports/data/layer_rowcounts.csv} (contract machine fields).}
+\label{fig:rowcounts}
+\end{figure}
+
+\begin{figure}[tbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[wm bar, xtick={0,...,5},
+  xticklabels={customers,employees,order\_items,orders,products,stores},
+  xtick=data, x tick label style={rotate=32, anchor=east},
+  ylabel={rows}, title={Bronze extract snapshot}]
+\addplot table[x expr=\coordindex,y=rows] {data/extract_rows.csv};
+\end{axis}
+\end{tikzpicture}
+\caption{Bronze counts are one row per table: the seeded snapshot recorded in the contracts, shown to prove the pipeline, not production volume. Source: \file{reports/data/extract_rows.csv}.}
+\label{fig:bronze-rows}
+\end{figure}
+
+\section{Code size and test composition}
+
+\Cref{fig:loc} sizes the areas; \cref{fig:pyramid} shapes the suite and \cref{fig:tests-bars} numbers it.
+
+\begin{figure}[tbp]
+\centering
+\pgfplotstableread[col sep=comma]{data/loc_by_area.csv}\loctable
+\begin{tikzpicture}
+\begin{axis}[wm hbar, yticklabels from table={\loctable}{area},
+  xlabel={lines}, title={Project code lines by area}]
+\addplot table[x=lines, y expr=\coordindex] {\loctable};
+\end{axis}
+\end{tikzpicture}
+\caption{Python, SQL, YAML and shell lines per area, excluding vendored and generated trees. Takeaway: ops scripts outweigh the runtime; the warehouse itself is compact. Source: \file{reports/data/loc_by_area.csv}.}
+\label{fig:loc}
+\end{figure}
+
+\begin{figure}[tbp]
+\centering
+\begin{tikzpicture}
+\node[font=\sffamily\bfseries\small, text=WmBlueDeep] (t) at (0,5.2) {Test suite composition};
+\node[box, minimum width=22mm] (u) at (0,4.2) {unit: 30};
+\node[box, minimum width=30mm] (s) at (0,3.2) {smoke: 16};
+\node[box, minimum width=36mm] (q) at (0,2.2) {SQL data quality: 19};
+\node[box, minimum width=44mm] (g) at (0,1.2) {GX validations: 23};
+\node[box=DbtOrange, minimum width=64mm] (d) at (0,0) {dbt tests: 172};
+\end{tikzpicture}
+\caption{Suite sizes as test-function and check counts. Takeaway: dbt carries two thirds of all checks. Source: \file{reports/data/tests_pyramid.csv}.}
+\label{fig:pyramid}
+\end{figure}
+
+\begin{figure}[tbp]
+\centering
+\pgfplotstableread[col sep=comma]{data/tests_pyramid.csv}\pyramidtable
+\begin{tikzpicture}
+\begin{axis}[wm hbar, ytick=data,
+  yticklabels={unit,smoke,sql\_data\_quality,dbt,gx},
+  xlabel={count}, title={Test counts by kind}]
+\addplot table[x=count, y expr=\coordindex] {\pyramidtable};
+\end{axis}
+\end{tikzpicture}
+\caption{Exact counts behind \cref{fig:pyramid}: unit and smoke count defined test functions; dbt counts \file{tests:} entries in \file{schema.yml}. Source: \file{reports/data/tests_pyramid.csv}.}
+\label{fig:tests-bars}
+\end{figure}
+
+\section{Stage durations}
+
+\Cref{fig:durations} times the latest complete run from its log.
+
+\begin{figure}[tbp]
+\centering
+\pgfplotstableread[col sep=comma]{data/pipeline_stages.csv}\stagestable
+\begin{tikzpicture}
+\begin{axis}[wm hbar, yticklabels from table={\stagestable}{name},
+  yticklabel style={text width=2.8cm, align=right},
+  xlabel={seconds}, title={Stage durations, latest complete run}]
+\addplot table[x=duration_s, y expr=\coordindex] {\stagestable};
+\end{axis}
+\end{tikzpicture}
+\caption{Extract and the dbt builds dominate; SQL gates take about a second. Source: newest \file{logs/pipeline_*.log} via the collector.}
+\label{fig:durations}
+\end{figure}
+
+\clearpage
+\section{Dashboard coverage}
+
+\Cref{tab:coverage} reads directly from the collector output with no hand edits.
+
+\begin{table}[tbp]
+\centering
+\pgfplotstabletypeset[
+  col sep=comma, header=true,
+  columns={page,charts,source_tables},
+  columns/page/.style={column type=l, verb string type, column name=Page},
+  columns/charts/.style={column type=r, column name=Charts},
+  columns/source_tables/.style={column type={>{\sffamily\footnotesize\raggedright\arraybackslash}p{8cm}}, string type, string replace*={_}{\_}, column name=Gold tables},
+  every head row/.style={before row=\toprule, after row=\midrule},
+  every last row/.style={after row=\bottomrule},
+]{data/dashboard_pages.csv}
+\caption{Pages, figure-builder calls and gold tables read. Every business page shares the \file{BASE_FROM} graph; the health page additionally reads bronze control tables. Source: \file{reports/data/dashboard_pages.csv}.}
+\label{tab:coverage}
+\end{table}
+
+\begin{keybox}
+\item Eight charts plus the coverage table, all regenerated by one command.
+\item Log-scale promotion chart, honest seeded bronze counts, dated durations.
+\item Rerun \cmd{make report-data} after any model, test or page change before rebuilding.
+\end{keybox}

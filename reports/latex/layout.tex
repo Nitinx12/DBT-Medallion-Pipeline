@@ -6,6 +6,8 @@
 \clubpenalty=10000
 \widowpenalty=10000
 \displaywidowpenalty=10000
+% Last-resort stretch for unbreakable-heavy paragraphs (paths, commands).
+\emergencystretch=1.5em
 
 % --- Chapter opening: yellow number, deep-blue title, blue rule ---
 \renewcommand{\chapterlinesformat}[3]{%
@@ -24,7 +26,8 @@
 \ifoot{Walmart Medallion Data Pipeline}
 \ofoot{v\ReportVersion{} · \ReportCommit{}}
 \setkomafont{pageheadfoot}{\sffamily\footnotesize\color{InkSoft}}
-\setheadsepline{0.4pt}[\color{Rule}]
+\KOMAoptions{headsepline}
+\setkomafont{headsepline}{\color{Rule}}
 
 % --- Float policy: prefer tbp, keep floats near their reference ---
 \renewcommand{\topfraction}{.85}

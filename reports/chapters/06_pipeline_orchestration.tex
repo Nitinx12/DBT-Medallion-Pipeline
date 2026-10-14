@@ -1,3 +1,70 @@
 \chapter{Pipeline orchestration}
 \chapterlead{Eight fixed stages, five runners, one definition of success.}
-\todo{Write chapter content.}
+
+\begin{glance}
+\item Stage order is fixed; changing it means editing \file{pipeline/run_pipeline.ps1} and the DAG together.
+\item Every runner fails fast: the first failed stage stops the run.
+\item Airflow adds two schedules plus an hourly health DAG.
+\end{glance}
+
+\section{Stages}
+
+\Cref{fig:stages} chains the eight stages; \cref{tab:stages} gives the exact command per stage.
+
+\begin{figure}[tbp]
+\centering
+\input{figures/tikz/03_pipeline_stages}
+\caption{The eight stages with their tools. Banners print \file{STEP n / 7} because stages are numbered 0--7. Takeaway: order never varies, whatever runs it.}
+\label{fig:stages}
+\end{figure}
+
+\begin{center}
+\begin{tabular}{cl >{\raggedright\arraybackslash}p{9.6cm}}
+\toprule
+\# & Stage & Command \\
+\midrule
+0 & Preflight & \cmd{uv run python -c "import pyspark"} with a 3.5.x prefix assert \\
+1 & Extract & \cmd{uv run python src/jobs/extract.py} \\
+2 & Bronze tests & \cmd{uv run python src/jobs/sql_test.py tests/data-quality/bronze} \\
+3 & dbt silver & \cmd{uv run dbt run --select silver} then \cmd{uv run dbt test --select silver} \\
+4 & Silver tests & \cmd{uv run python src/jobs/sql_test.py tests/data-quality/silver} \\
+5 & dbt gold & \cmd{uv run dbt run --select gold} then \cmd{uv run dbt test --select gold} \\
+6 & Gold tests & \cmd{uv run python src/jobs/sql_test.py tests/data-quality/gold} \\
+7 & Great Expectations & \cmd{uv run python -m gx.run --layer all} \\
+\bottomrule
+\end{tabular}
+\captionof{table}{Stage commands. Exit codes: \file{sql_test.py} 0/1/2, GX 0/1/2, extract non-zero on any failed collection.}
+\label{tab:stages}
+\end{center}
+
+\section{Runner parity}
+
+\Cref{fig:runner-parity} states the invariant: executors differ, stages do not.
+
+\begin{figure}[tbp]
+\centering
+\input{figures/tikz/10_runner_parity}
+\caption{Five runners, one stage list. Takeaway: pick by platform, not by behavior.}
+\label{fig:runner-parity}
+\end{figure}
+
+\file{pipeline/run_pipeline.ps1} is canonical: prerequisites check, \file{.env} import, per-stage logging to \file{logs/}, colored summary. \file{run_pipeline.bat} mirrors it for double-click CMD use; \file{main.py} mirrors it for Docker with setdefault env semantics and a container self-heal refusal; \file{make data-pipeline} exposes each stage as a granular target; the Airflow DAG schedules it. Differences are environmental (env loading, working directory, logging), never logical.
+
+\section{Airflow}
+
+\Cref{fig:airflow-dag} lays out the tasks; the text below gives schedules and the notification path.
+
+\begin{figure}[tbp]
+\centering
+\input{figures/tikz/09_airflow_dag}
+\caption{Pipeline DAG tasks and notification branch. Takeaway: linear gate chain, then one result sweep and a single email decision.}
+\label{fig:airflow-dag}
+\end{figure}
+
+\file{airflow/dags/walmart_pipeline_dag.py} builds two DAGs from one factory: \file{walmart_mwf_morning} (Monday, Wednesday, Friday 11:00 Asia/Kolkata) and \file{walmart_rest_night} (Sunday, Tuesday, Thursday, Saturday 23:00). Ten stage tasks run the same \cmd{uv run ...} commands after a preamble that sources \file{.env}, rewrites \file{localhost} to \file{host.docker.internal} and pins the venv Python. \file{collect_results} sweeps XCom, \file{choose_email} branches, and exactly one of \file{email_success}/\file{email_failure} sends a per-stage table. \file{walmart_health_dag.py} pings Postgres and Mongo hourly and emails only on failure.
+
+\begin{keybox}
+\item One stage list in five executors; parity is a maintained invariant, not an accident.
+\item Airflow contributes scheduling, retries and mail; the gates themselves are the same scripts.
+\item Fail-fast is free: PowerShell stops, Python raises, Airflow uses \file{all_success}.
+\end{keybox}

@@ -1,25 +1,27 @@
-% Hero diagram: MongoDB -> extract.py -> bronze -> QA -> silver -> QA ->
-% gold -> consumers, with the PostgreSQL boundary and Airflow side lane.
-\begin{tikzpicture}[node distance=9mm and 11mm]
-  \node[db=MongoGreen] (mongo) {\faDatabase\\MongoDB\\\scriptsize operational};
-  \node[box=WmBlue, right=of mongo] (extract) {\faCogs\ \texttt{extract.py}\\\scriptsize PySpark + JDBC};
-  \node[bronze box, right=of extract] (bronze) {\textbf{Bronze}\\\scriptsize raw 1:1 mirror};
-  \node[gate, right=5mm of bronze] (g1) {QA};
-  \node[silver box, right=5mm of g1] (silver) {\textbf{Silver}\\\scriptsize typed, deduped};
-  \node[gate, right=5mm of silver] (g2) {QA};
-  \node[gold box, right=5mm of g2] (gold) {\textbf{Gold}\\\scriptsize star schema};
-  \foreach \a/\b in {mongo/extract,extract/bronze,bronze/g1,g1/silver,silver/g2,g2/gold}
+% Hero diagram: MongoDB -> extract.py -> bronze -> QA -> silver, then down
+% through QA to gold and the three consumer groups, inside PostgreSQL.
+\begin{tikzpicture}[node distance=8mm and 5mm]
+  \node[db=MongoGreen] (mongo) {\faDatabase\\MongoDB\\\scriptsize source};
+  \node[box=WmBlue, minimum width=22mm, right=of mongo] (extract) {\faCogs\ \texttt{extract.py}\\\scriptsize PySpark};
+  \node[bronze box, minimum width=22mm, right=of extract] (bronze) {\textbf{Bronze}\\\scriptsize raw mirror};
+  \node[gate, right=of bronze] (g1) {QA};
+  \node[silver box, minimum width=22mm, right=of g1] (silver) {\textbf{Silver}\\\scriptsize typed};
+  \foreach \a/\b in {mongo/extract,extract/bronze,bronze/g1,g1/silver}
     \draw[strong flow] (\a) -- (\b);
+  \node[gate, below=of silver] (g2) {QA};
+  \node[gold box, below=of g2] (gold) {\textbf{Gold}\\\scriptsize star schema};
+  \draw[strong flow] (silver) -- (g2);
+  \draw[strong flow] (g2) -- (gold);
+  \node[box=StreamlitRed, below=of gold] (dash) {\faChartBar\ Streamlit};
+  \node[box=PgBlue, left=of dash] (sql) {\faFile\ \texttt{sql/}};
+  \node[box=InkSoft, right=of dash] (rep) {\faFilePdf\ \texttt{reports/}};
+  \draw[flow] (gold) -- (dash);
+  \draw[flow] (gold) -| (sql);
+  \draw[flow] (gold) -| (rep);
+  \node[box=AirflowTeal, above=of silver] (air) {\faClock\ Airflow schedules};
+  \draw[data flow] (air) -- (silver);
   \begin{scope}[on background layer]
-    \node[ext, fit=(bronze)(g1)(silver)(g2)(gold),
+    \node[ext, fit=(bronze)(g1)(silver)(g2)(gold)(sql)(dash)(rep),
       label={[lane title]north west:PostgreSQL 16 --- walmart\_db}] {};
   \end{scope}
-  \node[box=StreamlitRed, below=11mm of silver] (dash) {\faChartBar\ Streamlit\\\scriptsize gold dashboard};
-  \node[box=PgBlue, left=8mm of dash] (sql) {\faFile\ \texttt{sql/}\\\scriptsize 25 reports};
-  \node[box=InkSoft, right=8mm of dash] (rep) {\faFilePdf\ \texttt{reports/}\\\scriptsize md + pdf};
-  \draw[flow] (gold) |- (dash);
-  \draw[flow] (gold) |- (sql);
-  \draw[flow] (gold) |- (rep);
-  \node[box=AirflowTeal, above=11mm of silver] (air) {\faClock\ Airflow\\\scriptsize 2 schedules + hourly};
-  \draw[data flow] (air) -- (silver);
 \end{tikzpicture}
