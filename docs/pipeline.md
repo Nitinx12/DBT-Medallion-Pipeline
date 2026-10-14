@@ -1,6 +1,6 @@
 # Pipeline
 
-Windows entry point: `pipeline/run_pipeline.ps1` (mirrored by `pipeline/run_pipeline.bat` and `main.py`). Same 8 stages, same exit contract. Linux stage wrappers live flat in `scripts/`.
+Windows entry point: `pipeline/run_pipeline.ps1` (mirrored by `run_pipeline.bat` at the repo root and `main.py`). Same 8 stages, same exit contract. Linux stage wrappers live flat in `scripts/`.
 
 ## Stages
 
