@@ -13,6 +13,16 @@ Version bumps happen on `release/vX.Y.Z` branches; the `vX.Y.Z` tag triggers
 
 ### Added
 
+- **Rebuilt technical report.** Replaced the `article`-class
+  `reports/report.tex` (preserved at `reports/legacy/report_v1.tex`) with a
+  XeLaTeX `scrreprt` project under `reports/` (see `reports/report.pdf`):
+  semantic color system, bundled Inter/JetBrains Mono fonts, 14 TikZ
+  diagrams, 8 charts generated from `reports/data/*.csv` via
+  `scripts/report/collect_metrics.py` (`make report-data`), 13 chapters
+  plus 7 appendices, and `make report` / `report-watch` / `report-clean` /
+  `report-lint` targets. Every number traces to the repo; the build is
+  warning-free (zero overfull boxes, all fonts embedded).
+
 - **Split-schedule Airflow pipelines.** Replaced the single DAG with
   `walmart_mwf_morning` (Mon/Wed/Fri 11:00 Asia/Kolkata) and
   `walmart_rest_night` (Tue/Thu/Sat/Sun 23:00 Asia/Kolkata) in

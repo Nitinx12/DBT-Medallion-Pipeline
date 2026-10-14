@@ -296,9 +296,9 @@ The comparison is string-to-string because the source stores these timestamps as
 \texttt{\_id} (cast to string, \texttt{sanitize\_for\_postgres}) is the merge key. Existing tables get a scratch staging table \texttt{\_stg\_\{collection\}} written with \texttt{mode("overwrite")}, then a single
 \begin{lstlisting}[style=sql,caption={Merge — inserted vs updated via xmin}]
 WITH upsert AS (
-  INSERT INTO "bronze"."orders" ("_id", ...) 
+  INSERT INTO "bronze"."orders" ("_id", ...)
   SELECT ... FROM "bronze"."_stg_orders"
-  ON CONFLICT ("_id") DO UPDATE SET ... 
+  ON CONFLICT ("_id") DO UPDATE SET ...
   RETURNING (xmax = 0) AS inserted
 )
 SELECT count(*) FILTER (WHERE inserted) AS rows_inserted,

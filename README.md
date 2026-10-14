@@ -197,6 +197,7 @@ This README is the pitch. Everything below is the engineering detail:
 | [`docs/ci-cd.md`](docs/ci-cd.md) | See how CI/CD works |
 | [`docs/health.md`](docs/health.md) | Local health and security checks |
 | [`dashboard/README.md`](dashboard/README.md) | Dashboard design: schema, caching, chart choices |
+| [`reports/report.pdf`](reports/report.pdf) | Full technical report: architecture, stages, models, gates, metrics (rebuild with `make report`) |
 
 Full pipeline script (`run_pipeline.ps1`): [view on Google Drive](https://drive.google.com/file/d/1vSPYN8GvC5cFMEHf7EVjwSq4HHAbCZRF/view?usp=sharing)
 
